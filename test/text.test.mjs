@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { classify, defensiveChecks, defsIn, idioms, lineFindings, literalsIn, paramCount, relevant, restates, similarity, typeLines } from '../lib/text.mjs';
+import { classify, defensiveChecks, defsIn, idioms, lineFindings, literalsIn, paramCount, relevant, restates, similarity, typeLines, windows } from '../lib/text.mjs';
 import { clineTool } from '../lib/hosts.mjs';
+import { anchors } from '../lib/requirements.mjs';
 
 const kinds = (file, text) => typeLines(file, text).map(classify);
 const one = (file, line) => kinds(file, `${line}\nx = 1\n`)[0];
@@ -112,7 +113,7 @@ test('parameters are counted from the signature: a bare arrow parameter is one, 
   assert.equal(paramCount(['def f(self, a, b):', '    return a'], 0), 2);
 });
 
-test('lines built to slow a review down take no longer than their length: escaped quotes, catch clauses, banners, unclosed SEARCH blocks', () => {
+test('lines built to slow a review down take no longer than their length: escaped quotes, catch clauses, banners, unclosed SEARCH blocks, `}else{` runs, paths after a command', () => {
   const fast = (what, f) => {
     const t0 = performance.now();
     f();
@@ -123,4 +124,6 @@ test('lines built to slow a review down take no longer than their length: escape
   fast('a catch clause that never closes', () => idioms('a.js', `try { f(); } catch (${' '.repeat(3000)}`));
   fast('a long banner comment', () => kinds('a.js', `// ${'-'.repeat(4000)}!`));
   fast('SEARCH markers that never close', () => clineTool('replace_in_file', { path: 'a.py', diff: '------- SEARCH\n'.repeat(40000) }));
+  fast('a long run of `}else{`', () => windows('a.js', `function f() {\n  ${'}else{'.repeat(40)}x\n}\n`, 4));
+  fast('a prompt with many paths after a command', () => anchors(`Add support: go ${'a/b/c '.repeat(40)}x --fast`));
 });

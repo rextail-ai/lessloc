@@ -8,12 +8,12 @@ Every release of lessloc, newest first. Versions follow [Semantic Versioning](ht
 
 - The CI workflow from `init --ci` installs lessloc from npm at exactly the version that wrote it, a version no one can republish. Its token can only read the repository, the checkout keeps no credentials, and the base branch reaches the command as a variable. To get it in a repository that has the earlier file, delete `.github/workflows/lessloc.yml` and run `lessloc init --ci` again.
 - The setup step that `init --copilot --repo` prints for Copilot's cloud agent installs lessloc from npm at exactly that version, checked against the registry's hash.
-- Snapshots keep the content of untracked environment and key files (`.env`, `.env.<name>`, `*.pem`, `*.key`, `id_rsa`, `id_ed25519`) out of `.git/objects`, and a new `.env` is still reported.
+- Snapshots keep the content of untracked environment and key files (`.env`, `.env.<name>`, `*.pem`, `*.key`, `id_rsa`, `id_ed25519`) out of `.git/objects`, and a new `.env`, or a private key in a new file, is still reported.
 - lessloc's state, with its shortened copies of your prompts, is readable by your user alone, and so is each process's folder of temporary files.
 - A settings file lessloc updates for an agent tool keeps its permissions, and a symlinked one stays a symlink.
 - ruff runs with its fixes turned off, whatever the repository's ruff settings say, and every file name reaches it as a file name.
 - On Windows, the programs lessloc starts itself (git, ruff, python3, cargo, node) always come from where they are installed, never from the repository's folder.
-- Reviews stay fast on lines built to slow them down: long runs of escaped quotes, `catch` clauses that never close, long banner and comment lines, and SEARCH/REPLACE edits that never close.
+- Reviews stay fast on lines built to slow them down (long runs of escaped quotes or of `}else{`, `catch` clauses that never close, long banner and comment lines, SEARCH/REPLACE edits that never close), and so does reading a prompt with a long run of paths after a command.
 - Each detector runs on its own, so one that meets unexpected code never stops the others, the credential check included. An invalid `mustNotImport` pattern in `.lessloc.json` is reported as a settings problem.
 - The approval asked before a command that skips the project's checks covers more forms: `git -C <dir>` and other options before the command, a shortened `--no-verify`, and `core.hooksPath`.
 - `audit --tools` runs knip from `node_modules` only when it was installed there, never from a `node_modules` committed to the repository.

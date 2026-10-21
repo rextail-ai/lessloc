@@ -443,7 +443,7 @@ In the repository. Nothing goes into the working tree unless the user asks:
 | File | What writes it |
 |---|---|
 | `.git/hooks/pre-commit`, `.git/hooks/prepare-commit-msg` | `init`; never pushed |
-| `.git/objects` | the hooks, `check`, `test`, `verify` and `probe`: snapshots of the working tree, untracked files that git does not ignore included (over 1 MB skipped; environment and key files such as `.env`, `*.pem` and `id_rsa` go in empty), as unreachable objects that `git gc` prunes and `remove` leaves; never pushed |
+| `.git/objects` | the hooks, `check`, `test`, `verify` and `probe`: snapshots of the working tree, untracked files that git does not ignore included (over 1 MB skipped; environment and key files such as `.env`, `*.pem` and `id_rsa` go in with their lines blanked), as unreachable objects that `git gc` prunes and `remove` leaves; never pushed |
 | `AGENTS.md`, between `<!-- lessloc -->` markers, and an `@AGENTS.md` line in an existing CLAUDE.md | `init --rules` |
 | `.lessloc.json` | `init --config` |
 | `.lessloc-baseline.json` | `init --baseline`, `baseline` |

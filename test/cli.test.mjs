@@ -397,12 +397,15 @@ test('the workflow from init --ci reads only, keeps no credentials in the checko
   assert.match(fs.readFileSync(path.join(fork, '.github/workflows/lessloc.yml'), 'utf8'), /- run: npx --yes github:someone\/lessloc#v1\.0\.0 ci /);
 });
 
-test('a snapshot keeps the content of untracked keys and environment files out of git, and still reports an environment file about to be committed', () => {
-  const dir = repo({ 'a.py': 'x = 1\n' }), files = { '.env': 'TOKEN=not-a-real-value-0123456789\n', '.env.production': 'TOKEN=also-not-real-9876543210\n', id_rsa: 'not a real key 0123\n', 'certs/site.pem': 'not a real certificate 0123\n', '.env.example': 'TOKEN=\n', 'b.py': 'y = 2\n' };
+test('a snapshot keeps the content of untracked keys and environment files out of git, and still reports an environment file or a private key about to be committed', () => {
+  const label = (w, what) => [`-----${w}`, `${what}-----`].join(' '), key = `${label('BEGIN', 'OPENSSH PRIVATE KEY')}\nnot a real key 0123\n${label('END', 'OPENSSH PRIVATE KEY')}\n`;
+  const dir = repo({ 'a.py': 'x = 1\n' }), files = { '.env': 'TOKEN=not-a-real-value-0123456789\n', '.env.production': 'TOKEN=also-not-real-9876543210\n', id_rsa: key, 'certs/site.pem': `${label('BEGIN', 'CERTIFICATE')}\nnot a real certificate 0123\n`, '.env.example': 'TOKEN=\n', 'b.py': 'y = 2\n' };
   write(dir, files);
   const out = run(dir, 'check').stdout, stored = f => spawnSync('git', ['cat-file', '-e', execFileSync('git', ['hash-object', f], { cwd: dir, encoding: 'utf8' }).trim()], { cwd: dir }).status === 0;
   assert.match(out, /\[secret\] \.env: environment file would be committed/);
   assert.match(out, /\[secret\] \.env\.production: environment file would be committed/);
+  assert.match(out, /\[secret\] id_rsa:1: credential `-----BEG\.\.\.`/);
+  assert.doesNotMatch(out, /certs\/site\.pem/, 'a certificate is no secret');
   for (const f of ['.env', '.env.production', 'id_rsa', 'certs/site.pem']) assert.ok(!stored(f), `${f} is not in .git/objects`);
   for (const f of ['.env.example', 'b.py']) assert.ok(stored(f), `${f} is reviewed as usual`);
   write(dir, { '.gitignore': '.env*\n', '.env': 'TOKEN=changed-not-real-0123456789\n' });
