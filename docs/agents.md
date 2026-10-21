@@ -439,7 +439,7 @@ In the repository. Nothing goes into the working tree unless the user asks:
 | File | What writes it |
 |---|---|
 | `.git/hooks/pre-commit`, `.git/hooks/prepare-commit-msg` | `init`; never pushed |
-| `.git/objects` | the hooks, `check`, `test`, `verify` and `probe`: snapshots of the working tree, untracked files that git does not ignore included (over 1 MB skipped), as unreachable objects that `git gc` prunes and `remove` leaves; never pushed |
+| `.git/objects` | the hooks, `check`, `test`, `verify` and `probe`: snapshots of the working tree, untracked files that git does not ignore included (over 1 MB skipped; environment and key files such as `.env`, `*.pem` and `id_rsa` go in empty), as unreachable objects that `git gc` prunes and `remove` leaves; never pushed |
 | `AGENTS.md`, between `<!-- lessloc -->` markers, and an `@AGENTS.md` line in an existing CLAUDE.md | `init --rules` |
 | `.lessloc.json` | `init --config` |
 | `.lessloc-baseline.json` | `init --baseline`, `baseline` |
@@ -447,9 +447,9 @@ In the repository. Nothing goes into the working tree unless the user asks:
 | `.github/hooks/review.json` | `init --copilot --repo` |
 | `Lessloc-Verified`, `Lessloc-Open`, `Lessloc-Unchecked` commit trailers | `prepare-commit-msg`, only when `trailers` is set |
 
-In the user cache, one folder per checkout: `~/.cache/lessloc/<repo>-<id>/`. It holds `sessions/<session>.log` (each session's journal: files touched, approvals asked, notes given, turns held), `sessions/<session>.json`, `ledger/<session>.json` (the handoff record), `evidence/<tree>.json` (test results per exact tree), `errors.log`, `cost.log` and `staged.json`. Beside the checkout folders, `originals.json` keeps what each agent tool's settings file held before `init`, so `remove` can give it back. None of it is shared with the team. Session state and handoff records keep a shortened copy of the user's prompts. Only `originals.json` is readable by the user alone; lessloc creates the other files and folders with the account's default permissions, so on a shared machine other accounts can read them where the home folder lets them. `chmod 700 ~/.cache/lessloc`, at the default location, makes them private ([In your user cache](/guide/reference#in-your-user-cache)).
+In the user cache, one folder per checkout: `~/.cache/lessloc/<repo>-<id>/`. It holds `sessions/<session>.log` (each session's journal: files touched, approvals asked, notes given, turns held), `sessions/<session>.json`, `ledger/<session>.json` (the handoff record), `evidence/<tree>.json` (test results per exact tree), `errors.log`, `cost.log` and `staged.json`. Beside the checkout folders, `originals.json` keeps what each agent tool's settings file held before `init`, so `remove` can give it back. None of it is shared with the team. Session state and handoff records keep a shortened copy of the user's prompts. The whole folder is readable by the user alone: lessloc creates it, and each checkout's folder, with mode 700 ([In your user cache](/guide/reference#in-your-user-cache)).
 
-In the home folder: the files in the [install table](#install-lessloc). In the system's temporary folder: clean checkouts (`lessloc-checkout-*`) and `doctor`'s test folders (`lessloc-doctor-*`), removed when the command ends.
+In the home folder: the files in the [install table](#install-lessloc). In the system's temporary folder: clean checkouts (`lessloc-checkout-*`), `doctor`'s test folders (`lessloc-doctor-*`) and one folder per process for short-lived files (`lessloc-tmp-*`), each readable by the user alone and removed when the command ends.
 
 ### Environment variables
 

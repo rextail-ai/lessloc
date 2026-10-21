@@ -3,8 +3,8 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
-import { VERSION } from '../lib/repo.mjs';
-import { CLI, ENTRY, ENV, FN, commit, findings, repo, run, write } from './helpers.mjs';
+import { VERSION, save } from '../lib/repo.mjs';
+import { CLI, ENTRY, ENV, FN, commit, findings, repo, run, tmp, write } from './helpers.mjs';
 
 const ruff = !spawnSync('ruff', ['--version']).error;
 const kinds = F => F.map(f => `${f.kind} ${f.file}${f.line ? `:${f.line}` : ''} ${f.msg}${f.cite ? ` (${f.cite})` : ''}`).join('\n');
@@ -296,6 +296,47 @@ test('brute-force code the language has a shorter idiom for is flagged on the ne
   assert.doesNotMatch(out, /old\.py/, 'code this change did not write is not judged');
 });
 
+test('ruff never changes a file, whatever the repository sets, and every file name reaches it as a file name', { skip: !ruff && 'ruff is not installed' }, () => {
+  const dir = repo({ 'ruff.toml': 'fix = true\nfix-only = true\nunsafe-fixes = true\n', 'victim.py': 'x = 1\n' });
+  write(dir, { 'app.py': 'import os\n\nx = 1\n', '--output-file=victim.py': 'y = 2\n' });
+  const out = run(dir, 'check').stdout;
+  assert.equal(fs.readFileSync(path.join(dir, 'app.py'), 'utf8'), 'import os\n\nx = 1\n');
+  assert.equal(fs.readFileSync(path.join(dir, 'victim.py'), 'utf8'), 'x = 1\n');
+  assert.match(out, /\[unused\] app\.py:1/);
+});
+
+test('a boundary pattern that does not compile is a settings problem, and code with regex characters in its names stops no check', () => {
+  const dir = repo({ '.lessloc.json': JSON.stringify({ boundaries: [{ files: '**', mustNotImport: '(' }] }), 'a.py': 'x = 1\n' });
+  const box = 'class Box:\n    def __init__(self, a, b, sep=", (x"):\n        self.a = a\n        self.b = b\n        self.sep = sep\n        self.end = 1\n';
+  write(dir, { 'a.py': `x = 1\nTOKEN = "${['ghp', 'Zq8Lm2Vt9Rw4Kp7Hn3Jd6Fg1Xc5Bs0Ya8Ue2W'].join('_')}"\n\n\n${box}` });
+  const out = run(dir, 'check').stdout;
+  assert.match(out, /\[config\] \.lessloc\.json: "mustNotImport" "\(" is not a valid regular expression/);
+  assert.match(out, /\[secret\] a\.py:2/);
+});
+
+test('init sets up no hooks from a lessloc folder whose path a hook command cannot quote', () => {
+  const copy = tmp('less$loc-');
+  for (const f of ['lessloc.mjs', 'hook.mjs', 'package.json', 'RULES.md', 'PATTERNS.md', 'lib']) fs.cpSync(path.join(path.dirname(CLI), f), path.join(copy, f), { recursive: true });
+  const dir = repo({ 'a.py': 'x = 1\n' }), r = spawnSync('node', [path.join(copy, 'lessloc.mjs'), 'init'], { cwd: dir, encoding: 'utf8', env: ENV });
+  assert.equal(r.status, 2);
+  assert.match(r.stderr, /^lessloc init cannot set up hooks from .*less\$loc-\w+: hook commands cannot quote the \$ in it/);
+  assert.ok(!fs.existsSync(path.join(dir, '.git/hooks/pre-commit')));
+});
+
+test('audit --tools runs knip from node_modules only when it was installed there, never from a node_modules the repository commits', { skip: process.platform === 'win32' && 'a shell script stands in for knip' }, () => {
+  const knip = { 'node_modules/.bin/knip': '#!/bin/sh\ntouch RAN-FROM-REPO\n' }, env = { ...ENV, PATH: `${path.dirname(process.execPath)}:/usr/bin:/bin` };
+  const audit = dir => {
+    fs.chmodSync(path.join(dir, 'node_modules/.bin/knip'), 0o755);
+    spawnSync('node', [CLI, 'audit', '--tools'], { cwd: dir, encoding: 'utf8', env });
+    return fs.existsSync(path.join(dir, 'RAN-FROM-REPO'));
+  };
+  const installed = repo({ '.gitignore': 'node_modules/\n', 'a.py': 'x = 1\n' });
+  write(installed, knip);
+  assert.ok(audit(installed), 'an installed knip runs');
+  const committed = repo({ 'a.py': 'x = 1\n', ...knip });
+  assert.ok(!audit(committed), 'a committed one never runs');
+});
+
 test('--help after any command prints the usage and does nothing else', () => {
   const dir = repo({ 'a.py': 'x = 1\n' });
   assert.equal(run(dir, 'init').status, 0);
@@ -341,4 +382,41 @@ test("init --ci writes a workflow on the current Node LTS with the action versio
   assert.match(yaml, /node-version: 24\n/);
   assert.deepEqual(uses(yaml), ['actions/checkout@v7', 'actions/setup-node@v7']);
   assert.deepEqual([...new Set(fs.readdirSync(own).flatMap(f => uses(fs.readFileSync(new URL(f, own), 'utf8'))))].sort(), uses(yaml));
+});
+
+test('a snapshot keeps the content of untracked keys and environment files out of git, and still reports an environment file about to be committed', () => {
+  const dir = repo({ 'a.py': 'x = 1\n' }), files = { '.env': 'TOKEN=not-a-real-value-0123456789\n', '.env.production': 'TOKEN=also-not-real-9876543210\n', id_rsa: 'not a real key 0123\n', 'certs/site.pem': 'not a real certificate 0123\n', '.env.example': 'TOKEN=\n', 'b.py': 'y = 2\n' };
+  write(dir, files);
+  const out = run(dir, 'check').stdout, stored = f => spawnSync('git', ['cat-file', '-e', execFileSync('git', ['hash-object', f], { cwd: dir, encoding: 'utf8' }).trim()], { cwd: dir }).status === 0;
+  assert.match(out, /\[secret\] \.env: environment file would be committed/);
+  assert.match(out, /\[secret\] \.env\.production: environment file would be committed/);
+  for (const f of ['.env', '.env.production', 'id_rsa', 'certs/site.pem']) assert.ok(!stored(f), `${f} is not in .git/objects`);
+  for (const f of ['.env.example', 'b.py']) assert.ok(stored(f), `${f} is reviewed as usual`);
+  write(dir, { '.gitignore': '.env*\n', '.env': 'TOKEN=changed-not-real-0123456789\n' });
+  assert.doesNotMatch(run(dir, 'check').stdout, /environment file/, 'an ignored environment file is not committed');
+  assert.ok(!stored('.env'), 'nor is it taken in once it is ignored');
+});
+
+test('lessloc keeps its state in folders only the user can open, a root an earlier version made included', { skip: process.platform === 'win32' && 'Windows has no POSIX modes' }, () => {
+  const root = path.join(tmp('cache-'), 'lessloc'), dir = repo({ 'a.py': 'x = 1\n' });
+  fs.mkdirSync(root);
+  fs.chmodSync(root, 0o755);
+  spawnSync('node', [CLI, 'check'], { cwd: dir, encoding: 'utf8', env: { ...ENV, LESSLOC_STATE: root } });
+  const own = fs.readdirSync(root).map(f => path.join(root, f)).filter(f => fs.statSync(f).isDirectory());
+  assert.equal(own.length, 1);
+  for (const f of [root, ...own]) assert.equal(fs.statSync(f).mode & 0o777, 0o700, f);
+});
+
+test('a settings file lessloc rewrites keeps its permissions, and a symlinked one stays a symlink', { skip: process.platform === 'win32' && 'Windows has no POSIX modes' }, () => {
+  const dir = tmp('settings-'), real = path.join(dir, 'real.json'), link = path.join(dir, 'link.json');
+  fs.writeFileSync(real, '{}');
+  fs.chmodSync(real, 0o600);
+  fs.symlinkSync(real, link);
+  save(link, { a: 1 });
+  assert.ok(fs.lstatSync(link).isSymbolicLink());
+  assert.deepEqual(JSON.parse(fs.readFileSync(real, 'utf8')), { a: 1 });
+  assert.equal(fs.statSync(real).mode & 0o777, 0o600);
+  fs.chmodSync(real, 0o644);
+  save(real, {}, 0o600);
+  assert.equal(fs.statSync(real).mode & 0o777, 0o600, 'an explicit mode wins');
 });

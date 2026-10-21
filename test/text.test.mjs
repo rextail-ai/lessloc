@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { classify, defensiveChecks, defsIn, idioms, lineFindings, literalsIn, paramCount, relevant, restates, similarity, typeLines } from '../lib/text.mjs';
+import { clineTool } from '../lib/hosts.mjs';
 
 const kinds = (file, text) => typeLines(file, text).map(classify);
 const one = (file, line) => kinds(file, `${line}\nx = 1\n`)[0];
@@ -109,4 +110,17 @@ test('parameters are counted from the signature: a bare arrow parameter is one, 
   assert.equal(paramCount(['function f(a, cb = x => x, b) {', '  return cb(a + b);', '}'], 0), 3);
   assert.equal(paramCount(['const f = (a, b) => ({ a, b });'], 0), 2);
   assert.equal(paramCount(['def f(self, a, b):', '    return a'], 0), 2);
+});
+
+test('lines built to slow a review down take no longer than their length: escaped quotes, catch clauses, banners, unclosed SEARCH blocks', () => {
+  const fast = (what, f) => {
+    const t0 = performance.now();
+    f();
+    assert.ok(performance.now() - t0 < 1000, what);
+  };
+  fast('a Rust lifetime before escaped quotes', () => found('a.rs', `let s: &'static str = "${'\\"'.repeat(26)}`));
+  fast('a Python string of escapes that never closes', () => found('a.py', `s = '${'\\"'.repeat(26)}`));
+  fast('a catch clause that never closes', () => idioms('a.js', `try { f(); } catch (${' '.repeat(3000)}`));
+  fast('a long banner comment', () => kinds('a.js', `// ${'-'.repeat(4000)}!`));
+  fast('SEARCH markers that never close', () => clineTool('replace_in_file', { path: 'a.py', diff: '------- SEARCH\n'.repeat(40000) }));
 });

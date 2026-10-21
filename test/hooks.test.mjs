@@ -194,7 +194,8 @@ test('right after a write, the agent hears only what is cheapest to fix while th
 test('commands that skip the project checks need the user, not the agent', () => {
   const dir = repo({ 'a.py': 'x = 1\n' });
   const ask = command => hook(dir, { hook_event_name: 'PreToolUse', tool_name: 'Bash', tool_use_id: command, tool_input: { command } })?.hookSpecificOutput;
-  for (const command of ['git commit --no-verify -m "wip"', 'git commit -nm wip', 'HUSKY=0 git commit -m x', 'LESSLOC=off git commit -m x', 'git push --no-verify']) assert.equal(ask(command)?.permissionDecision, 'ask', command);
+  for (const command of ['git commit --no-verify -m "wip"', 'git commit -nm wip', 'HUSKY=0 git commit -m x', 'LESSLOC=off git commit -m x', 'git push --no-verify', 'git -C sub commit --no-verify -m x', 'git --no-pager -c color.ui=never push --no-verif', 'git -C sub commit -nm wip', 'git -c core.hooksPath=/dev/null commit -m x']) assert.equal(ask(command)?.permissionDecision, 'ask', command);
+  assert.match(ask('git -c core.hooksPath=/dev/null commit -m x').permissionDecisionReason, /\(`core\.hooksPath`\)/);
   assert.match(ask('git commit --no-verify -m "wip"').permissionDecisionReason, /^lessloc: this command skips the project's own checks \(`--no-verify`\)/);
   for (const command of ['git commit -am "fix login"', 'git push -n origin main', 'git commit --amend --no-edit', 'npm test']) assert.notEqual(ask(command)?.permissionDecision, 'ask', command);
 });

@@ -376,7 +376,7 @@ lessloc writes nothing into your working tree unless you ask. Its own state live
 | File | Written by | Notes | Shared with your team? |
 |---|---|---|---|
 | `.git/hooks/pre-commit`, `.git/hooks/prepare-commit-msg` | `init` | only hook files that did not exist or held only lessloc's lines | No: git never pushes `.git/hooks` |
-| `.git/objects` | the agent hooks, the git hooks, `check`, `test`, `verify` and `probe` | snapshots of the working tree, untracked files that git does not ignore included, so a review sees exactly what each tool call changed. Ordinary unreachable objects, which `git gc` prunes once they are older than `gc.pruneExpire` (two weeks by default). Untracked files over 1 MB are skipped | No: git never pushes them |
+| `.git/objects` | the agent hooks, the git hooks, `check`, `test`, `verify` and `probe` | snapshots of the working tree, untracked files that git does not ignore included, so a review sees exactly what each tool call changed. Ordinary unreachable objects, which `git gc` prunes once they are older than `gc.pruneExpire` (two weeks by default). Untracked files over 1 MB are skipped. Untracked environment and key files (`.env`, `.env.<name>` except examples and templates, `*.pem`, `*.key`, `id_rsa`, `id_ed25519`) go in empty, so their content never reaches `.git/objects` | No: git never pushes them |
 | `.git/worktrees/` | `verify`, `ci`, `probe`, `check --ratchet` | git's record of a temporary clean checkout, removed with it | No |
 | `AGENTS.md` | `init --rules` | the working standard, between `<!-- lessloc -->` markers | Only when you commit it |
 | `CLAUDE.md` | `init --rules` | one `@AGENTS.md` line, only when CLAUDE.md exists and does not import AGENTS.md | Only when you commit it |
@@ -407,7 +407,7 @@ lessloc keeps one folder per checkout, and per git worktree: `~/.cache/lessloc/<
 
 Beside the checkout folders, `originals.json` keeps what each agent tool's hook or settings file held before `init` first added lessloc's entries: its text, where writing it back would not give the same bytes, or that `init` created it. `remove` uses it to give each file back exactly. Only your user can read it.
 
-lessloc restricts no other file. It creates every other folder and file here with your account's default permissions, so on a machine you share with other accounts, they can read these files, the shortened prompts among them, wherever your home folder lets them. To make them private, run `chmod 700 ~/.cache/lessloc`, or the same on `$XDG_CACHE_HOME/lessloc` or the `LESSLOC_STATE` folder when one of them is set. What lessloc writes inside it later stays private too.
+The whole folder is private to your user. lessloc creates the root (`~/.cache/lessloc`, `$XDG_CACHE_HOME/lessloc` or the `LESSLOC_STATE` folder) and each checkout's folder readable by your user alone (mode 700), and sets a root folder an earlier version created to 700 the next time it runs, so other accounts on a shared machine cannot read these files, the shortened prompts among them.
 
 Session files go after a week, and handoff records after two weeks. Evidence keeps the 50 newest trees, and the logs keep their recent lines. A checkout's whole folder is removed when the checkout is gone, or a month after lessloc first wrote it.
 
@@ -443,7 +443,7 @@ lessloc changes only its own entries in these files, which are not shared with y
 
 ### Temporary files
 
-In the system's temporary folder, lessloc creates clean checkouts (`lessloc-checkout-*`) for `verify`, `ci`, `probe` and `check --ratchet`, a folder (`lessloc-doctor-*`) where `doctor` runs each installed hook command once, and short-lived input and index files. Each is removed when its command ends.
+In the system's temporary folder, lessloc creates clean checkouts (`lessloc-checkout-*`) for `verify`, `ci`, `probe` and `check --ratchet`, a folder (`lessloc-doctor-*`) where `doctor` runs each installed hook command once, and one folder per process (`lessloc-tmp-*`) for short-lived input and index files. Only your user can open these folders, and each is removed when its command ends.
 
 ## Environment variables
 

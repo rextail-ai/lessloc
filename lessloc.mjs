@@ -13,7 +13,7 @@ import { annotations, fmt, format, review, summary, unchecked, verifiedAt } from
 import { clip, fmtDefs, isCode, relevant } from './lib/text.mjs';
 import { renderCatalog } from './lib/catalog.mjs';
 import { CLOUD_ENTRY } from './lib/hosts.mjs';
-import { CLI, REPO_HOOKS, TOOLS, ago, cloudStep, health, hostRows, hostTable, repoHooks, setup, teardown } from './lib/install.mjs';
+import { CLI, REPO_HOOKS, ROOT, TOOLS, ago, cloudStep, health, hostRows, hostTable, repoHooks, setup, teardown } from './lib/install.mjs';
 
 const SELF = fileURLToPath(import.meta.url);
 const [cmd, ...args] = process.argv.slice(2);
@@ -291,6 +291,9 @@ const ownHook = t => t.split('\n').every(l => !l.trim() || l.startsWith('#!') ||
 function init() {
   const top = repo();
   if (!top) return fail('lessloc init needs a git repository');
+  // Hook commands put lessloc's path in double quotes for sh, cmd and PowerShell, inside which these characters still act.
+  const unquotable = process.platform === 'win32' ? ['"', '$', '`'] : ['"', '$', '`', '\\'], bad = unquotable.find(c => ROOT.includes(c));
+  if (bad) return fail(`lessloc init cannot set up hooks from ${ROOT}: hook commands cannot quote the ${bad} in it. Move lessloc to a folder whose path has none of ${unquotable.join(' ')}, then run init again`);
   const cfg = config(top), done = [], manual = [], set = [], flag = f => args.includes(f);
   const hooksDir = path.resolve(top, git(top, ['rev-parse', '--git-path', 'hooks'])), common = path.resolve(top, git(top, ['rev-parse', '--git-common-dir']));
   const local = !path.relative(common, hooksDir).startsWith('..');
