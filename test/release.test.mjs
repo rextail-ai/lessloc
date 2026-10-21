@@ -19,7 +19,9 @@ function clone(changelog = t => t) {
     fs.mkdirSync(path.dirname(path.join(dir, f)), { recursive: true });
     fs.copyFileSync(new URL(`../${f}`, import.meta.url), path.join(dir, f));
   }
-  fs.writeFileSync(path.join(dir, 'CHANGELOG.md'), changelog(fs.readFileSync(path.join(dir, 'CHANGELOG.md'), 'utf8')));
+  // The changelog as it stands right after a release, whatever this checkout has waiting in its Unreleased section.
+  const released = fs.readFileSync(path.join(dir, 'CHANGELOG.md'), 'utf8').replace(/^## \[Unreleased\]\n[\s\S]*?(?=^## \[)/m, '');
+  fs.writeFileSync(path.join(dir, 'CHANGELOG.md'), changelog(released));
   for (const args of [['init', '-q', '-b', 'main'], ['add', '-A'], ['commit', '-qm', 'c'], ['remote', 'add', 'origin', origin], ['push', '-q', '-u', 'origin', 'main']]) run(dir, 'git', ...args);
   return { origin, dir, read: f => fs.readFileSync(path.join(dir, f), 'utf8') };
 }
