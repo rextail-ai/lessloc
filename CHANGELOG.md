@@ -19,11 +19,11 @@ Every release of lessloc, newest first. Versions follow [Semantic Versioning](ht
 - `audit --tools` runs knip from `node_modules` only when it was installed there, never from a `node_modules` committed to the repository.
 - `init` sets up hooks only from a lessloc folder whose path its hook commands can quote: one without `"`, `$` or `` ` ``, and outside Windows without `\`.
 - Releases go to npm through trusted publishing with provenance, and only from a commit on `main`.
-- `init --ci` and `init --config` write their file only where nothing is, in one step: a file or a symlink already in its place is left as it is, and nothing is written through it. lessloc's own git hooks and `CLAUDE.md` are each read and written through one open file.
+- `init --ci` and `init --config` write their file only where nothing is, in one step: a file or a symlink already in its place is left as it is, and nothing is written through it. lessloc's own git hooks and `CLAUDE.md` are each read and written through one open file, and one that lessloc cannot write is left as it is, with the line to add shown when it lacks it.
 
 ### More accurate
 
-- PHPUnit's and .NET's verdict lines count only where a line starts, so a test name or a log line that quotes one is never read as a failed run.
+- PHPUnit's and .NET's verdict lines count only at the start of a line, so one quoted inside a test name or a log line is not read as a failed run.
 
 ## [0.10.0]
 

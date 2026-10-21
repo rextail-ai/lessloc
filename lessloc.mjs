@@ -334,13 +334,17 @@ function init() {
   if (flag('--rules')) {
     const prev = read(top, 'AGENTS.md') || '', block = `<!-- lessloc -->\n${STANDARD}\n<!-- /lessloc -->\n`;
     fs.writeFileSync(path.join(top, 'AGENTS.md'), RULES_BLOCK.test(prev) ? prev.replace(RULES_BLOCK, m => (m.startsWith('\n') ? '\n\n' : '') + block) : `${prev ? prev.trimEnd() + '\n\n' : ''}${block}`);
-    // CLAUDE.md, when there is one, is read and added to through one open file: the file found without the import gets it.
-    let claude;
-    try { claude = fs.openSync(path.join(top, 'CLAUDE.md'), 'r+'); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+    // CLAUDE.md, when there is one, is read and added to through one open file: the file found without the import gets it. One
+    // lessloc cannot write is left as it is, and the line to add is shown when it lacks the import.
+    let claude, note = '';
+    try { claude = fs.openSync(path.join(top, 'CLAUDE.md'), 'r+'); } catch (e) {
+      if (!['ENOENT', 'EACCES', 'EPERM', 'EROFS'].includes(e.code)) throw e;
+      if (e.code !== 'ENOENT' && !read(top, 'CLAUDE.md')?.includes('@AGENTS.md')) note = 'lessloc cannot write CLAUDE.md, so it was left as it is: add the line @AGENTS.md to it for Claude Code to read the rules';
+    }
     if (claude !== undefined) {
       try { if (!fs.readFileSync(claude, 'utf8').includes('@AGENTS.md')) fs.writeSync(claude, '\n@AGENTS.md\n'); } finally { fs.closeSync(claude); }
     }
-    done.push('rules in AGENTS.md, for every agent that reads it (commit it if the team agrees)');
+    done.push('rules in AGENTS.md, for every agent that reads it (commit it if the team agrees)', note);
   }
   if (flag('--config')) {
     const command = testCommand(top, cfg);

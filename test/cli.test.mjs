@@ -385,6 +385,18 @@ test("init --ci writes a workflow on the current Node LTS with the action versio
   assert.deepEqual([...new Set(fs.readdirSync(own).flatMap(f => uses(fs.readFileSync(new URL(f, own), 'utf8'))))].sort(), uses(yaml));
 });
 
+test('init --rules leaves a CLAUDE.md it cannot write as it is, and shows the line to add only when the import is missing', { skip: process.getuid?.() === 0 && 'root writes a read-only file' }, () => {
+  for (const [body, shown] of [['# Notes\n\n@AGENTS.md\n', false], ['# Notes\n', true]]) {
+    const dir = repo({ 'a.py': 'x = 1\n', 'CLAUDE.md': body });
+    fs.chmodSync(path.join(dir, 'CLAUDE.md'), 0o444);
+    const r = run(dir, 'init', '--rules');
+    assert.equal(r.status, 0, r.stderr);
+    assert.match(fs.readFileSync(path.join(dir, 'AGENTS.md'), 'utf8'), /<!-- lessloc -->/);
+    assert.equal(fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8'), body);
+    assert.equal(/- lessloc cannot write CLAUDE\.md, so it was left as it is: add the line @AGENTS\.md to it/.test(r.stdout), shown, r.stdout);
+  }
+});
+
 test('init adds a shared file only where nothing is: a symlink in its place is left as it is, never written through', () => {
   const dir = repo({ 'a.py': 'x = 1\n' }), outside = tmp('outside-');
   fs.mkdirSync(path.join(dir, '.github/workflows'), { recursive: true });
