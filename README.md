@@ -50,56 +50,6 @@ To remove it: `Remove lessloc by following https://lessloc.org/remove.md`
 
 <p align="center"><a href="https://github.com/Kludex/starlette/pull/3517"><picture><source media="(prefers-color-scheme: dark)" srcset="https://lessloc.org/diff-dark.svg"><img alt="starlette #3517: 13 lines without lessloc, 6 lines with lessloc, in both runs, and all four runs passed the hidden tests" src="https://lessloc.org/diff-light.svg" width="880"></picture></a></p>
 
-<details>
-<summary>The real diffs</summary>
-
-Without lessloc, 13 lines:
-
-```diff
-@@ -46,7 +46,15 @@ class CORSMiddleware:
- 
--        preflight_headers: dict[str, str] = {}
--        if preflight_explicit_allow_origin:
--            # The origin value will be set in preflight_response() if it is allowed.
--            preflight_headers["Vary"] = "Origin"
--        else:
-+        # Preflight responses depend on every request input that is checked below, so
-+        # they are all varied on, including optional headers that may be absent.
-+        preflight_headers: dict[str, str] = {
-+            "Vary": ", ".join(
-+                [
-+                    "Origin",
-+                    "Access-Control-Request-Method",
-+                    "Access-Control-Request-Headers",
-+                    "Access-Control-Request-Private-Network",
-+                ]
-+            ),
-+        }
-+        if not preflight_explicit_allow_origin:
-             preflight_headers["Access-Control-Allow-Origin"] = "*"
-```
-
-With lessloc, 6 lines:
-
-```diff
-@@ -46,7 +46,8 @@ class CORSMiddleware:
- 
--        preflight_headers: dict[str, str] = {}
--        if preflight_explicit_allow_origin:
--            # The origin value will be set in preflight_response() if it is allowed.
--            preflight_headers["Vary"] = "Origin"
--        else:
-+        # Every preflight request input can change the response, so caches must key on all of them.
-+        preflight_headers: dict[str, str] = {
-+            "Vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, "
-+            "Access-Control-Request-Private-Network",
-+        }
-+        if not preflight_explicit_allow_origin:
-             preflight_headers["Access-Control-Allow-Origin"] = "*"
-```
-
-</details>
-
 ## What changes
 
 - **Less code to review.** It reuses what your project already has.

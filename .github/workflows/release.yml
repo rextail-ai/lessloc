@@ -43,6 +43,6 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
-      - run: npm view "lessloc@${GITHUB_REF_NAME#v}" version > /dev/null 2>&1 || npm publish --provenance
+      - run: npm view "lessloc@${GITHUB_REF_NAME#v}" version > /dev/null 2>&1 || npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
