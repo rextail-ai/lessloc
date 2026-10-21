@@ -6,6 +6,7 @@ import { test } from 'node:test';
 import { HOSTS, NEUTRAL, userHooks } from '../lib/hosts.mjs';
 import { REPO_HOOKS, ROOT, repoHooks } from '../lib/install.mjs';
 import { STANDARD } from '../lib/voice.mjs';
+import { at } from './e2e/record.mjs';
 import { ENTRY, ENV, agentWrite, fill, hook, repo, run, stop, tmp, turn, write } from './helpers.mjs';
 import { session } from './reference-agent.mjs';
 
@@ -20,11 +21,6 @@ import { session } from './reference-agent.mjs';
 // end of a turn.
 const FIXTURES = new URL('./fixtures/hosts/', import.meta.url);
 const fixtures = fs.readdirSync(FIXTURES).map(f => JSON.parse(fs.readFileSync(new URL(f, FIXTURES), 'utf8')));
-const get = (o, p) => p?.split('.').reduce((x, k) => x?.[k], o);
-const at = (o, p) => {
-  const [where, when] = String(p).split('|'), [field, value] = (when || '').split('=');
-  return !when || String(get(o, field)) === value ? get(o, where) : undefined;
-};
 // Nothing a model reads may name lessloc, show a path or command of its own, tag a kind or cite a source.
 const quiet = t => assert.doesNotMatch(String(t), /lessloc|\bnode\s|\.mjs\b|\[[a-z]+(?:-[a-z]+)*\]|\(CWE-|et al\./i);
 

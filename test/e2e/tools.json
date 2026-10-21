@@ -1,0 +1,3 @@
+{
+  "claude": { "npm": "@anthropic-ai/claude-code-{platform}-{arch}", "version": "2.1.306", "bin": "claude" }
+}
