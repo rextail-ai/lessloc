@@ -10,7 +10,7 @@ lessloc keeps coding agents to the least code that does the job and still works.
 It makes no network calls; [Does my code leave my machine?](/guide/faq#does-my-code-leave-my-machine) lists the programs it runs and has a check the user can run. The agent tool still sends code and prompts to its model provider. Of the commands the user runs, `lessloc probe` starts the user's `probe` agent command in a clean checkout of the repository, a paid agent session whose model provider gets the code that agent reads, and `lessloc audit --tools` runs the vulnerability scanners the user has installed, which look up advisories online. What lessloc stores ([Files lessloc writes](#files-lessloc-writes)):
 
 - In the repository: two git hooks in `.git/hooks`, `pre-commit` (the commit gate) and `prepare-commit-msg` (commit trailers, only when `trailers` is set), and snapshots of the working tree, untracked files that git does not ignore included, as unreachable objects in `.git/objects` until `git gc` prunes them. Git pushes neither. Nothing goes into the repository's files or commits unless the user asks.
-- In the user cache: one folder per checkout, which holds a shortened copy of the user's prompts, with the account's default permissions.
+- In the user cache: one folder per checkout, which holds a shortened copy of the user's prompts and is readable by the user alone.
 
 `node ~/.lessloc/lessloc.mjs remove` deletes only this checkout's folder in the user cache. To delete what lessloc stored outside the repositories, the user closes every agent session and runs `rm -rf ~/.cache/lessloc ~/.lessloc`; the snapshots stay in `.git/objects` until `git gc` prunes them ([Remove lessloc](#remove-lessloc)).
 

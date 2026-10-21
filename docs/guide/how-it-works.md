@@ -220,7 +220,7 @@ Several agents can work in one checkout at once, and in Claude Code a session ca
 - A subagent's writes are tracked by its id. Its own work is reviewed when it finishes, and its hints go into its own prompt.
 - Test results are kept one file per state, and handoff records one file per session. Each file is written whole, and the journals only grow by appended lines, so hooks running at the same time never lose each other's updates.
 - Each checkout, and each git worktree, has its own state folder. Agents in separate worktrees share nothing.
-- People who share one checkout under their own accounts each have their own state, in their own account's cache, so one person's agent is never told another person's prompts. lessloc leaves those files with each account's default permissions ([In your user cache](/guide/reference#in-your-user-cache)). ([Busy sessions](/patterns/#busy-sessions))
+- People who share one checkout under their own accounts each have their own state, in their own account's cache, so one person's agent is never told another person's prompts. Each account's lessloc folder is readable by that account alone ([In your user cache](/guide/reference#in-your-user-cache)). ([Busy sessions](/patterns/#busy-sessions))
 
 ## The handoff
 

@@ -407,7 +407,7 @@ lessloc keeps one folder per checkout, and per git worktree: `~/.cache/lessloc/<
 
 Beside the checkout folders, `originals.json` keeps what each agent tool's hook or settings file held before `init` first added lessloc's entries: its text, where writing it back would not give the same bytes, or that `init` created it. `remove` uses it to give each file back exactly. Only your user can read it.
 
-The whole folder is private to your user. lessloc creates the root (`~/.cache/lessloc`, `$XDG_CACHE_HOME/lessloc` or the `LESSLOC_STATE` folder) and each checkout's folder readable by your user alone (mode 700), and sets a root folder an earlier version created to 700 the next time it runs, so other accounts on a shared machine cannot read these files, the shortened prompts among them.
+The whole folder is private to your user. lessloc creates the root (`~/.cache/lessloc`, `$XDG_CACHE_HOME/lessloc` or the `LESSLOC_STATE` folder) and each checkout's folder readable by your user alone (mode 700), and sets a root folder an earlier version created to 700 the next time it runs, so other accounts on a shared machine cannot read these files, the shortened prompts among them. On Windows, where folders have no mode, the default `%LOCALAPPDATA%\lessloc` is private to you through your user profile; keep a `LESSLOC_STATE` or `XDG_CACHE_HOME` folder inside your profile too.
 
 Session files go after a week, and handoff records after two weeks. Evidence keeps the 50 newest trees, and the logs keep their recent lines. A checkout's whole folder is removed when the checkout is gone, or a month after lessloc first wrote it.
 
