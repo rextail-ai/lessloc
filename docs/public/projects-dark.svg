@@ -1,47 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="880" height="636" viewBox="0 0 880 636" role="img" aria-labelledby="t d">
-<title id="t">lessloc: less code and lower cost on every project</title>
-<desc id="d">lessloc 0.10.0 against no tool, Claude Code with Haiku, production lines and cost per task on each of three open-source Python projects. starlette, 43 tasks: 26% less code, 26% lower cost. pydantic-settings, 45 tasks: 23% less code, 22% lower cost. w3lib, 29 tasks: 36% less code, 15% lower cost.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="422" viewBox="0 0 880 422" role="img" aria-labelledby="t d">
+<title id="t">lessloc: less code and lower cost on every project tested</title>
+<desc id="d">lessloc 0.10.0 against no tool, Claude Code with Haiku, per task, on each of three open-source Python projects: 23% to 36% less production code and 15% to 26% lower cost.</desc>
 <style>
 svg{font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .ink{fill:#243040}.mut{fill:#56657a}.lt{fill:#4d7c0f}
 .lb{fill:#b3ec64}.gb{fill:#8d99a8}
-.lr{stroke:#8ed13f}.tr{stroke:#e5e9ee}
+.lr{stroke:#8ed13f}.tr{stroke:#e5e9ee}.ck{stroke:#243040}.tb{fill:#e5e9ee}.dot{fill:#243040}
 @media all{
 .ink{fill:#e4f1f4}.mut{fill:#9aa8b8}.lt{fill:#bdf86c}
 .lb{fill:#b3ec64}.gb{fill:#5d6879}
-.lr{stroke:#b3ec64}.tr{stroke:#1f2834}}
+.lr{stroke:#b3ec64}.tr{stroke:#1f2834}.tb{fill:#1f2834}.dot{fill:#e4f1f4}}
 </style>
-<text class="ink" x="440.0" y="36" font-size="32" font-weight="800" text-anchor="middle">on every project</text>
-<text class="ink" x="146.7" y="104" font-size="30" font-weight="700" text-anchor="middle">starlette</text>
-<text class="mut" x="146.7" y="134" font-size="24" text-anchor="middle">43 tasks</text>
-<circle class="tr" cx="146.7" cy="238" r="70" fill="none" stroke-width="18"/>
-<circle class="lr" cx="146.7" cy="238" r="70" fill="none" stroke-width="18" stroke-dasharray="114.35 439.82" stroke-dashoffset="0" transform="rotate(-90 146.7 238)"><animate attributeName="stroke-dashoffset" begin="0s" dur="1.20s" values="114.35;114.35;0" keyTimes="0;0.1667;1" calcMode="spline" keySplines="0 0 1 1;0.22 1 0.36 1" fill="freeze"/></circle>
-<text class="lt" x="146.7" y="255" font-size="48" font-weight="800" text-anchor="middle" opacity="1"><animate attributeName="opacity" begin="0s" dur="1.00s" values="0;0;1" keyTimes="0;0.5;1" fill="freeze"/>26%</text>
-<text class="ink" x="146.7" y="353.0" font-size="26" font-weight="600" text-anchor="middle">less code</text>
-<circle class="tr" cx="146.7" cy="460" r="70" fill="none" stroke-width="18"/>
-<circle class="lr" cx="146.7" cy="460" r="70" fill="none" stroke-width="18" stroke-dasharray="114.35 439.82" stroke-dashoffset="0" transform="rotate(-90 146.7 460)"><animate attributeName="stroke-dashoffset" begin="0s" dur="1.50s" values="114.35;114.35;0" keyTimes="0;0.3333;1" calcMode="spline" keySplines="0 0 1 1;0.22 1 0.36 1" fill="freeze"/></circle>
-<text class="lt" x="146.7" y="477" font-size="48" font-weight="800" text-anchor="middle" opacity="1"><animate attributeName="opacity" begin="0s" dur="1.30s" values="0;0;1" keyTimes="0;0.6154;1" fill="freeze"/>26%</text>
-<text class="ink" x="146.7" y="575.0" font-size="26" font-weight="600" text-anchor="middle">lower cost</text>
-<text class="ink" x="440.0" y="104" font-size="30" font-weight="700" text-anchor="middle">pydantic-settings</text>
-<text class="mut" x="440.0" y="134" font-size="24" text-anchor="middle">45 tasks</text>
-<circle class="tr" cx="440.0" cy="238" r="70" fill="none" stroke-width="18"/>
-<circle class="lr" cx="440.0" cy="238" r="70" fill="none" stroke-width="18" stroke-dasharray="101.16 439.82" stroke-dashoffset="0" transform="rotate(-90 440.0 238)"><animate attributeName="stroke-dashoffset" begin="0s" dur="1.35s" values="101.16;101.16;0" keyTimes="0;0.2593;1" calcMode="spline" keySplines="0 0 1 1;0.22 1 0.36 1" fill="freeze"/></circle>
-<text class="lt" x="440.0" y="255" font-size="48" font-weight="800" text-anchor="middle" opacity="1"><animate attributeName="opacity" begin="0s" dur="1.15s" values="0;0;1" keyTimes="0;0.5652;1" fill="freeze"/>23%</text>
-<text class="ink" x="440.0" y="353.0" font-size="26" font-weight="600" text-anchor="middle">less code</text>
-<circle class="tr" cx="440.0" cy="460" r="70" fill="none" stroke-width="18"/>
-<circle class="lr" cx="440.0" cy="460" r="70" fill="none" stroke-width="18" stroke-dasharray="96.76 439.82" stroke-dashoffset="0" transform="rotate(-90 440.0 460)"><animate attributeName="stroke-dashoffset" begin="0s" dur="1.65s" values="96.76;96.76;0" keyTimes="0;0.3939;1" calcMode="spline" keySplines="0 0 1 1;0.22 1 0.36 1" fill="freeze"/></circle>
-<text class="lt" x="440.0" y="477" font-size="48" font-weight="800" text-anchor="middle" opacity="1"><animate attributeName="opacity" begin="0s" dur="1.45s" values="0;0;1" keyTimes="0;0.6552;1" fill="freeze"/>22%</text>
-<text class="ink" x="440.0" y="575.0" font-size="26" font-weight="600" text-anchor="middle">lower cost</text>
-<text class="ink" x="733.3" y="104" font-size="30" font-weight="700" text-anchor="middle">w3lib</text>
-<text class="mut" x="733.3" y="134" font-size="24" text-anchor="middle">29 tasks</text>
-<circle class="tr" cx="733.3" cy="238" r="70" fill="none" stroke-width="18"/>
-<circle class="lr" cx="733.3" cy="238" r="70" fill="none" stroke-width="18" stroke-dasharray="158.34 439.82" stroke-dashoffset="0" transform="rotate(-90 733.3 238)"><animate attributeName="stroke-dashoffset" begin="0s" dur="1.50s" values="158.34;158.34;0" keyTimes="0;0.3333;1" calcMode="spline" keySplines="0 0 1 1;0.22 1 0.36 1" fill="freeze"/></circle>
-<text class="lt" x="733.3" y="255" font-size="48" font-weight="800" text-anchor="middle" opacity="1"><animate attributeName="opacity" begin="0s" dur="1.30s" values="0;0;1" keyTimes="0;0.6154;1" fill="freeze"/>36%</text>
-<text class="ink" x="733.3" y="353.0" font-size="26" font-weight="600" text-anchor="middle">less code</text>
-<circle class="tr" cx="733.3" cy="460" r="70" fill="none" stroke-width="18"/>
-<circle class="lr" cx="733.3" cy="460" r="70" fill="none" stroke-width="18" stroke-dasharray="65.97 439.82" stroke-dashoffset="0" transform="rotate(-90 733.3 460)"><animate attributeName="stroke-dashoffset" begin="0s" dur="1.80s" values="65.97;65.97;0" keyTimes="0;0.4444;1" calcMode="spline" keySplines="0 0 1 1;0.22 1 0.36 1" fill="freeze"/></circle>
-<text class="lt" x="733.3" y="477" font-size="48" font-weight="800" text-anchor="middle" opacity="1"><animate attributeName="opacity" begin="0s" dur="1.60s" values="0;0;1" keyTimes="0;0.6875;1" fill="freeze"/>15%</text>
-<text class="ink" x="733.3" y="575.0" font-size="26" font-weight="600" text-anchor="middle">lower cost</text>
-<text class="mut" x="440.0" y="626" font-size="24" text-anchor="middle">lessloc vs no tool · per task</text>
+<text class="ink" x="0" y="40" font-size="32" font-weight="800">on every project tested</text>
+<g opacity="1"><animate attributeName="opacity" begin="0s" dur="0.70s" values="0;0;1" keyTimes="0;0.2857;1" fill="freeze"/><text class="lt" x="0" y="144" font-size="52" font-weight="800">23–36%</text><text class="ink" x="0" y="184" font-size="28" font-weight="600">less code</text></g>
+<rect class="tb" x="300" y="122" width="560" height="16" rx="8"/>
+<rect class="lb" x="557.6" y="118" width="145.6" height="24" rx="12"><animate attributeName="width" begin="0s" dur="1.20s" values="0;0;145.6" keyTimes="0;0.3333;1" calcMode="spline" keySplines="0 0 1 1;0.22 1 0.36 1" fill="freeze"/></rect>
+<circle class="dot" cx="557.6" cy="130" r="9" opacity="1"><animate attributeName="opacity" begin="0s" dur="1.20s" values="0;0;1" keyTimes="0;0.75;1" fill="freeze"/></circle>
+<circle class="dot" cx="591.2" cy="130" r="9" opacity="1"><animate attributeName="opacity" begin="0s" dur="1.32s" values="0;0;1" keyTimes="0;0.7727;1" fill="freeze"/></circle>
+<circle class="dot" cx="703.2" cy="130" r="9" opacity="1"><animate attributeName="opacity" begin="0s" dur="1.44s" values="0;0;1" keyTimes="0;0.7917;1" fill="freeze"/></circle>
+<text class="mut" x="300.0" y="176" font-size="20" text-anchor="middle">0%</text>
+<text class="mut" x="580.0" y="176" font-size="20" text-anchor="middle">25%</text>
+<text class="mut" x="860.0" y="176" font-size="20" text-anchor="middle">50%</text>
+<g opacity="1"><animate attributeName="opacity" begin="0s" dur="1.05s" values="0;0;1" keyTimes="0;0.5238;1" fill="freeze"/><text class="lt" x="0" y="294" font-size="52" font-weight="800">15–26%</text><text class="ink" x="0" y="334" font-size="28" font-weight="600">lower cost</text></g>
+<rect class="tb" x="300" y="272" width="560" height="16" rx="8"/>
+<rect class="lb" x="468.0" y="268" width="123.2" height="24" rx="12"><animate attributeName="width" begin="0s" dur="1.55s" values="0;0;123.2" keyTimes="0;0.4839;1" calcMode="spline" keySplines="0 0 1 1;0.22 1 0.36 1" fill="freeze"/></rect>
+<circle class="dot" cx="468.0" cy="280" r="9" opacity="1"><animate attributeName="opacity" begin="0s" dur="1.55s" values="0;0;1" keyTimes="0;0.8065;1" fill="freeze"/></circle>
+<circle class="dot" cx="546.4" cy="280" r="9" opacity="1"><animate attributeName="opacity" begin="0s" dur="1.67s" values="0;0;1" keyTimes="0;0.8204;1" fill="freeze"/></circle>
+<circle class="dot" cx="591.2" cy="280" r="9" opacity="1"><animate attributeName="opacity" begin="0s" dur="1.79s" values="0;0;1" keyTimes="0;0.8324;1" fill="freeze"/></circle>
+<text class="mut" x="300.0" y="326" font-size="20" text-anchor="middle">0%</text>
+<text class="mut" x="580.0" y="326" font-size="20" text-anchor="middle">25%</text>
+<text class="mut" x="860.0" y="326" font-size="20" text-anchor="middle">50%</text>
+<text class="mut" x="0" y="412" font-size="22">3 open-source projects · lessloc vs no tool · per task</text>
 </svg>

@@ -1,16 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="880" height="628" viewBox="0 0 880 628" role="img" aria-labelledby="t d">
 <title id="t">lessloc: 27% less code, 23% lower cost, same results</title>
-<desc id="d">lessloc 0.10.0 against no tool, Claude Code with Haiku, 117 real merged changes from three open-source Python projects (starlette, pydantic-settings, w3lib), each task run twice per setup and judged by the project's own tests for that change, hidden from the agent. Per task: production lines 15.2 with no tool vs 11.1 with lessloc, 27% less; cost $0.0202 vs $0.0156, 23% lower; tasks passed: the same, with no measurable difference; earlier changes broken 0.37 vs 0.32 per task.</desc>
+<desc id="d">lessloc 0.10.0 against no tool, Claude Code with Haiku, 117 real merged changes from three open-source Python projects, each task run twice per setup and judged by the project's own tests for that change, hidden from the agent. Per task: production lines 15.2 with no tool vs 11.1 with lessloc, 27% less; cost $0.0202 vs $0.0156, 23% lower; tasks passed: the same, with no measurable difference; earlier changes broken 0.37 vs 0.32 per task.</desc>
 <style>
 svg{font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .ink{fill:#243040}.mut{fill:#56657a}.lt{fill:#4d7c0f}
 .lb{fill:#b3ec64}.gb{fill:#8d99a8}
-.lr{stroke:#8ed13f}.tr{stroke:#e5e9ee}.ck{stroke:#243040}
+.lr{stroke:#8ed13f}.tr{stroke:#e5e9ee}.ck{stroke:#243040}.tb{fill:#e5e9ee}.dot{fill:#243040}
 @media not all{
 .ink{fill:#e4f1f4}.mut{fill:#9aa8b8}.lt{fill:#bdf86c}
 .lb{fill:#b3ec64}.gb{fill:#5d6879}
-.lr{stroke:#b3ec64}.tr{stroke:#1f2834}}
+.lr{stroke:#b3ec64}.tr{stroke:#1f2834}.tb{fill:#1f2834}.dot{fill:#e4f1f4}}
 </style>
 <g font-size="24"><rect class="gb" x="0" y="12" width="24" height="24" rx="4"/><text class="ink" x="34" y="32">no tool</text><rect class="lb" x="150" y="12" width="24" height="24" rx="4"/><text class="ink" x="184" y="32" font-weight="700">lessloc</text></g>
 <g opacity="1"><animate attributeName="opacity" begin="0s" dur="0.65s" values="0;0;1" keyTimes="0;0.2308;1" fill="freeze"/><text class="lt" x="0" y="114" font-size="40" font-weight="800">27% less code</text><text class="mut" x="0" y="148" font-size="24">production lines per task</text></g>

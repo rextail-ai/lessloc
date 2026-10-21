@@ -42,7 +42,7 @@ To remove it: `Remove lessloc by following https://lessloc.org/remove.md`
 
 <p align="center"><a href="https://lessloc.org/benchmarks"><picture><source media="(prefers-color-scheme: dark)" srcset="https://lessloc.org/results-dark.svg"><img alt="117 real changes in 3 open-source projects, judged by hidden tests: 27% less code, 23% lower cost, the same results" src="https://lessloc.org/results-light.svg" width="880"></picture></a></p>
 
-<p align="center"><a href="https://lessloc.org/benchmarks"><picture><source media="(prefers-color-scheme: dark)" srcset="https://lessloc.org/projects-dark.svg"><img alt="Less code and lower cost on every project: starlette, pydantic-settings and w3lib" src="https://lessloc.org/projects-light.svg" width="880"></picture></a></p>
+<p align="center"><a href="https://lessloc.org/benchmarks"><picture><source media="(prefers-color-scheme: dark)" srcset="https://lessloc.org/projects-dark.svg"><img alt="On every project tested: 23 to 36% less code and 15 to 26% lower cost" src="https://lessloc.org/projects-light.svg" width="880"></picture></a></p>
 
 <p align="center"><a href="https://lessloc.org/benchmarks">Every task and the method</a></p>
 
