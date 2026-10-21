@@ -82,6 +82,7 @@ test('a run\'s result comes from the host: its failure event or exit code, else 
     [{ masked: true, family: 'cargo', response: { stdout: 'test result: ok. 3 passed\n\nerror: 1 target failed:\n    `--lib`' } }, false, 'cargo: a later target failed'],
     [{ masked: true, family: 'mvn', response: { stdout: 'Tests run: 4, Failures: 1, Errors: 0\nBUILD FAILURE' } }, false, 'maven failure'],
     [{ masked: true, family: 'phpunit', response: { stdout: 'OK (12 tests, 30 assertions)' } }, true, 'phpunit pass'],
+    [{ masked: true, response: { stdout: '  ✓ reads "Test Run Failed" and "Tests: 2, Assertions: 2, Failures: 1" from a log (3 ms)\nTests:       3 passed, 3 total' } }, true, "a test named after other runners' verdict lines is no verdict"],
     [{ masked: true, family: 'pytest', response: { stdout: 'FAIL Required test coverage of 90% not reached. Total coverage: 80.00%\n== 5 passed in 0.2s ==' } }, false, 'pytest-cov threshold'],
     [{ failed: true, chained: true, family: 'pytest', response: { stdout: 'ERROR: ./x is not a valid editable requirement' } }, null, 'pip failed before pytest ran: no verdict on the tests'],
     [{ failed: true, chained: true, family: 'pytest', response: { stdout: '== 1 passed in 0.1s ==\nFound 1 error.' } }, true, 'a linter after pytest failed: the tests passed'],
