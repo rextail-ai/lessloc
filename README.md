@@ -48,7 +48,7 @@ To remove it: `Remove lessloc by following https://lessloc.org/remove.md`
 
 ## Same task, less code
 
-<p align="center"><a href="https://github.com/Kludex/starlette/pull/3517"><picture><source media="(prefers-color-scheme: dark)" srcset="https://lessloc.org/diff-dark.svg"><img alt="starlette #3517: 13 lines without lessloc, 6 lines with lessloc, in both runs, and all four runs passed the hidden tests" src="https://lessloc.org/diff-light.svg" width="880"></picture></a></p>
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://lessloc.org/diff-dark.svg"><img alt="Same task: 13 lines without lessloc, 6 lines with lessloc, in both runs, and all four runs passed the hidden tests" src="https://lessloc.org/diff-light.svg" width="880"></picture></p>
 
 ## What changes
 

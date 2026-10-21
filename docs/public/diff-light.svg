@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="880" height="556" viewBox="0 0 880 556" role="img" aria-labelledby="t d">
 <title id="t">Same task, less code: 13 lines without lessloc, 6 lines with lessloc</title>
-<desc id="d">One real task from the lessloc benchmark: starlette #3517, "Vary CORS preflight responses by their request inputs". Each setup ran it twice and all four sessions passed the hidden tests. Without lessloc the agent wrote 13 production lines in starlette/middleware/cors.py, in both runs, building the Vary value from a list. With lessloc it wrote 6 lines, in both runs: one Vary string, the same approach as the fix that was merged. Line counts leave out blank lines.</desc>
+<desc id="d">One real task from the lessloc benchmark, run twice by each setup; all four sessions passed the hidden tests. Without lessloc the agent wrote 13 production lines, in both runs, building the Vary header value from a list. With lessloc it wrote 6 lines, in both runs: one Vary string, the same approach as the fix that was merged. Line counts leave out blank lines.</desc>
 <style>
 text{font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
 .m{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px;white-space:pre}
@@ -84,5 +84,5 @@ text{font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
 <g><animate attributeName="opacity" values="0;0;1;1" keyTimes="0;0.8396;0.9000;1" dur="5.3s" fill="freeze"/><animateTransform attributeName="transform" type="translate" values="0 -8;0 -8;0 0;0 0" keyTimes="0;0.8396;0.9000;1" calcMode="spline" keySplines="0 0 1 1;.2 .7 .3 1;0 0 1 1" dur="5.3s" fill="freeze"/><text class="m cctx" x="478" y="352.6" xml:space="preserve">            preflight_headers["Access-Control-Allow-O…</text></g>
 </g>
 <rect class="pnl" x="452.75" y="132.75" width="426.5" height="234.5" rx="10" fill="none" stroke-width="1.5"><animate attributeName="opacity" values="0;0;1;1" keyTimes="0;0.8868;0.9623;1" dur="5.3s" fill="freeze"/></rect>
-<g transform="translate(0 536)"><circle class="chk" cx="11" cy="-6.5" r="11"/><path class="chkm" d="M5.8 -6.6l3.6 3.6 7-7.2" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><text class="cap ink" x="32" y="0">starlette #3517 · all four runs passed the hidden tests</text></g>
+<g transform="translate(0 536)"><circle class="chk" cx="11" cy="-6.5" r="11"/><path class="chkm" d="M5.8 -6.6l3.6 3.6 7-7.2" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><text class="cap ink" x="32" y="0">All four runs passed the hidden tests</text></g>
 </svg>
