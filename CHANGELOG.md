@@ -24,6 +24,14 @@ Every release of lessloc, newest first. Versions follow [Semantic Versioning](ht
 ### More accurate
 
 - PHPUnit's and .NET's verdict lines count only at the start of a line, so one quoted inside a test name or a log line is not read as a failed run.
+- A turn goes on through prompt events that bring no new request: Claude Code's notice that a background task or subagent ended, the event Qwen Code sends for the same prompt after each batch of tool calls, and a held turn that Gemini CLI sends back as a prompt. The turn is still held at most once, and the next session hears the session's last reply. Gemini CLI's request is read without the session start text it puts in front.
+
+### Works in more tools
+
+- GitHub Copilot CLI: the agent's test runs are read from the exit code the CLI gives after a command's output.
+- Junie: the hooks work in the project the payload names in `project_path`.
+- Antigravity CLI: its own file tools, `write_file` and `edit_file`, are gated and tracked, and a turn it ends normally is reviewed.
+- Cline CLI and SDK: the plugin file from `init --cline` imports lessloc in the form Cline loads. `doctor` points out a plugin file written by an earlier lessloc; run `lessloc init --cline` again to replace it.
 
 ## [0.10.0]
 

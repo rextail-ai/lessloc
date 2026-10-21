@@ -159,6 +159,30 @@ test('copilot: a subagent task gets the hints in its prompt, and arguments may b
   assert.match(send('preToolUse', { toolName: 'edit', toolArgs: JSON.stringify(edit) }).permissionDecisionReason, /placeholder/);
 });
 
+test('copilot: a test run is known by the exit code its CLI puts at the end of the output, also when the run prints nothing else', () => {
+  const dir = repo(MONEY), toolArgs = { command: 'python3 -m pytest -q > /dev/null 2>&1', description: 'Run the tests' };
+  const send = (event, payload) => spawnSync('node', [ENTRY, '--host', 'copilot', event], { cwd: dir, input: JSON.stringify({ sessionId: 'c1', timestamp: Date.now(), cwd: dir, ...payload }), encoding: 'utf8', env: ENV });
+  send('userPromptSubmitted', { prompt: 'fix the totals' });
+  send('preToolUse', { toolName: 'bash', toolArgs });
+  // Copilot CLI 1.0.101 calls a command that exits non-zero a success, and gives its exit code in the text's last line.
+  send('postToolUse', { toolName: 'bash', toolArgs, toolResult: { resultType: 'success', textResultForLlm: 'last time: <shellId: 0 completed with exit code 0>\n<shellId: 1 completed with exit code 1>' } });
+  execFileSync('git', ['add', '-A'], { cwd: dir });
+  assert.match(run(dir, 'check', '--staged').stdout, /tests FAILED at this exact state/);
+});
+
+test("antigravity: the CLI's own file tools are gated and tracked, and a turn it ends normally is held", () => {
+  const dir = repo(MONEY), send = (event, payload) => JSON.parse(spawnSync('node', [ENTRY, '--host', 'antigravity', event], { cwd: dir, input: JSON.stringify({ conversationId: 'a1', workspacePaths: [dir], ...payload }), encoding: 'utf8', env: ENV }).stdout || '{}');
+  for (const t of ['write_file', 'edit_file']) assert.match(t, new RegExp(HOSTS.antigravity.hooks.events.PreToolUse.matcher));
+  send('SessionStart', {});
+  // Antigravity CLI 1.4.4's file tools, with the arguments its model is offered.
+  assert.match(send('PreToolUse', { toolCall: { name: 'edit_file', args: { Path: path.join(dir, 'shop/money.py'), Target: '    return', Replacement: '    # ... existing code ...\n    return' } } }).reason, /placeholder/);
+  const toolCall = { name: 'write_file', args: { Path: path.join(dir, 'shop/load.py'), Content: 'def load():\n    print("debug here")\n    return 1\n', Append: false, Overwrite: false } };
+  assert.equal(send('PreToolUse', { toolCall }).decision, 'allow');
+  write(dir, { 'shop/load.py': toolCall.args.Content });
+  send('PostToolUse', { toolCall, error: '' });
+  assert.match(send('Stop', { executionNum: 1, terminationReason: 'NO_TOOL_CALL', error: '', fullyIdle: true }).reason, /shop\/load\.py:2:.*debug print/);
+});
+
 test("copilot: the repository's hook file runs lessloc from ~/.agent-standard, and does nothing where node or lessloc is missing", () => {
   const dir = repo(MONEY);
   repoHooks(dir, true);

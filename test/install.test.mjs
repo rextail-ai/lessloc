@@ -224,6 +224,7 @@ test('init --kilo --amp --cline --pi writes the file each tool loads lessloc fro
   assert.match(out, /^- Pi extension installed in .*\.pi\/agent\/extensions\/lessloc\.js, for all your projects\. Pi loads it after \/reload, or a restart$/m);
   assert.match(read('.config/kilo/plugin/lessloc.js'), /^\/\/ Written by `lessloc init --kilo`[\s\S]*export \{ kilo as default \} from "file:\/\/.*\/opencode\/server\.js";/);
   assert.match(read('.pi/agent/extensions/lessloc.js'), /export \{ default \} from "\/.*\/pi\/extension\.js";/, 'Pi loads extensions with jiti, which takes a path');
+  assert.match(read('.cline/plugins/lessloc.js'), /\nimport \{ lessloc \} from "file:\/\/.*\/cline\/plugin\.js";\nexport default lessloc\(\);\n$/, "Cline's loader takes a named import");
   for (const h of ['TaskStart', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse', 'TaskComplete']) {
     const f = path.join(m.home, 'Documents/Cline/Hooks', h);
     assert.equal(fs.statSync(f).mode & 0o111, 0o111, `${h} is executable`);
@@ -232,6 +233,9 @@ test('init --kilo --amp --cline --pi writes the file each tool loads lessloc fro
   const doctor = m.cli(['doctor']).stdout;
   for (const t of ['Kilo Code', 'Amp', 'Cline', 'Pi']) assert.match(doctor, new RegExp(`^✓ ${t}: set up \\(.*\\); its hooks have not run in this repository yet`, 'm'));
   assert.doesNotMatch(doctor, /set up twice/, "Cline's plugin and hook files serve its CLI and its IDE extension");
+  fs.writeFileSync(path.join(m.home, '.cline/plugins/lessloc.js'), `// Written by \`lessloc init --cline\`; \`lessloc remove --cline\` deletes it.\nexport { default } from "file://${ROOT}/cline/plugin.js";\n`);
+  assert.match(m.cli(['doctor']).stdout, /^✗ Cline: the hooks in .*\.cline\/plugins\/lessloc\.js and .* do not answer \(node ".*lessloc\.mjs" init --cline\)$/m, 'a file an older lessloc wrote, which Cline cannot load');
+  m.cli(['init', '--cline']);
   m.cli(['remove', '--kilo', '--amp', '--cline', '--pi']);
   assert.deepEqual(tree(m.home), before);
 });

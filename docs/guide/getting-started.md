@@ -109,8 +109,7 @@ The plugin also adds a `/lessloc` skill for you. It is never listed to the agent
 ### Codex
 
 1. Ask your agent: [the sentence above](#_1-install-lessloc).
-2. In Codex's prompt box, type `/plugins`, choose "Add marketplace", enter `rextail-ai/lessloc`, and install lessloc from the list. The plugin's hooks are exactly the ones `init --codex` writes.
-3. In a terminal:
+2. In a terminal:
 
    ```sh
    cd your-repo
@@ -118,6 +117,7 @@ The plugin also adds a `/lessloc` skill for you. It is never listed to the agent
    ```
 
    This adds lessloc's entries to `~/.codex/hooks.json` (in `$CODEX_HOME` when that is set), so they apply to all your projects.
+3. In Codex's prompt box, type `/plugins`, choose "Add marketplace", enter `rextail-ai/lessloc`, and install lessloc from the list. The plugin's hooks are exactly the ones `init --codex` writes.
 
 Either way, Codex runs new hooks only after you trust them once: `/hooks` in Codex. Use the plugin or `init --codex`, not both; `doctor` warns when both are set up.
 

@@ -13,8 +13,9 @@ const agentRun = (dir, command, { failed = false, stdout = '', input = {}, respo
   hook(dir, { hook_event_name: 'PreToolUse', tool_name: 'Bash', tool_use_id: command, tool_input: { command, ...input } });
   return hook(dir, { hook_event_name: failed ? 'PostToolUseFailure' : 'PostToolUse', tool_name: 'Bash', tool_use_id: command, tool_input: { command, ...input }, tool_response: { stdout, stderr: '', interrupted: false, ...response } });
 };
-// What the session's handoff record says its tests showed at the final state.
-const verified = (dir, sid = 's') => JSON.parse(fs.readFileSync(path.join(STATE, fs.readdirSync(STATE).find(d => d.startsWith(`${path.basename(dir)}-`)), 'ledger', `${sid}.json`), 'utf8')).verified;
+// The session's handoff record, and what it says its tests showed at the final state.
+const handoffOf = (dir, sid = 's') => JSON.parse(fs.readFileSync(path.join(STATE, fs.readdirSync(STATE).find(d => d.startsWith(`${path.basename(dir)}-`)), 'ledger', `${sid}.json`), 'utf8'));
+const verified = (dir, sid) => handoffOf(dir, sid).verified;
 // The next session's start, where the last one's uncommitted work is handed over.
 const nextSession = (dir, sid = 'next') => context(hook(dir, { hook_event_name: 'SessionStart', session_id: sid }));
 
@@ -415,6 +416,27 @@ test('the final state is what must pass: a pass before the last edit does not co
   assert.match(held(() => agentWrite(dir, { 'pytest.ini': '[pytest]\naddopts = -q -k "not slow"\n' })), /You changed how the tests run this turn \(`pytest\.ini`\)/, 'held even when no code changed');
   assert.equal(held(() => (edit(), agentRun(dir, 'npm test'))), null);
   assert.equal(verified(dir), 'tests not run', 'another runner is not this project\'s test command');
+});
+
+test('a prompt event with no new request keeps the turn: a background task\'s notice, an event of the same prompt, the hold sent back; a request that starts with a tag is new', () => {
+  const dir = repo({ 'a.py': 'x = 1\n' }), notice = '<task-notification>\n<task-id>b2</task-id>\n<status>completed</status>\n</task-notification>';
+  turn(dir, '<hook_context>Every line you leave is read again.</hook_context>\n\nadd a loader');
+  agentWrite(dir, { 'load.py': 'def load():\n    print("debug here")\n    return 1\n' });
+  turn(dir, notice);
+  const held = stop(dir).reason;
+  assert.match(held, /load\.py:2:.*debug print/, 'the write before the notice is still this turn\'s');
+  assert.equal(handoffOf(dir).prompt, 'add a loader', 'the context the host put in front is not the request');
+  turn(dir, notice);
+  turn(dir, held);
+  agentWrite(dir, { 'load.py': 'def load():\n    print("debug here")\n    print("debug again")\n    return 1\n' });
+  assert.equal(stop(dir), null, 'after a notice, or the hold coming back as a prompt, the turn is still held once');
+  hook(dir, { hook_event_name: 'UserPromptSubmit', prompt: 'add a saver', prompt_id: 'p2' });
+  agentWrite(dir, { 'save.py': 'def save():\n    print("debug there")\n    return 1\n' });
+  hook(dir, { hook_event_name: 'UserPromptSubmit', prompt: '', prompt_id: 'p2' });
+  assert.match(stop(dir).reason, /save\.py:2:.*debug print/, 'a new prompt starts a turn, an empty event of the same prompt does not');
+  turn(dir, '<Button> in app.js never calls save(); add a click handler in click.py');
+  agentWrite(dir, { 'click.py': 'def click():\n    print("debug click")\n    return 1\n' });
+  assert.match(stop(dir).reason, /click\.py:2:.*debug print/);
 });
 
 test('a turn is held once, whatever the host reports; an item held once is not held again in a later turn', () => {
