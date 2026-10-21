@@ -8,6 +8,10 @@ docs/patterns/
 docs/benchmarks.md
 docs/why-less-code.md
 docs/public/install.md
+# Credentials: never committed
+.env
+.env.*
+.npmrc
 # Local work that never ships: drafts, experiments, notes
 /scratch/
 /drafts/

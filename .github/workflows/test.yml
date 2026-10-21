@@ -18,5 +18,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node }}
-      - run: pipx install ruff
+          package-manager-cache: false
+      # One ruff version, so its findings in the tests stay the same from run to run.
+      - run: pipx install ruff==0.17.1
       - run: npm test

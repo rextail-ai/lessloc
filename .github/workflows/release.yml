@@ -1,7 +1,7 @@
 # Publishes each version tag that matches package.json, once the tests pass: a GitHub release with the Gemini CLI extension
 # (scripts/gemini-extension.mjs) as its one asset and the version's section of CHANGELOG.md as its notes, then the npm package.
 # Gemini CLI and Qwen Code install a release's only asset; with more assets than one, they take the source archive instead.
-# A re-run skips whatever is already published.
+# A re-run skips whatever is already published. Each job runs in its own environment, whose rules decide which tags may deploy.
 name: release
 on:
   push:
@@ -10,13 +10,20 @@ permissions: {}
 jobs:
   release:
     runs-on: ubuntu-latest
+    environment: release
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      # Only a commit that is on main is released.
+      - run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
       - uses: actions/setup-node@v7
         with:
           node-version: 22
+          package-manager-cache: false
       - run: test "v$(node -p 'require("./package.json").version')" = "$GITHUB_REF_NAME"
       - run: npm test
       - run: node scripts/gemini-extension.mjs dist/gemini
@@ -25,12 +32,12 @@ jobs:
       - run: gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" lessloc-gemini.tar.gz --title "$GITHUB_REF_NAME" --notes-file notes.md
         env:
           GH_TOKEN: ${{ github.token }}
-  # npm trusted publishing (OIDC) with provenance, which needs npm 11.5.1 or later: Node 24 bundles it. NPM_TOKEN is for a
-  # first version only, since npm sets a trusted publisher on a package that exists; without the secret it is empty.
+  # npm trusted publishing (OIDC) with provenance, which needs npm 11.5.1 or later: Node 24 bundles it.
   npm:
     needs: release
     if: github.repository == 'rextail-ai/lessloc'
     runs-on: ubuntu-latest
+    environment: npm
     permissions:
       contents: read
       id-token: write
@@ -44,5 +51,3 @@ jobs:
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
       - run: npm view "lessloc@${GITHUB_REF_NAME#v}" version > /dev/null 2>&1 || npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
