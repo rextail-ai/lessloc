@@ -267,12 +267,12 @@ function trailers() {
   return 0;
 }
 
-// Where CI gets lessloc from: LESSLOC_SOURCE, or the repository lessloc's package.json names. Never a guessed package name,
-// because anyone could publish one.
+// The CI workflow. It gets lessloc from npm at exactly this version, which no one can republish (LESSLOC_SOURCE names another
+// source, such as a fork). Its token only reads, and the checkout keeps no credentials, since `ci` runs the pull request's own
+// setup and tests; the base branch reaches the command as a variable, never pasted into the script.
 function workflow() {
-  const repoUrl = load(new URL('./package.json', import.meta.url)).repository, source = process.env.LESSLOC_SOURCE || (repoUrl ? `github:${String(repoUrl.url || repoUrl).replace(/^.*github\.com[/:]|\.git$/g, '')}#v${VERSION}` : '');
-  const yaml = `name: lessloc\non: [pull_request]\njobs:\n  lessloc:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v7\n        with:\n          fetch-depth: 0\n      - uses: actions/setup-node@v7\n        with:\n          node-version: 24\n      - run: npx --yes ${source || '<lessloc source>'} ci --base origin/\${{ github.base_ref }}\n`;
-  return { source, yaml };
+  const source = process.env.LESSLOC_SOURCE || `lessloc@${VERSION}`;
+  return `name: lessloc\non: [pull_request]\npermissions:\n  contents: read\njobs:\n  lessloc:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v7\n        with:\n          fetch-depth: 0\n          persist-credentials: false\n      - uses: actions/setup-node@v7\n        with:\n          node-version: 24\n      - run: npx --yes ${source} ci --base "origin/$GITHUB_BASE_REF"\n`;
 }
 
 // The git hooks lessloc installs. Each line runs only where lessloc is installed at that path, so a hook copied to another
@@ -326,10 +326,9 @@ function init() {
   }
   if (flag('--baseline')) done.push(fs.existsSync(path.join(top, '.lessloc-baseline.json')) ? '.lessloc-baseline.json already exists, so it was left as it is (lessloc baseline records it again)' : (baseline(true), '.lessloc-baseline.json: a fixed ratchet line (commit it)'));
   if (flag('--ci')) {
-    const { source, yaml } = workflow(), f = path.join(top, '.github', 'workflows', 'lessloc.yml');
-    if (source && !fs.existsSync(f)) fs.mkdirSync(path.dirname(f), { recursive: true }), fs.writeFileSync(f, yaml), done.push(`CI workflow ${path.relative(top, f)} (commit it)`);
-    else if (source) done.push(`${path.relative(top, f)} already exists, so it was left as it is`);
-    else done.push(`CI workflow not written: lessloc's package.json names no repository to install it from. Set LESSLOC_SOURCE (for example github:<owner>/lessloc#v${VERSION}) and run init --ci again, or add this yourself:\n${yaml}`);
+    const f = path.join(top, '.github', 'workflows', 'lessloc.yml');
+    if (fs.existsSync(f)) done.push(`${path.relative(top, f)} already exists, so it was left as it is`);
+    else fs.mkdirSync(path.dirname(f), { recursive: true }), fs.writeFileSync(f, workflow()), done.push(`CI workflow ${path.relative(top, f)} (commit it)`);
   }
   if (flag('--repo') && !flag('--copilot')) done.push('--repo goes with --copilot, the one tool whose hooks lessloc writes into the repository; nothing written for it');
   else if (flag('--repo')) {

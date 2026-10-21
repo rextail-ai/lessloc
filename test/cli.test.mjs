@@ -384,6 +384,19 @@ test("init --ci writes a workflow on the current Node LTS with the action versio
   assert.deepEqual([...new Set(fs.readdirSync(own).flatMap(f => uses(fs.readFileSync(new URL(f, own), 'utf8'))))].sort(), uses(yaml));
 });
 
+test('the workflow from init --ci reads only, keeps no credentials in the checkout, gets lessloc from npm at exactly this version, and runs no expression in its script', () => {
+  const dir = repo({ 'a.py': 'x = 1\n' });
+  run(dir, 'init', '--ci');
+  const yaml = fs.readFileSync(path.join(dir, '.github/workflows/lessloc.yml'), 'utf8');
+  assert.match(yaml, /^on: \[pull_request\]\npermissions:\n {2}contents: read\n/m);
+  assert.match(yaml, /fetch-depth: 0\n {10}persist-credentials: false\n/);
+  assert.ok(yaml.includes(`- run: npx --yes lessloc@${VERSION} ci --base "origin/$GITHUB_BASE_REF"\n`));
+  assert.doesNotMatch(yaml, /\$\{\{/);
+  const fork = repo({ 'a.py': 'x = 1\n' });
+  spawnSync('node', [CLI, 'init', '--ci'], { cwd: fork, env: { ...ENV, LESSLOC_SOURCE: 'github:someone/lessloc#v1.0.0' } });
+  assert.match(fs.readFileSync(path.join(fork, '.github/workflows/lessloc.yml'), 'utf8'), /- run: npx --yes github:someone\/lessloc#v1\.0\.0 ci /);
+});
+
 test('a snapshot keeps the content of untracked keys and environment files out of git, and still reports an environment file about to be committed', () => {
   const dir = repo({ 'a.py': 'x = 1\n' }), files = { '.env': 'TOKEN=not-a-real-value-0123456789\n', '.env.production': 'TOKEN=also-not-real-9876543210\n', id_rsa: 'not a real key 0123\n', 'certs/site.pem': 'not a real certificate 0123\n', '.env.example': 'TOKEN=\n', 'b.py': 'y = 2\n' };
   write(dir, files);

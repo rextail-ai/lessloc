@@ -151,7 +151,7 @@ test('init --copilot --repo writes the hook file the cloud agent reads, and the 
   const m = machine(['copilot']), file = path.join(m.dir, '.github/hooks/review.json');
   const out = m.cli(['init', '--copilot', '--repo']).stdout;
   assert.match(out, /^- GitHub Copilot hooks in \.github\/hooks\/review\.json, for the cloud agent and everyone who works here; commit it to the default branch\. They run lessloc from ~\/\.agent-standard and do nothing where it is missing\./m);
-  assert.ok(out.includes(`- run: git clone --depth 1 --branch v${VERSION} https://github.com/rextail-ai/lessloc "$HOME/.agent-standard"`), 'cloned at this version\'s release tag');
+  assert.ok(out.includes(`- run: mkdir -p "$HOME/.agent-standard" && cd "$HOME/.agent-standard" && npm pack lessloc@${VERSION} --silent && tar -xzf lessloc-${VERSION}.tgz --strip-components=1`), 'this version\'s npm package, which npm checks against the registry');
   assert.ok(!fs.existsSync(path.join(m.home, '.copilot/hooks/lessloc.json')), 'with --repo, nothing in the home folder');
   const text = fs.readFileSync(file, 'utf8'), hooks = JSON.parse(text).hooks;
   assert.equal(hooks.agentStop[0].bash, 'if command -v node >/dev/null 2>&1 && [ -f "$HOME/.agent-standard/hook.mjs" ]; then node "$HOME/.agent-standard/hook.mjs" --host copilot agentStop; fi');

@@ -256,6 +256,8 @@ To see what the gate sees, run `lessloc check --staged`. To see everything since
 ```yaml
 name: lessloc
 on: [pull_request]
+permissions:
+  contents: read
 jobs:
   lessloc:
     runs-on: ubuntu-latest
@@ -263,17 +265,19 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-node@v7
         with:
           node-version: 24
-      - run: npx --yes github:rextail-ai/lessloc#v<version> ci --base origin/${{ github.base_ref }}
+      - run: npx --yes lessloc@<version> ci --base "origin/$GITHUB_BASE_REF"
 ```
 
-- `<version>` is the version that wrote the file. `LESSLOC_SOURCE` set when running `init --ci` installs from elsewhere, such as a fork.
+- `<version>` is the version that wrote the file; npm serves exactly that version. `LESSLOC_SOURCE` set when running `init --ci` installs from elsewhere, such as a fork.
+- Keep `permissions: contents: read`, `persist-credentials: false` and the `pull_request` trigger: `lessloc ci` runs the pull request's own setup and tests. Never change the trigger to `pull_request_target`.
 - If the tests need a toolchain, services or dependencies, add those steps before the lessloc step, and put the install command in `setup` in `.lessloc.json`, with your edit tool ([Configure it](#configure-it)).
 - Tell the user to commit the file and make the lessloc job a required status check, so a pull request cannot merge while it fails.
 - `protect` does not reach pull requests: `check` and CI ignore it. For review of changes to `.github/workflows/` and `.lessloc.json` in pull requests, the user sets up CODEOWNERS with "Require review from Code Owners" in branch protection.
-- Other CI services run `npx --yes github:rextail-ai/lessloc#v<version> ci --base origin/main` in a clone with the base branch and its history.
+- Other CI services run `npx --yes lessloc@<version> ci --base origin/main` in a clone with the base branch and its history.
 
 `lessloc ci` runs `setup` when it is set, then the tests, then `check --base <ref> --ratchet --require-evidence` (`--require-evidence` only when there is a test command), and fails when any of them fails. Without `--base`, the base is `origin/$GITHUB_BASE_REF` on a GitHub pull request, and `HEAD~1` anywhere else.
 

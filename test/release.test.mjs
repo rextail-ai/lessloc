@@ -32,7 +32,7 @@ test('npm version carries the new version into every manifest, the CI guide and 
   assert.equal(r.status, 0, r.stderr);
   for (const f of ['package.json', ...MANIFESTS]) assert.equal(JSON.parse(read(f)).version, next, f);
   const ci = read('docs/guide/ci.md');
-  assert.ok(ci.includes(`github:rextail-ai/lessloc#v${next} ci`) && !ci.includes(VERSION), 'the CI guide shows the new tag only');
+  assert.ok(ci.includes(`npx --yes lessloc@${next} ci`) && !ci.includes(VERSION), 'the CI guide shows the new version only');
   assert.ok(read('CHANGELOG.md').includes(`## [${next}]\n\n- A change.\n\n## [${VERSION}]`), 'the Unreleased section is named after the version');
   assert.ok(read('CHANGELOG.md').includes(`[${next}]: https://github.com/rextail-ai/lessloc/releases/tag/v${next}\n[${VERSION}]: `));
   assert.equal(run(dir, 'git', 'status', '--porcelain').stdout, '', 'every change is in the release commit');

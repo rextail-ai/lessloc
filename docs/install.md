@@ -71,7 +71,7 @@ The cloud agent reads hooks only from the repository. From the repository folder
 node ~/.lessloc/lessloc.mjs init --copilot --repo
 ```
 
-It writes `.github/hooks/review.json` and prints one step that starts with `- run: git clone`. Put that step under `steps:` of the `copilot-setup-steps` job in `.github/workflows/copilot-setup-steps.yml`. If that file does not exist, create it with this content, and use the printed line as the step:
+It writes `.github/hooks/review.json` and prints one step that starts with `- run: mkdir`. Put that step under `steps:` of the `copilot-setup-steps` job in `.github/workflows/copilot-setup-steps.yml`. If that file does not exist, create it with this content, and use the printed line as the step:
 
 ```yaml
 name: Copilot setup steps
@@ -82,7 +82,7 @@ jobs:
   copilot-setup-steps:
     runs-on: ubuntu-latest
     steps:
-      - run: git clone --depth 1 --branch v<version> https://github.com/rextail-ai/lessloc "$HOME/.agent-standard"
+      - run: mkdir -p "$HOME/.agent-standard" && cd "$HOME/.agent-standard" && npm pack lessloc@<version> --silent && tar -xzf lessloc-<version>.tgz --strip-components=1
 ```
 
 Do not commit. Tell the user that both files must be committed to the repository's default branch, because the cloud agent reads them from there, and that everyone who works in the repository shares them.

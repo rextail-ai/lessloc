@@ -207,7 +207,7 @@ Nothing the agent reads names lessloc, shows one of its paths or commands, tags 
 - The handoff note leaves out any open item or closing message that names lessloc.
 - Nothing appears in your working tree; lessloc's state is in your user cache ([Files lessloc writes](/guide/reference#files-lessloc-writes)).
 - The only texts lessloc sends that name it are the approval prompts, because they are written for you. Commit trailers, when you turn them on, name lessloc in the history.
-- Two files you can ask lessloc to write into the repository name it, and the agent can read them there: the markers of its block in AGENTS.md (`init --rules`), and the setup step that clones lessloc for Copilot's cloud agent (`init --copilot --repo`). The cloud agent's hook file and the folder it runs lessloc from have neutral names.
+- Two files you can ask lessloc to write into the repository name it, and the agent can read them there: the markers of its block in AGENTS.md (`init --rules`), and the setup step that installs lessloc for Copilot's cloud agent (`init --copilot --repo`). The cloud agent's hook file and the folder it runs lessloc from have neutral names.
 
 What was checked live in each agent tool is in [Supported agent tools](/guide/getting-started#supported-agent-tools).
 

@@ -454,7 +454,7 @@ In the system's temporary folder, lessloc creates clean checkouts (`lessloc-chec
 | `LESSLOC_STATE` | the folder lessloc keeps its files in, instead of the user cache |
 | `LESSLOC_DEBUG=1` | prints hook errors on the hook's stderr as they happen; `doctor` shows the logged ones |
 | `LESSLOC_PROFILE=1` | prints each detector's time |
-| `LESSLOC_SOURCE` | where the workflow from `init --ci` installs lessloc from, instead of `github:rextail-ai/lessloc#v<version>` |
+| `LESSLOC_SOURCE` | where the workflow from `init --ci` installs lessloc from, instead of the npm package at exactly this version, `lessloc@<version>` |
 | `XDG_CACHE_HOME`, `LOCALAPPDATA` | the user cache that lessloc's folder goes in |
 | `XDG_CONFIG_HOME` | where `init --opencode`, `--kilo` and `--amp` put their plugin files, `init --goose` and `--crush` their rules blocks, `init --crush` its hook entry and `init --aider` its `agent-standard` folder, and where `init` and `doctor` look for the settings folders of OpenCode, Amp, Kilo Code, goose, Crush and Zed |
 | `CRUSH_GLOBAL_CONFIG` | the folder of Crush's `crush.json`, as Crush reads it, for `init --crush` |

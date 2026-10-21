@@ -309,7 +309,7 @@ The cloud agent reads hooks only from the repository, so this setup is per repos
    lessloc init --copilot --repo
    ```
 
-   This writes `.github/hooks/review.json` into the repository, and prints one step for `.github/workflows/copilot-setup-steps.yml`. The step clones lessloc into `~/.agent-standard` at the release tag of the version that printed it. If that file does not exist yet, create it:
+   This writes `.github/hooks/review.json` into the repository, and prints one step for `.github/workflows/copilot-setup-steps.yml`. The step installs lessloc into `~/.agent-standard` from npm, at exactly the version that printed it. If that file does not exist yet, create it:
 
    ```yaml
    name: Copilot setup steps
@@ -320,10 +320,10 @@ The cloud agent reads hooks only from the repository, so this setup is per repos
      copilot-setup-steps:
        runs-on: ubuntu-latest
        steps:
-         - run: git clone --depth 1 --branch v<version> https://github.com/rextail-ai/lessloc "$HOME/.agent-standard"
+         - run: mkdir -p "$HOME/.agent-standard" && cd "$HOME/.agent-standard" && npm pack lessloc@<version> --silent && tar -xzf lessloc-<version>.tgz --strip-components=1
    ```
 
-   Commit both files to the default branch: the cloud agent reads both from there. The step clones lessloc's public repository at a release tag.
+   Commit both files to the default branch: the cloud agent reads both from there. A published npm version never changes, and `npm pack` checks the package against the registry's hash.
 
 Each line of the hook file runs lessloc from `~/.agent-standard`, and does nothing where node or lessloc is missing, so a teammate without it is not affected. The cloud agent can read the repository's files, so the hook file and that folder have neutral names. The setup step is the one file in the repository that names lessloc.
 
