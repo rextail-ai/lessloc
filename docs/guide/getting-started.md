@@ -54,7 +54,7 @@ Recommended:
 | Zed, Warp, Continue, JetBrains AI Assistant, Roo Code, and other tools without hooks | [`init --rules`](/guide/getting-started#tools-without-hooks), the git hooks and CI | rules tier: rules written where each tool's documentation says it reads them |
 <!-- hosts:end -->
 
-`lib/hosts.mjs` maps each tool's hook protocol onto one core, so every tool with hooks gets the same gate, end-of-turn review and handoff, as far as the tool lets lessloc act. Claude Code and Qwen Code also review subagents, and Claude Code also checks MCP tools that write. Each tool's section below says how lessloc works there.
+`lib/hosts.mjs` maps each tool's hook protocol onto one core, so every tool with hooks gets the same gate, end-of-turn review and handoff, as far as the tool lets lessloc act. Claude Code also reviews subagents and checks MCP tools that write. Each tool's section below says how lessloc works there.
 
 ## 1. Install lessloc
 
