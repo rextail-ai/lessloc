@@ -19,6 +19,7 @@ Every release of lessloc, newest first. Versions follow [Semantic Versioning](ht
 - `audit --tools` runs knip from `node_modules` only when it was installed there, never from a `node_modules` committed to the repository.
 - `init` sets up hooks only from a lessloc folder whose path its hook commands can quote: one without `"`, `$` or `` ` ``, and outside Windows without `\`.
 - Releases go to npm through trusted publishing with provenance, and only from a commit on `main`.
+- `init --ci` and `init --config` write their file only where nothing is, in one step: a file or a symlink already in its place is left as it is, and nothing is written through it. lessloc's own git hooks and `CLAUDE.md` are each read and written through one open file.
 
 ## [0.10.0]
 

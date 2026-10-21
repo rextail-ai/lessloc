@@ -283,6 +283,17 @@ const GATE_NAME = { 'pre-commit': 'commit gate', 'prepare-commit-msg': 'trailers
 const RULES_BLOCK = /\n*<!-- lessloc -->[\s\S]*?<!-- \/lessloc -->\n?/;
 // A hook file lessloc wrote holds nothing but its own lines.
 const ownHook = t => t.split('\n').every(l => !l.trim() || l.startsWith('#!') || l.includes('lessloc'));
+// A shared file init adds is written only where nothing is, in one step: true when it was written. Anything already there, a
+// symlink included, is left as it is.
+const writeIfAbsent = (f, text) => {
+  try {
+    fs.writeFileSync(f, text, { flag: 'wx' });
+    return true;
+  } catch (e) {
+    if (e.code === 'EEXIST') return false;
+    throw e;
+  }
+};
 
 // Setup writes nothing into the repository unless asked. Git hooks go to this clone's .git/hooks, and only into hook files lessloc
 // created; a shared or hand-written hook gets the line to add instead. Files the whole team shares (rules for every agent, team
@@ -299,36 +310,47 @@ function init() {
   const local = !path.relative(common, hooksDir).startsWith('..');
   for (const [name, line] of Object.entries(GATES)) {
     const p = path.join(hooksDir, name);
-    const cur = fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : null;
-    if (local && (cur == null || ownHook(cur))) {
+    // A hook in this clone is read and rewritten through one open file, so the hook judged lessloc's own (or new) is the one
+    // written. One that lessloc cannot open for writing gets its line shown instead.
+    let fd = null;
+    if (local) {
       fs.mkdirSync(hooksDir, { recursive: true });
-      fs.writeFileSync(p, `#!/bin/sh\n${line}\n`);
-      fs.chmodSync(p, 0o755);
-      set.push(name);
-    } else if (cur?.includes(line)) set.push(name);
-    else manual.push(`add to ${path.relative(top, p)}: ${line}`);
+      try { fd = fs.openSync(p, fs.constants.O_RDWR | fs.constants.O_CREAT, 0o755); } catch { /* its line is shown below */ }
+    }
+    try {
+      let cur = null;
+      if (fd != null) cur = fs.readFileSync(fd, 'utf8');
+      else if (fs.existsSync(p)) cur = fs.readFileSync(p, 'utf8');
+      if (fd != null && ownHook(cur)) {
+        fs.ftruncateSync(fd);
+        fs.writeSync(fd, `#!/bin/sh\n${line}\n`, 0);
+        fs.fchmodSync(fd, 0o755);
+        set.push(name);
+      } else if (cur?.includes(line)) set.push(name);
+      else manual.push(`add to ${path.relative(top, p)}: ${line}`);
+    } finally { if (fd != null) fs.closeSync(fd); }
   }
   done.push(set.length ? `git hooks in this clone only (.git/hooks): ${set.map(n => GATE_NAME[n]).join(' and ')}` : '');
   if (flag('--rules')) {
     const prev = read(top, 'AGENTS.md') || '', block = `<!-- lessloc -->\n${STANDARD}\n<!-- /lessloc -->\n`;
     fs.writeFileSync(path.join(top, 'AGENTS.md'), RULES_BLOCK.test(prev) ? prev.replace(RULES_BLOCK, m => (m.startsWith('\n') ? '\n\n' : '') + block) : `${prev ? prev.trimEnd() + '\n\n' : ''}${block}`);
-    const claude = path.join(top, 'CLAUDE.md');
-    if (fs.existsSync(claude) && !fs.readFileSync(claude, 'utf8').includes('@AGENTS.md')) fs.appendFileSync(claude, '\n@AGENTS.md\n');
+    // CLAUDE.md, when there is one, is read and added to through one open file: the file found without the import gets it.
+    let claude;
+    try { claude = fs.openSync(path.join(top, 'CLAUDE.md'), 'r+'); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+    if (claude !== undefined) {
+      try { if (!fs.readFileSync(claude, 'utf8').includes('@AGENTS.md')) fs.writeSync(claude, '\n@AGENTS.md\n'); } finally { fs.closeSync(claude); }
+    }
     done.push('rules in AGENTS.md, for every agent that reads it (commit it if the team agrees)');
   }
   if (flag('--config')) {
-    if (fs.existsSync(path.join(top, '.lessloc.json'))) done.push('.lessloc.json already exists, so it was left as it is');
-    else {
-      const command = testCommand(top, cfg);
-      fs.writeFileSync(path.join(top, '.lessloc.json'), `${JSON.stringify(command ? { test: command } : {}, null, 2)}\n`);
-      done.push(`.lessloc.json${command ? ` with test command \`${command}\`` : ' (add a "test" command)'}`);
-    }
+    const command = testCommand(top, cfg);
+    done.push(writeIfAbsent(path.join(top, '.lessloc.json'), `${JSON.stringify(command ? { test: command } : {}, null, 2)}\n`) ? `.lessloc.json${command ? ` with test command \`${command}\`` : ' (add a "test" command)'}` : '.lessloc.json already exists, so it was left as it is');
   }
   if (flag('--baseline')) done.push(fs.existsSync(path.join(top, '.lessloc-baseline.json')) ? '.lessloc-baseline.json already exists, so it was left as it is (lessloc baseline records it again)' : (baseline(true), '.lessloc-baseline.json: a fixed ratchet line (commit it)'));
   if (flag('--ci')) {
     const f = path.join(top, '.github', 'workflows', 'lessloc.yml');
-    if (fs.existsSync(f)) done.push(`${path.relative(top, f)} already exists, so it was left as it is`);
-    else fs.mkdirSync(path.dirname(f), { recursive: true }), fs.writeFileSync(f, workflow()), done.push(`CI workflow ${path.relative(top, f)} (commit it)`);
+    fs.mkdirSync(path.dirname(f), { recursive: true });
+    done.push(writeIfAbsent(f, workflow()) ? `CI workflow ${path.relative(top, f)} (commit it)` : `${path.relative(top, f)} already exists, so it was left as it is`);
   }
   if (flag('--repo') && !flag('--copilot')) done.push('--repo goes with --copilot, the one tool whose hooks lessloc writes into the repository; nothing written for it');
   else if (flag('--repo')) {

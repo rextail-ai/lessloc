@@ -194,7 +194,7 @@ test('verify runs the tests on a clean checkout of the exact state and fails clo
 });
 
 test('init writes nothing into the repository unless asked, leaves shared or hand-written hooks alone, and remove undoes it', () => {
-  const dir = repo({ 'tests/test_a.py': 'import unittest\n\n\nclass A(unittest.TestCase):\n    def test_a(self):\n        self.assertTrue(True)\n', 'a.py': 'x = 1\n' });
+  const dir = repo({ 'tests/test_a.py': 'import unittest\n\n\nclass A(unittest.TestCase):\n    def test_a(self):\n        self.assertTrue(True)\n', 'a.py': 'x = 1\n', 'CLAUDE.md': '# Notes\n' });
   const status = () => execFileSync('git', ['status', '--porcelain', '--ignored', '--untracked-files=all'], { cwd: dir, encoding: 'utf8' });
   const init = run(dir, 'init');
   assert.match(init.stdout, /git hooks in this clone only/);
@@ -206,6 +206,7 @@ test('init writes nothing into the repository unless asked, leaves shared or han
   run(dir, 'init', '--rules', '--config');
   run(dir, 'init', '--rules');
   assert.equal(fs.readFileSync(path.join(dir, 'AGENTS.md'), 'utf8').match(/<!-- lessloc -->/g).length, 1);
+  assert.equal(fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf8'), '# Notes\n\n@AGENTS.md\n', 'CLAUDE.md imports the rules once');
   assert.match(fs.readFileSync(path.join(dir, '.lessloc.json'), 'utf8'), /"test": "python3 -m unittest discover -s tests -q"/);
   const removed = run(dir, 'remove');
   assert.match(removed.stdout, /removed: git hook pre-commit; git hook prepare-commit-msg; AGENTS\.md \(it held only the rules\)/);
@@ -382,6 +383,17 @@ test("init --ci writes a workflow on the current Node LTS with the action versio
   assert.match(yaml, /node-version: 24\n/);
   assert.deepEqual(uses(yaml), ['actions/checkout@v7', 'actions/setup-node@v7']);
   assert.deepEqual([...new Set(fs.readdirSync(own).flatMap(f => uses(fs.readFileSync(new URL(f, own), 'utf8'))))].sort(), uses(yaml));
+});
+
+test('init adds a shared file only where nothing is: a symlink in its place is left as it is, never written through', () => {
+  const dir = repo({ 'a.py': 'x = 1\n' }), outside = tmp('outside-');
+  fs.mkdirSync(path.join(dir, '.github/workflows'), { recursive: true });
+  fs.symlinkSync(path.join(outside, 'lessloc.yml'), path.join(dir, '.github/workflows/lessloc.yml'));
+  fs.symlinkSync(path.join(outside, 'lessloc.json'), path.join(dir, '.lessloc.json'));
+  const out = run(dir, 'init', '--ci', '--config').stdout;
+  assert.match(out, /- \.github\/workflows\/lessloc\.yml already exists, so it was left as it is\n/);
+  assert.match(out, /- \.lessloc\.json already exists, so it was left as it is\n/);
+  assert.deepEqual(fs.readdirSync(outside), []);
 });
 
 test('the workflow from init --ci reads only, keeps no credentials in the checkout, gets lessloc from npm at exactly this version, and runs no expression in its script', () => {
