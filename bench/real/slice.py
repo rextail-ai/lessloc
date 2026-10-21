@@ -9,6 +9,7 @@ assignments, functions and classes it refers to, and pytest fixtures named by it
 """
 import ast
 import sys
+from pathlib import Path
 
 
 def defined(node):
@@ -126,11 +127,11 @@ def tests_in(tree):
 def main():
     mode, path, wanted = sys.argv[1], sys.argv[2], sys.argv[3:]
     if mode == "changed":
-        old = tests_in(ast.parse(open(path, encoding="utf-8").read())) if path != "-" else {}
-        new = tests_in(ast.parse(open(wanted[0], encoding="utf-8").read()))
+        old = tests_in(ast.parse(Path(path).read_text(encoding="utf-8"))) if path != "-" else {}
+        new = tests_in(ast.parse(Path(wanted[0]).read_text(encoding="utf-8")))
         print("\n".join(name for name, src in new.items() if old.get(name) != src))
         return
-    tree = ast.parse(open(path, encoding="utf-8").read())
+    tree = ast.parse(Path(path).read_text(encoding="utf-8"))
     keep, roots = select(tree, wanted)
     if len(roots) == 0:
         sys.exit(f"none of {wanted} found in {path}")

@@ -133,7 +133,7 @@ for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => (console.error(`s
 // with blocking calls, and output left in a full pipe meanwhile can be lost when the agent exits, its result with it.
 function once(cwd, args, s) {
   return new Promise(resolve => {
-    const io = path.join(os.tmpdir(), `lessloc-session-${Math.random().toString(36).slice(2)}`), fds = ['out', 'err'].map(x => fs.openSync(`${io}.${x}`, 'w'));
+    const io = path.join(TMP, `lessloc-session-${Math.random().toString(36).slice(2)}`), fds = ['out', 'err'].map(x => fs.openSync(`${io}.${x}`, 'w'));
     // PWD too: OpenCode takes its project folder from it, not from the process's folder, and would otherwise work in the
     // folder the benchmark was started from (lessloc's own checkout, with the hidden tests in it).
     const bin = H.bin, iso = ISOLATE && ['--dev-bind', '/', '/', '--unshare-pid', '--die-with-parent', '--proc', '/proc', bin, ...args];
@@ -159,14 +159,14 @@ const TEST_RUN = /unittest|pytest|npm test|node --test|make test|cargo test|go t
 const touches = s => new RegExp([LESSLOC, s.plugin, s.env?.LESSLOC_STATE].filter(Boolean).map(esc).concat('lessloc\\.mjs').join('|'));
 // The working tree as one tree object, and back: a session cut off by a usage limit is run again from where it started.
 const tree = cwd => {
-  const idx = path.join(os.tmpdir(), `lessloc-bench-index-${process.pid}-${Math.random().toString(36).slice(2)}`), env = { ...process.env, GIT_INDEX_FILE: idx };
+  const idx = path.join(TMP, `lessloc-bench-index-${process.pid}-${Math.random().toString(36).slice(2)}`), env = { ...process.env, GIT_INDEX_FILE: idx };
   try {
     execFileSync('git', ['add', '-A'], { cwd, env, stdio: 'ignore' });
     return execFileSync('git', ['write-tree'], { cwd, env, encoding: 'utf8' }).trim();
   } finally { fs.rmSync(idx, { force: true }); }
 };
 function restore(cwd, t) {
-  const idx = path.join(os.tmpdir(), `lessloc-bench-index-${process.pid}-${Math.random().toString(36).slice(2)}`), env = { ...process.env, GIT_INDEX_FILE: idx };
+  const idx = path.join(TMP, `lessloc-bench-index-${process.pid}-${Math.random().toString(36).slice(2)}`), env = { ...process.env, GIT_INDEX_FILE: idx };
   try {
     execFileSync('git', ['read-tree', t], { cwd, env, stdio: 'ignore' });
     for (const f of execFileSync('git', ['ls-files', '-o', '--exclude-standard', '-z'], { cwd, env, encoding: 'utf8' }).split('\0').filter(Boolean)) fs.rmSync(path.join(cwd, f), { force: true });

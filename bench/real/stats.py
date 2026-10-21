@@ -12,6 +12,7 @@ import random
 import re
 import sys
 from collections import defaultdict
+from pathlib import Path
 
 ARMS = ('none', 'lessloc')
 
@@ -28,9 +29,9 @@ def lines(diff):
 
 
 def tasks(results, prepared):
-    meta = json.load(open(f'{prepared}/tasks.json'))
+    meta = json.loads(Path(f'{prepared}/tasks.json').read_text())
     by = defaultdict(lambda: defaultdict(list))
-    for r in json.load(open(results))['results']:
+    for r in json.loads(Path(results).read_text())['results']:
         if not r.get('lost') and r.get('passed') is not None:
             by[r['task']][r['arm']].append(r)
     mean = lambda xs: sum(xs) / len(xs)

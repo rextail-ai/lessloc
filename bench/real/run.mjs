@@ -158,7 +158,7 @@ if (opt('replay')) {
   for (const ev of events) console.log(`| ${ev.task} | ${ARMS.map(a => cell(out.filter(r => r.task === ev.task && r.arm === a))).join(' | ')} |`);
   console.log(`| all | ${ARMS.map(a => cell(out.filter(r => r.arm === a))).join(' | ')} |`);
   const file = path.join(KEEP, `lessloc-replay-${Date.now()}.json`);
-  fs.writeFileSync(file, JSON.stringify({ versions, identity: identity(ARMS), events, results: out }, null, 1));
+  fs.writeFileSync(file, JSON.stringify({ versions, identity: identity(ARMS), events, results: out }, null, 1), { flag: 'wx', mode: 0o600 });
   console.log(`\nraw results: ${file}`);
   process.exit(0);
 }
@@ -209,5 +209,5 @@ for (const arm of ARMS.slice(1)) {
   console.log(`\n${arm} vs ${ARMS[0]}: per-task cost ${sum(d) >= 0 ? '+' : ''}${fmt(sum(d) / TASKS.length)} $ on average, sign-flip p=${((hits + 1) / 10001).toFixed(3)} over ${TASKS.length} tasks`);
 }
 const file = path.join(KEEP, `lessloc-real-${Date.now()}.json`);
-fs.writeFileSync(file, JSON.stringify({ scope, versions, identity: identity(ARMS), human, results }, null, 1));
+fs.writeFileSync(file, JSON.stringify({ scope, versions, identity: identity(ARMS), human, results }, null, 1), { flag: 'wx', mode: 0o600 });
 console.log(`\nraw results and repos: ${file}`);

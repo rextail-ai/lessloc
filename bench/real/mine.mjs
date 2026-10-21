@@ -18,8 +18,16 @@ const gh = path => {
   try { return JSON.parse(execFileSync('gh', ['api', path], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })); } catch { return null; }
 };
 const isTest = f => under(f, P.tests) || /(^|\/)(test_[^/]*|[^/]*_test)\.py$|(^|\/)conftest\.py$/.test(f);
-// A pull request template's comments and empty checklists are not part of what the developer asked for.
-const clean = text => String(text || '').replace(/<!--[\s\S]*?-->/g, '').replace(/^\s*- \[[ x]\] .*$/gim, '').replace(/\n{3,}/g, '\n\n').trim();
+// A pull request template's comments and empty checklists are not part of what the developer asked for. Comments go until
+// none is left, so removing one cannot leave another behind.
+const clean = text => {
+  let t = String(text || ''), was;
+  do {
+    was = t;
+    t = t.replace(/<!--[\s\S]*?-->/g, '');
+  } while (t !== was);
+  return t.replace(/^\s*- \[[ x]\] .*$/gim, '').replace(/\n{3,}/g, '\n\n').trim();
+};
 const CLOSES = /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s*:?\s+(?:[\w.-]+\/[\w.-]+)?#(\d+)/gi;
 
 // Main-line changes from the start: a squash commit, or a pull-request merge measured against its first parent.

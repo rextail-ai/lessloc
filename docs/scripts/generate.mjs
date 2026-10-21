@@ -49,8 +49,8 @@ const firstSentence = text => text.split(/(?<=[.!?]) +(?=[A-Z[`"]|lessloc\b)/)[0
 // Each kind a pattern is reported as, with its tier and what it reports.
 const kinds = p => [...new Set([...p.does.matchAll(/\{([a-z-]+)\}/g)].map(m => m[1]))].filter(k => KINDS.has(k))
   .map(k => `- \`${k}\` (tier ${KINDS.get(k).tier}): ${KINDS.get(k).reports}`).join('\n');
-// A name in Markdown: its underscores and asterisks are not emphasis.
-const md = s => s.replace(/[_*]/g, '\\$&');
+// A name in Markdown: its underscores and asterisks are not emphasis, and a backslash in it escapes nothing.
+const md = s => s.replace(/[\\_*]/g, '\\$&');
 const groupOf = p => GROUPS.find(([g]) => g === p.group);
 
 // A pattern page opens with the answer: what the pattern is one of and the first thing lessloc does about it. It then asks and

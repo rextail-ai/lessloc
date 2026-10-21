@@ -109,7 +109,7 @@ for (const t of TASKS) {
   }
 }
 const file = path.join(os.tmpdir(), `lessloc-candidates-${Date.now()}.json`);
-fs.writeFileSync(file, JSON.stringify(rows, null, 1));
+fs.writeFileSync(file, JSON.stringify(rows, null, 1), { flag: 'wx', mode: 0o600 });
 // Per variant: how many candidates, how many stopped (refused at write or held), and how many finished by the hidden tests.
 console.log(`| variant | candidates | stopped | not stopped | hidden tests pass |\n|---|--:|--:|--:|--:|`);
 for (const v of [...new Set(rows.map(r => r.variant))]) {

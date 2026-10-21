@@ -3,6 +3,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
+import { esc } from '../lib/text.mjs';
 import { STANDARD } from '../lib/voice.mjs';
 import { ENTRY, ENV, FN, STATE, agentShell, agentWrite, commit, deny, hook, repo, run, stop, turn, write } from './helpers.mjs';
 
@@ -52,7 +53,7 @@ test('the edit gate denies junk files, placeholders and commented-out code, also
   for (const file of ['.lessloc.json', 'migrations/001.sql']) {
     const o = hook(dir, { hook_event_name: 'PreToolUse', tool_name: 'Edit', tool_input: { file_path: path.join(dir, file), old_string: 'a', new_string: 'b' } }).hookSpecificOutput;
     assert.equal(o.permissionDecision, 'ask', file);
-    assert.match(o.permissionDecisionReason, new RegExp(`^lessloc: \`${file.replace(/[.*]/g, '\\$&')}\` is protected in this project\\. Only you change it`), 'the approval prompt names the file to the user');
+    assert.match(o.permissionDecisionReason, new RegExp(`^lessloc: \`${esc(file)}\` is protected in this project\\. Only you change it`), 'the approval prompt names the file to the user');
   }
   turn(dir, 'write an implementation summary to IMPLEMENTATION_SUMMARY.md');
   assert.equal(deny(dir, 'Write', { file_path: path.join(dir, 'IMPLEMENTATION_SUMMARY.md'), content: '# done\n' }), undefined, 'files the user asked for pass');
