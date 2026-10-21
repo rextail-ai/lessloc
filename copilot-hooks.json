@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "bash": "if command -v node >/dev/null 2>&1 && [ -f \"$PLUGIN_ROOT/hook.mjs\" ]; then node \"$PLUGIN_ROOT/hook.mjs\" --host copilot sessionStart; fi",
+        "powershell": "if ((Get-Command node -ErrorAction SilentlyContinue) -and (Test-Path \"$env:PLUGIN_ROOT/hook.mjs\")) { node \"$env:PLUGIN_ROOT/hook.mjs\" --host copilot sessionStart; exit $LASTEXITCODE }",
+        "timeoutSec": 30
+      }
+    ],
+    "userPromptSubmitted": [
+      {
+        "type": "command",
+        "bash": "if command -v node >/dev/null 2>&1 && [ -f \"$PLUGIN_ROOT/hook.mjs\" ]; then node \"$PLUGIN_ROOT/hook.mjs\" --host copilot userPromptSubmitted; fi",
+        "powershell": "if ((Get-Command node -ErrorAction SilentlyContinue) -and (Test-Path \"$env:PLUGIN_ROOT/hook.mjs\")) { node \"$env:PLUGIN_ROOT/hook.mjs\" --host copilot userPromptSubmitted; exit $LASTEXITCODE }",
+        "timeoutSec": 30
+      }
+    ],
+    "preToolUse": [
+      {
+        "type": "command",
+        "bash": "if command -v node >/dev/null 2>&1 && [ -f \"$PLUGIN_ROOT/hook.mjs\" ]; then node \"$PLUGIN_ROOT/hook.mjs\" --host copilot preToolUse; fi",
+        "powershell": "if ((Get-Command node -ErrorAction SilentlyContinue) -and (Test-Path \"$env:PLUGIN_ROOT/hook.mjs\")) { node \"$env:PLUGIN_ROOT/hook.mjs\" --host copilot preToolUse; exit $LASTEXITCODE }",
+        "matcher": "bash|powershell|create|edit|apply_patch|task",
+        "timeoutSec": 30
+      }
+    ],
+    "postToolUse": [
+      {
+        "type": "command",
+        "bash": "if command -v node >/dev/null 2>&1 && [ -f \"$PLUGIN_ROOT/hook.mjs\" ]; then node \"$PLUGIN_ROOT/hook.mjs\" --host copilot postToolUse; fi",
+        "powershell": "if ((Get-Command node -ErrorAction SilentlyContinue) -and (Test-Path \"$env:PLUGIN_ROOT/hook.mjs\")) { node \"$env:PLUGIN_ROOT/hook.mjs\" --host copilot postToolUse; exit $LASTEXITCODE }",
+        "matcher": "bash|powershell|create|edit|apply_patch",
+        "timeoutSec": 60
+      }
+    ],
+    "postToolUseFailure": [
+      {
+        "type": "command",
+        "bash": "if command -v node >/dev/null 2>&1 && [ -f \"$PLUGIN_ROOT/hook.mjs\" ]; then node \"$PLUGIN_ROOT/hook.mjs\" --host copilot postToolUseFailure; fi",
+        "powershell": "if ((Get-Command node -ErrorAction SilentlyContinue) -and (Test-Path \"$env:PLUGIN_ROOT/hook.mjs\")) { node \"$env:PLUGIN_ROOT/hook.mjs\" --host copilot postToolUseFailure; exit $LASTEXITCODE }",
+        "timeoutSec": 60
+      }
+    ],
+    "agentStop": [
+      {
+        "type": "command",
+        "bash": "if command -v node >/dev/null 2>&1 && [ -f \"$PLUGIN_ROOT/hook.mjs\" ]; then node \"$PLUGIN_ROOT/hook.mjs\" --host copilot agentStop; fi",
+        "powershell": "if ((Get-Command node -ErrorAction SilentlyContinue) -and (Test-Path \"$env:PLUGIN_ROOT/hook.mjs\")) { node \"$env:PLUGIN_ROOT/hook.mjs\" --host copilot agentStop; exit $LASTEXITCODE }",
+        "timeoutSec": 600
+      }
+    ],
+    "subagentStart": [
+      {
+        "type": "command",
+        "bash": "if command -v node >/dev/null 2>&1 && [ -f \"$PLUGIN_ROOT/hook.mjs\" ]; then node \"$PLUGIN_ROOT/hook.mjs\" --host copilot subagentStart; fi",
+        "powershell": "if ((Get-Command node -ErrorAction SilentlyContinue) -and (Test-Path \"$env:PLUGIN_ROOT/hook.mjs\")) { node \"$env:PLUGIN_ROOT/hook.mjs\" --host copilot subagentStart; exit $LASTEXITCODE }",
+        "timeoutSec": 30
+      }
+    ]
+  }
+}

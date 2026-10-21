@@ -1,0 +1,86 @@
+{
+  "name": "lessloc",
+  "version": "0.10.0",
+  "description": "Keeps AI coding agents such as Claude Code, Codex, GitHub Copilot, Gemini CLI and Cursor to the least code that does the job and still works.",
+  "keywords": [
+    "claude-code",
+    "claude-code-plugin",
+    "codex",
+    "cursor",
+    "github-copilot",
+    "gemini-cli",
+    "gemini-cli-extension",
+    "qwen-code",
+    "opencode",
+    "amp",
+    "cline",
+    "pi-package",
+    "ai-coding-agent",
+    "coding-agent",
+    "agent-hooks",
+    "code-review",
+    "code-quality",
+    "dead-code",
+    "duplicate-code",
+    "llm"
+  ],
+  "homepage": "https://lessloc.org",
+  "bugs": {
+    "url": "https://github.com/rextail-ai/lessloc/issues"
+  },
+  "author": {
+    "name": "lessloc",
+    "url": "https://lessloc.org"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rextail-ai/lessloc.git"
+  },
+  "bin": {
+    "lessloc": "lessloc.mjs"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "preversion": "node scripts/version.mjs --check",
+    "version": "node scripts/version.mjs",
+    "postversion": "git push --follow-tags"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "type": "module",
+  "files": [
+    "lessloc.mjs",
+    "hook.mjs",
+    "lib/",
+    "bridge/",
+    "opencode/",
+    "amp/",
+    "augment/",
+    "cline/",
+    "pi/",
+    "RULES.md",
+    "PATTERNS.md",
+    "skills/",
+    ".claude-plugin/",
+    ".codex-plugin/",
+    "docs/public/favicon-32.png",
+    "docs/public/favicon-180.png",
+    "codex-hooks.json",
+    ".github/plugin/",
+    "copilot-hooks.json",
+    ".cursor-plugin/",
+    "cursor-hooks.json",
+    "cursor/",
+    "gemini/",
+    "qwen-extension.json",
+    "qwen-hooks.json"
+  ],
+  "pi": {
+    "extensions": [
+      "./pi/extension.js"
+    ],
+    "skills": []
+  }
+}

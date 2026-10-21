@@ -1,0 +1,27 @@
+# Counts lessloc's installs every 5 minutes, GitHub's shortest schedule, and redraws the README's slime on the branch `installs`
+# (scripts/installs.mjs), so a new install makes it pop soon after. It
+# downloads the two scripts instead of checking out the repository, because a checkout counts as a clone. TRAFFIC_TOKEN, a
+# fine-grained token with Administration: read on this repository, lets it read the clone counts; without it they are left out.
+name: installs
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+permissions: {}
+jobs:
+  count:
+    if: github.repository == 'rextail-ai/lessloc'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - run: |
+          for f in installs.mjs slime.mjs; do curl -fsSL "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$GITHUB_SHA/scripts/$f" -o "$f"; done
+          node installs.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TRAFFIC_TOKEN: ${{ secrets.TRAFFIC_TOKEN }}

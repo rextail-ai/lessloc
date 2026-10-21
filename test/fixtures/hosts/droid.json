@@ -1,0 +1,19 @@
+{
+  "host": "droid",
+  "source": ["https://docs.factory.com/harness/hooks.md"],
+  "read": "2026-10-19",
+  "_verify": [
+    "events.written and events.ran: the shape of tool_response; the docs say only that it depends on the tool. Here a plain text result, of which lessloc reads the test runner's own summary",
+    "the arguments of Edit and ApplyPatch; the docs show only Create's (file_path, content) and Execute's (command)"
+  ],
+  "events": {
+    "start": {"session_id": "$SID", "transcript_path": "/tmp/session.jsonl", "cwd": "$CWD", "permission_mode": "off", "hook_event_name": "SessionStart", "source": "startup"},
+    "prompt": {"session_id": "$SID", "transcript_path": "/tmp/session.jsonl", "cwd": "$CWD", "permission_mode": "off", "hook_event_name": "UserPromptSubmit", "prompt": "$PROMPT", "has_images": false},
+    "write": {"session_id": "$SID", "transcript_path": "/tmp/session.jsonl", "cwd": "$CWD", "permission_mode": "off", "hook_event_name": "PreToolUse", "tool_name": "Create", "tool_input": {"file_path": "$ABSFILE", "content": "$CONTENT"}},
+    "written": {"session_id": "$SID", "transcript_path": "/tmp/session.jsonl", "cwd": "$CWD", "permission_mode": "off", "hook_event_name": "PostToolUse", "tool_name": "Create", "tool_input": {"file_path": "$ABSFILE", "content": "$CONTENT"}, "tool_response": "File created: $ABSFILE"},
+    "shell": {"session_id": "$SID", "transcript_path": "/tmp/session.jsonl", "cwd": "$CWD", "permission_mode": "off", "hook_event_name": "PreToolUse", "tool_name": "Execute", "tool_input": {"command": "$COMMAND"}},
+    "ran": {"session_id": "$SID", "transcript_path": "/tmp/session.jsonl", "cwd": "$CWD", "permission_mode": "off", "hook_event_name": "PostToolUse", "tool_name": "Execute", "tool_input": {"command": "$COMMAND"}, "tool_response": "$OUTPUT"},
+    "stop": {"session_id": "$SID", "transcript_path": "/tmp/session.jsonl", "cwd": "$CWD", "permission_mode": "off", "hook_event_name": "Stop", "stop_hook_active": "$AGAIN", "tool_execution_count": 6, "elapsed_time": 42}
+  },
+  "answer": {"context": "hookSpecificOutput.additionalContext", "deny": "hookSpecificOutput.permissionDecisionReason|hookSpecificOutput.permissionDecision=deny", "ask": "hookSpecificOutput.permissionDecisionReason|hookSpecificOutput.permissionDecision=ask", "feedback": "hookSpecificOutput.additionalContext", "block": "reason"}
+}

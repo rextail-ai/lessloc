@@ -1,0 +1,16 @@
+---
+name: lessloc
+description: Find, review or remove code a codebase does not need (duplicates, copies under other names, dead code, needless abstractions, files, folders, comments, dependencies) without changing behavior. Use for "audit", "find bloat", "consolidate", "slim this", "reduce LOC", "what can I delete", "review this change", "does this already exist", /lessloc.
+argument-hint: "[setup | audit [path] | review [git ref] | consolidate | find <words>]"
+disable-model-invocation: true
+---
+
+The CLI is `node "${CLAUDE_PLUGIN_ROOT}/lessloc.mjs"`. Its numbers are facts; do not recount by hand.
+
+- **setup** ("set up lessloc for this project"): run `init`. It writes nothing into the repository, only git hooks for this clone. Show the user the test command it found: a passing run of it is what marks an agent's final state verified. Offer `init --rules` (rules in AGENTS.md for other AI tools) only if the user uses tools without lessloc's hooks, and say that the file is shared with everyone who works on the project. Finish with `doctor`, in plain words. `remove` undoes it all.
+- **find**: `find <what it does>` lists existing definitions that may already do it, by name; then search for code named differently too.
+- **audit**: `audit <path> --json --tools` (`--tools` adds knip, vulture, cargo-machete, deadcode and installed vulnerability scanners). Then find what the tool cannot see: code the standard library or an installed dependency already provides, defensive code for cases that cannot happen, responsibilities split across folders that always change together, made-up APIs and unpinned versions, over-mocked tests, answers hard-coded to fixtures, data shapes duplicated with renamed fields, and dead code kept behind a guard or flag. Similar-looking code is a duplicate only if it serves the same responsibility.
+- **review**: `check --base <ref> --json` (no ref: the uncommitted work), then the same semantic pass on the changed code and its callers.
+- **consolidate**: the deletion pass agents never do on their own. Run `audit --json`, take the biggest safe cuts (duplicate blocks, definitions with the same body, unreferenced definitions after checking dynamic use, if-chains a table replaces, swallowed errors, comment blocks whose decisions belong in DECISIONS.md), in small steps with `test` after each, then rerun the audit. Shrink without removing tests, logging or error handling. Stop when the next cut needs a tradeoff or cannot be verified; "nothing further justified" is a valid result. Finish with `baseline` so the ratchet locks the gain in.
+
+Every finding names a location, the concrete cut, the lines saved, and why behavior stays the same. Never cut what RULES.md says never to cut: correctness, security, tests or anything the user asked for (see "What lessloc never pushes an agent toward" in PATTERNS.md). No style taste. Report numbered findings, biggest safe saving first, one line each: `N. path:lines: cut → −X lines (risk)`, ending with `Total: −X lines, −Y files, −Z dependencies` and what you did not check. For audit and review, change nothing until the user picks numbers.

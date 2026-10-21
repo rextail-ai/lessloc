@@ -1,0 +1,21 @@
+{
+  "host": "vscode",
+  "flag": "copilot",
+  "source": ["https://code.visualstudio.com/docs/agents/reference/hooks-reference", "https://code.visualstudio.com/docs/agent-customization/hooks"],
+  "read": "2026-10-19",
+  "_verify": [
+    "the tool names and inputs (create_file {filePath, content}, run_in_terminal {command, explanation, isBackground}): the docs leave them to the agent debug log; these come from the source of VS Code's Copilot Chat extension (src/extension/tools/common/toolNames.ts)",
+    "events.ran: how run_in_terminal reports the exit code in tool_response; here only the runner's own output, which lessloc reads"
+  ],
+  "argv": {"start": "sessionStart", "prompt": "userPromptSubmitted", "write": "preToolUse", "written": "postToolUse", "shell": "preToolUse", "ran": "postToolUse", "stop": "agentStop"},
+  "events": {
+    "start": {"hook_event_name": "SessionStart", "session_id": "$SID", "timestamp": "$TIME", "cwd": "$CWD", "transcript_path": "/tmp/transcript.json", "source": "new"},
+    "prompt": {"hook_event_name": "UserPromptSubmit", "session_id": "$SID", "timestamp": "$TIME", "cwd": "$CWD", "prompt": "$PROMPT"},
+    "write": {"hook_event_name": "PreToolUse", "session_id": "$SID", "timestamp": "$TIME", "cwd": "$CWD", "tool_name": "create_file", "tool_input": {"filePath": "$ABSFILE", "content": "$CONTENT"}, "tool_use_id": "$ID"},
+    "written": {"hook_event_name": "PostToolUse", "session_id": "$SID", "timestamp": "$TIME", "cwd": "$CWD", "tool_name": "create_file", "tool_input": {"filePath": "$ABSFILE", "content": "$CONTENT"}, "tool_use_id": "$ID", "tool_response": "The following files were successfully edited:\n$ABSFILE"},
+    "shell": {"hook_event_name": "PreToolUse", "session_id": "$SID", "timestamp": "$TIME", "cwd": "$CWD", "tool_name": "run_in_terminal", "tool_input": {"command": "$COMMAND", "explanation": "Run the tests", "isBackground": false}, "tool_use_id": "$ID"},
+    "ran": {"hook_event_name": "PostToolUse", "session_id": "$SID", "timestamp": "$TIME", "cwd": "$CWD", "tool_name": "run_in_terminal", "tool_input": {"command": "$COMMAND", "explanation": "Run the tests", "isBackground": false}, "tool_use_id": "$ID", "tool_response": "$OUTPUT"},
+    "stop": {"hook_event_name": "Stop", "session_id": "$SID", "timestamp": "$TIME", "cwd": "$CWD", "stop_hook_active": "$AGAIN"}
+  },
+  "answer": {"context": "hookSpecificOutput.additionalContext", "deny": "stderr", "ask": "hookSpecificOutput.permissionDecisionReason", "feedback": "hookSpecificOutput.additionalContext", "block": "hookSpecificOutput.reason"}
+}

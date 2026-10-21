@@ -1,0 +1,39 @@
+name: Bug report
+description: lessloc did something wrong, or got in your agent tool's way
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: lessloc version
+      description: "`node ~/.lessloc/lessloc.mjs version`, or the version your agent tool's plugin list shows"
+    validations:
+      required: true
+  - type: input
+    id: tool
+    attributes:
+      label: Agent tool and its version
+      placeholder: Claude Code 2.1.303
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Operating system and Node version
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The smallest repository and prompt that show it.
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `lessloc doctor` in that repository
+      description: "With a clone install: `node ~/.lessloc/lessloc.mjs doctor`. It shows paths on your machine; remove what you do not want public."
+      render: text

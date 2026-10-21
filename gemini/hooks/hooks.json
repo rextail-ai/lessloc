@@ -1,0 +1,61 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${extensionPath}${/}hook.mjs\" --host gemini",
+            "timeout": 30000
+          }
+        ]
+      }
+    ],
+    "BeforeAgent": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${extensionPath}${/}hook.mjs\" --host gemini",
+            "timeout": 30000
+          }
+        ]
+      }
+    ],
+    "BeforeTool": [
+      {
+        "matcher": "^(write_file|replace|run_shell_command)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${extensionPath}${/}hook.mjs\" --host gemini",
+            "timeout": 30000
+          }
+        ]
+      }
+    ],
+    "AfterTool": [
+      {
+        "matcher": "^(write_file|replace|run_shell_command)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${extensionPath}${/}hook.mjs\" --host gemini",
+            "timeout": 60000
+          }
+        ]
+      }
+    ],
+    "AfterAgent": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${extensionPath}${/}hook.mjs\" --host gemini",
+            "timeout": 600000
+          }
+        ]
+      }
+    ]
+  }
+}

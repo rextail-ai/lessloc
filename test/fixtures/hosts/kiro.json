@@ -1,0 +1,21 @@
+{
+  "host": "kiro",
+  "source": ["https://kiro.dev/docs/hooks/types/", "https://kiro.dev/docs/hooks/actions.md", "https://kiro.dev/docs/cli/v3/hooks-migration.md"],
+  "read": "2026-10-19",
+  "text": true,
+  "_verify": [
+    "the write tools' arguments (fs_write {command, path, file_text}); the docs name the tools (fs_write, fs_append, str_replace, delete_file, execute_bash) but not their arguments, and show tool_input only for read_file ({path})",
+    "events.ran: the shape of execute_bash's result inside tool_response.result; the docs show {success, result} only for read_file. Here the exit status as Kiro's CLI reports it to its agent",
+    "whether the IDE loads the global ~/.kiro/hooks folder; the docs say only the CLI V3 does"
+  ],
+  "events": {
+    "start": {"hook_event_name": "SessionStart", "cwd": "$CWD", "session_id": "$SID"},
+    "prompt": {"hook_event_name": "UserPromptSubmit", "cwd": "$CWD", "session_id": "$SID", "prompt": "$PROMPT"},
+    "write": {"hook_event_name": "PreToolUse", "cwd": "$CWD", "session_id": "$SID", "tool_name": "fs_write", "tool_input": {"command": "create", "path": "$ABSFILE", "file_text": "$CONTENT"}},
+    "written": {"hook_event_name": "PostToolUse", "cwd": "$CWD", "session_id": "$SID", "tool_name": "fs_write", "tool_input": {"command": "create", "path": "$ABSFILE", "file_text": "$CONTENT"}, "tool_response": {"success": true, "result": [""]}},
+    "shell": {"hook_event_name": "PreToolUse", "cwd": "$CWD", "session_id": "$SID", "tool_name": "execute_bash", "tool_input": {"command": "$COMMAND"}},
+    "ran": {"hook_event_name": "PostToolUse", "cwd": "$CWD", "session_id": "$SID", "tool_name": "execute_bash", "tool_input": {"command": "$COMMAND"}, "tool_response": {"success": true, "result": [{"exit_status": "$EXIT", "stdout": "$OUTPUT", "stderr": ""}]}},
+    "stop": {"hook_event_name": "Stop", "cwd": "$CWD", "session_id": "$SID"}
+  },
+  "answer": {"context": "text", "deny": "stderr", "block": "reason"}
+}

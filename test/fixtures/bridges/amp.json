@@ -1,0 +1,20 @@
+{
+  "module": "amp/plugin.js",
+  "exports": {"Amp": "default"},
+  "source": ["https://ampcode.com/manual/plugin-api", "https://ampcode.com/manual/plugins"],
+  "read": "2026-10-19",
+  "_verify": [
+    "write, shell: the built-in tools' names and inputs (create_file {path, content}, Bash {cmd, cwd}); the plugin docs give the events' shapes, not the tools'",
+    "ran: the shape of a Bash result's output ({output, exitCode}), and whether a command that exits non-zero ends with status done or error",
+    "that a plugin file loading another module by its file URL runs under Amp's Bun runtime",
+    "whether Amp shows the model the plugin's name when it rejects a call or continues a turn (the file is named lessloc.js)"
+  ],
+  "events": {
+    "prompt": {"thread": {"id": "$SID"}, "message": "$PROMPT", "id": 1},
+    "write": {"thread": {"id": "$SID"}, "toolUseID": "$ID", "tool": "create_file", "input": {"path": "$ABSFILE", "content": "$CONTENT"}},
+    "written": {"thread": {"id": "$SID"}, "toolUseID": "$ID", "tool": "create_file", "input": {"path": "$ABSFILE", "content": "$CONTENT"}, "status": "done", "output": "Created $ABSFILE"},
+    "shell": {"thread": {"id": "$SID"}, "toolUseID": "$ID", "tool": "Bash", "input": {"cmd": "$COMMAND", "cwd": "$CWD"}},
+    "ran": {"thread": {"id": "$SID"}, "toolUseID": "$ID", "tool": "Bash", "input": {"cmd": "$COMMAND", "cwd": "$CWD"}, "status": "done", "output": {"output": "$OUTPUT", "exitCode": "$EXIT"}},
+    "stop": {"thread": {"id": "$SID"}, "message": "$PROMPT", "id": 1, "status": "done", "messages": [{"role": "user", "id": 1, "content": [{"type": "text", "text": "$PROMPT"}]}, {"role": "assistant", "id": 2, "content": [{"type": "text", "text": "Done."}]}]}
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "host": "cline",
+  "source": ["https://github.com/cline/cline/blob/main/.clinerules/hooks/README.md", "https://github.com/cline/cline/blob/main/apps/vscode/src/sdk/hooks-adapter.ts", "https://github.com/cline/cline/blob/main/sdk/packages/core/src/extensions/tools/schemas.ts"],
+  "read": "2026-10-19",
+  "_verify": [
+    "events.written: the text of an editor result; the adapter passes String(result.output)",
+    "events.ran: the adapter passes String(result.output), and run_commands returns a list of results, so a hook file gets \"[object Object]\" and no command output; test runs cannot be read from Cline's hook files (`evidence: false`)",
+    "events.stop: taskMetadata.result is the run's outputText, from the adapter's afterRun"
+  ],
+  "evidence": false,
+  "events": {
+    "start": {"clineVersion": "3.40.0", "hookName": "TaskStart", "timestamp": "$TIME", "taskId": "$SID", "workspaceRoots": ["$CWD"], "userId": "u1", "taskStart": {"taskMetadata": {"taskId": "$SID", "ulid": "", "initialTask": ""}}},
+    "prompt": {"clineVersion": "3.40.0", "hookName": "UserPromptSubmit", "timestamp": "$TIME", "taskId": "$SID", "workspaceRoots": ["$CWD"], "userId": "u1", "userPromptSubmit": {"prompt": "$PROMPT", "attachments": []}},
+    "write": {"clineVersion": "3.40.0", "hookName": "PreToolUse", "timestamp": "$TIME", "taskId": "$SID", "workspaceRoots": ["$CWD"], "userId": "u1", "preToolUse": {"toolName": "editor", "parameters": {"path": "$ABSFILE", "new_text": "$CONTENT"}}},
+    "written": {"clineVersion": "3.40.0", "hookName": "PostToolUse", "timestamp": "$TIME", "taskId": "$SID", "workspaceRoots": ["$CWD"], "userId": "u1", "postToolUse": {"toolName": "editor", "parameters": {"path": "$ABSFILE", "new_text": "$CONTENT"}, "result": "File created: $ABSFILE", "success": true, "executionTimeMs": 12}},
+    "shell": {"clineVersion": "3.40.0", "hookName": "PreToolUse", "timestamp": "$TIME", "taskId": "$SID", "workspaceRoots": ["$CWD"], "userId": "u1", "preToolUse": {"toolName": "run_commands", "parameters": {"commands": "[\"$COMMAND\"]"}}},
+    "ran": {"clineVersion": "3.40.0", "hookName": "PostToolUse", "timestamp": "$TIME", "taskId": "$SID", "workspaceRoots": ["$CWD"], "userId": "u1", "postToolUse": {"toolName": "run_commands", "parameters": {"commands": "[\"$COMMAND\"]"}, "result": "[object Object]", "success": true, "executionTimeMs": 840}},
+    "stop": {"clineVersion": "3.40.0", "hookName": "TaskComplete", "timestamp": "$TIME", "taskId": "$SID", "workspaceRoots": ["$CWD"], "userId": "u1", "taskComplete": {"taskMetadata": {"taskId": "$SID", "ulid": "", "initialTask": "", "result": "Done."}}}
+  },
+  "answer": {"context": "contextModification", "feedback": "contextModification"}
+}

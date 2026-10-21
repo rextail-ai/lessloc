@@ -1,0 +1,18 @@
+{
+  "module": "pi/extension.js",
+  "exports": {"Pi": "default"},
+  "source": ["https://github.com/earendil-works/pi/blob/73f8de8/packages/coding-agent/src/core/extensions/types.ts", "https://github.com/earendil-works/pi/blob/73f8de8/packages/coding-agent/docs/extensions.md", "https://github.com/earendil-works/pi/blob/73f8de8/packages/coding-agent/src/core/tools/bash.ts"],
+  "read": "2026-10-19",
+  "_verify": [
+    "that a package installed with `pi install git:...` loads its `pi.extensions` file, and an extensions-folder file loading another module by its path, under jiti"
+  ],
+  "events": {
+    "start": {"type": "session_start", "reason": "startup"},
+    "prompt": {"type": "before_agent_start", "messageType": "user", "prompt": "$PROMPT", "systemPrompt": "You are a coding agent.", "systemPromptOptions": {}},
+    "write": {"type": "tool_call", "toolCallId": "$ID", "toolName": "write", "input": {"path": "$FILE", "content": "$CONTENT"}},
+    "written": {"type": "tool_result", "toolCallId": "$ID", "toolName": "write", "input": {"path": "$FILE", "content": "$CONTENT"}, "content": [{"type": "text", "text": "Successfully wrote to $FILE"}], "isError": false},
+    "shell": {"type": "tool_call", "toolCallId": "$ID", "toolName": "bash", "input": {"command": "$COMMAND"}},
+    "ran": {"type": "tool_result", "toolCallId": "$ID", "toolName": "bash", "input": {"command": "$COMMAND"}, "content": [{"type": "text", "text": "$OUTPUT$EXIT_STATUS"}], "structuredContent": {"output": "$OUTPUT", "truncated": false, "exit_code": "$EXIT", "wall_time_seconds": 0.4}, "isError": "$FAILED"},
+    "stop": {"type": "agent_before_settle", "entries": [], "continue": false, "outcome": "completed", "context": {"contextEntries": [], "contextMessages": [{"role": "user", "content": [{"type": "text", "text": "$PROMPT"}]}, {"role": "assistant", "content": [{"type": "text", "text": "Done."}]}], "llmMessages": [], "pendingMessages": [], "canContinue": true}}
+  }
+}

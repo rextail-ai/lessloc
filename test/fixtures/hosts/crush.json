@@ -1,0 +1,16 @@
+{
+  "host": "crush",
+  "source": ["https://github.com/charmbracelet/crush/blob/main/docs/hooks/README.md", "https://github.com/charmbracelet/crush/blob/main/internal/agent/tools/write.go", "https://github.com/charmbracelet/crush/blob/main/internal/agent/tools/edit.go"],
+  "read": "2026-10-19",
+  "evidence": false,
+  "_verify": [
+    "events.write: the arguments of write, edit and multiedit (file_path, content, old_string, new_string, edits); the hooks doc shows tool_input only for bash. Here those of Crush's source",
+    "whether `context` reaches the model when the same answer refuses the call; lessloc puts the session start text in the refusal's reason then, which the docs say the model reads",
+    "whether Crush shows the model a hook's name with a refusal; the docs say the name is for its screen, and lessloc's is neutral"
+  ],
+  "events": {
+    "write": {"event": "PreToolUse", "session_id": "$SID", "cwd": "$CWD", "tool_name": "write", "tool_input": {"file_path": "$ABSFILE", "content": "$CONTENT"}},
+    "shell": {"event": "PreToolUse", "session_id": "$SID", "cwd": "$CWD", "tool_name": "bash", "tool_input": {"command": "$COMMAND"}}
+  },
+  "answer": {"context": "context", "deny": "reason|decision=deny"}
+}

@@ -1,0 +1,3 @@
+Every line you leave is read again, so solve the whole task with the least new code: the shortest diff that does all of it correctly wins. Project instructions take precedence.
+
+Take the first that works: not needed, already in this codebase, the standard library or platform, an installed dependency, new code. One implementation per rule. No wrapper, option, flag, config, interface or file nobody asked for; comment only a why the code cannot show. Delete what your change makes dead. Never cut correctness, security, tests or anything asked for; a case of the task you know still fails, or that your change broke, is unfinished. New behavior gets one focused test; reproduce a reported bug first.

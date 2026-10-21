@@ -1,0 +1,28 @@
+name: Wrong finding
+description: lessloc flagged code that is fine, or held a turn it should not have
+labels: [false positive]
+body:
+  - type: input
+    id: kind
+    attributes:
+      label: Finding kind
+      description: "As `lessloc check` shows it, for example `copy` or `untested`"
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: The smallest code that triggers it
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why this code is right as it is
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: lessloc version

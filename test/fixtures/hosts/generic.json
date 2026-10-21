@@ -1,0 +1,16 @@
+{
+  "host": "generic",
+  "source": ["docs/guide/any-agent.md"],
+  "read": "2026-10-19",
+  "events": {
+    "start": {"hook_event_name":"SessionStart","session_id":"$SID","cwd":"$CWD","source":"startup"},
+    "prompt": {"hook_event_name":"UserPromptSubmit","session_id":"$SID","cwd":"$CWD","prompt":"$PROMPT"},
+    "write": {"hook_event_name":"PreToolUse","session_id":"$SID","cwd":"$CWD","tool_name":"write","tool_use_id":"$ID","tool_input":{"path":"$FILE","content":"$CONTENT"}},
+    "written": {"hook_event_name":"PostToolUse","session_id":"$SID","cwd":"$CWD","tool_name":"write","tool_use_id":"$ID","tool_input":{"path":"$FILE","content":"$CONTENT"},"tool_response":{"exit_code":0,"output":"Wrote $FILE"}},
+    "shell": {"hook_event_name":"PreToolUse","session_id":"$SID","cwd":"$CWD","tool_name":"shell","tool_use_id":"$ID","tool_input":{"command":"$COMMAND"}},
+    "ran": {"hook_event_name":"PostToolUse","session_id":"$SID","cwd":"$CWD","tool_name":"shell","tool_use_id":"$ID","tool_input":{"command":"$COMMAND"},"tool_response":{"exit_code":"$EXIT","output":"$OUTPUT"}},
+    "agent": {"hook_event_name":"PreToolUse","session_id":"$SID","cwd":"$CWD","tool_name":"agent","tool_use_id":"$ID","tool_input":{"prompt":"$PROMPT"}},
+    "stop": {"hook_event_name":"Stop","session_id":"$SID","cwd":"$CWD","stop_hook_active":"$AGAIN","last_assistant_message":"Done."}
+  },
+  "answer": {"context":"context","deny":"deny","ask":"ask","input":"input.prompt","feedback":"feedback","block":"block"}
+}

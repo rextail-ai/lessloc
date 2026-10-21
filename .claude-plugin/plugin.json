@@ -1,0 +1,20 @@
+{
+  "name": "lessloc",
+  "version": "0.10.0",
+  "description": "Keeps AI coding agents such as Claude Code, Codex, GitHub Copilot, Gemini CLI and Cursor to the least code that does the job and still works: reuse hints and an edit gate while it writes, a review of exactly what it changed, a handoff record for the next agent, gates for commits and CI.",
+  "author": {"name": "lessloc", "url": "https://lessloc.org"},
+  "homepage": "https://lessloc.org",
+  "repository": "https://github.com/rextail-ai/lessloc",
+  "license": "Apache-2.0",
+  "keywords": ["ai-coding-agent", "coding-agent", "agent-hooks", "code-review", "code-quality", "dead-code", "duplicate-code", "llm"],
+  "hooks": {
+    "SessionStart": [{"hooks":[{"type":"command","command":"node","args":["${CLAUDE_PLUGIN_ROOT}/hook.mjs"],"timeout":30}]}],
+    "UserPromptSubmit": [{"hooks":[{"type":"command","command":"node","args":["${CLAUDE_PLUGIN_ROOT}/hook.mjs"],"timeout":30}]}],
+    "PreToolUse": [{"matcher":"Write|Edit|MultiEdit|NotebookEdit|Bash|Agent|Task|mcp__.*","hooks":[{"type":"command","command":"node","args":["${CLAUDE_PLUGIN_ROOT}/hook.mjs"],"timeout":30}]}],
+    "PostToolUse": [{"matcher":"Write|Edit|MultiEdit|Bash|mcp__.*","hooks":[{"type":"command","command":"node","args":["${CLAUDE_PLUGIN_ROOT}/hook.mjs"],"timeout":60}]}],
+    "PostToolUseFailure": [{"matcher":"Bash|mcp__.*","hooks":[{"type":"command","command":"node","args":["${CLAUDE_PLUGIN_ROOT}/hook.mjs"],"timeout":60}]}],
+    "SubagentStart": [{"hooks":[{"type":"command","command":"node","args":["${CLAUDE_PLUGIN_ROOT}/hook.mjs"],"timeout":30}]}],
+    "SubagentStop": [{"hooks":[{"type":"command","command":"node","args":["${CLAUDE_PLUGIN_ROOT}/hook.mjs"],"timeout":600}]}],
+    "Stop": [{"hooks":[{"type":"command","command":"node","args":["${CLAUDE_PLUGIN_ROOT}/hook.mjs"],"timeout":600}]}]
+  }
+}

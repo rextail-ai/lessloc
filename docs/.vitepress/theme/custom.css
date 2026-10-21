@@ -1,0 +1,48 @@
+/* The banner's colors: its lime, and the slate of its words. Lime is too light for text on white (1.4:1), so light pages
+   write links in a darker lime (5:1) and keep lime for button backgrounds, under slate text (9.6:1). */
+:root {
+  --vp-c-brand-1: #4d7c0f;
+  --vp-c-brand-2: #3f6212;
+  --vp-c-brand-3: #b3ec64;
+  --vp-c-brand-soft: rgba(179, 236, 100, 0.22);
+  --vp-c-text-1: #243040;
+  --vp-button-brand-text: #243040;
+  --vp-button-brand-hover-text: #243040;
+  --vp-button-brand-active-text: #243040;
+  --vp-button-brand-bg: #b3ec64;
+  --vp-button-brand-hover-bg: #bdf86c;
+  --vp-button-brand-active-bg: #a6dd55;
+}
+.dark {
+  --vp-c-brand-1: #b3ec64;
+  --vp-c-brand-2: #bdf86c;
+  --vp-c-brand-soft: rgba(179, 236, 100, 0.16);
+  --vp-c-text-1: #e4f1f4;
+  --vp-c-bg: #141a22;
+  --vp-c-bg-alt: #10151c;
+  --vp-c-bg-elv: #1b222c;
+  --vp-c-bg-soft: #1b222c;
+}
+
+/* The banner is the brand: full width above the headline, everything centered. */
+.VPHero.has-image .container { flex-direction: column; align-items: center; text-align: center; }
+.VPHero.has-image .image { order: -1; margin: 0 auto -8px; }
+.VPHero.has-image .main { order: 1; max-width: 760px; margin: 0 auto; }
+.VPHero .image-container { width: min(760px, 92vw); height: auto; transform: none; }
+.VPHero .image-bg { display: none; }
+.VPHero .image-src { position: static; transform: none; width: 100%; max-width: 100%; max-height: none; }
+.VPHero .text { font-size: clamp(28px, 4vw, 44px); line-height: 1.15; }
+.install-box { max-width: 760px; margin: 48px auto 0; padding: 20px 24px; border-radius: 12px; background: var(--vp-c-bg-soft); text-align: center; }
+.install-box p { margin: 6px 0; }
+.install-box code { font-size: 15px; }
+.VPHero.has-image .main, .VPHero.has-image .heading, .VPHero.has-image .tagline { text-align: center !important; }
+.VPHero.has-image .heading .text, .VPHero.has-image .tagline { margin-left: auto !important; margin-right: auto !important; }
+.VPHero.has-image .actions { justify-content: center !important; }
+.VPHero.has-image { padding-top: calc(var(--vp-nav-height) + 8px) !important; }
+.VPHero .banner { display: block; }
+.VPHero .banner .image-src { height: auto; }
+/* The system copy when the appearance follows the system color scheme, the other copy when the visitor chose the other one. */
+@media (prefers-color-scheme: dark) { html:not(.dark) .VPHero .banner.system, html.dark .VPHero .banner.other { display: none; } }
+@media not all and (prefers-color-scheme: dark) { html.dark .VPHero .banner.system, html:not(.dark) .VPHero .banner.other { display: none; } }
+/* The hero name puts "lessloc" in the page's h1 for search engines and screen readers; the banner above already shows it. */
+.VPHero.has-image .name { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

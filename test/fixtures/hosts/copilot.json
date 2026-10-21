@@ -1,0 +1,20 @@
+{
+  "host": "copilot",
+  "source": ["https://docs.github.com/en/copilot/reference/hooks-reference", "https://docs.github.com/en/copilot/tutorials/copilot-cli-hooks"],
+  "read": "2026-10-19",
+  "_verify": [
+    "events.write, events.written: the argument names of create (path, file_text) and edit (path, old_str, new_str); the docs list the tool names, not their arguments",
+    "events.ran: how a bash result reports the exit code (here `<exited with exit code N>`), and whether a command that exits non-zero is a success or a failure result; the docs show no bash result"
+  ],
+  "argv": {"start": "sessionStart", "prompt": "userPromptSubmitted", "write": "preToolUse", "written": "postToolUse", "shell": "preToolUse", "ran": "postToolUse", "stop": "agentStop"},
+  "events": {
+    "start": {"sessionId": "$SID", "timestamp": "$TIME_MS", "cwd": "$CWD", "source": "startup"},
+    "prompt": {"sessionId": "$SID", "timestamp": "$TIME_MS", "cwd": "$CWD", "prompt": "$PROMPT"},
+    "write": {"sessionId": "$SID", "timestamp": "$TIME_MS", "cwd": "$CWD", "toolName": "create", "toolArgs": "{\"path\":$ABSFILE_JSON,\"file_text\":$CONTENT_JSON}"},
+    "written": {"sessionId": "$SID", "timestamp": "$TIME_MS", "cwd": "$CWD", "toolName": "create", "toolArgs": "{\"path\":$ABSFILE_JSON,\"file_text\":$CONTENT_JSON}", "toolResult": {"resultType": "success", "textResultForLlm": "Created file $ABSFILE"}},
+    "shell": {"sessionId": "$SID", "timestamp": "$TIME_MS", "cwd": "$CWD", "toolName": "bash", "toolArgs": {"command": "$COMMAND", "description": "Run the tests"}},
+    "ran": {"sessionId": "$SID", "timestamp": "$TIME_MS", "cwd": "$CWD", "toolName": "bash", "toolArgs": {"command": "$COMMAND", "description": "Run the tests"}, "toolResult": {"resultType": "success", "textResultForLlm": "$OUTPUT\n<exited with exit code $EXIT>"}},
+    "stop": {"sessionId": "$SID", "timestamp": "$TIME_MS", "cwd": "$CWD", "transcriptPath": "/tmp/transcript.jsonl", "stopReason": "end_turn", "stop_hook_active": "$AGAIN"}
+  },
+  "answer": {"context": "additionalContext", "deny": "permissionDecisionReason", "feedback": "additionalContext", "block": "reason"}
+}

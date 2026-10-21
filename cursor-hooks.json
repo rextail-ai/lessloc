@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": "./cursor/hook.sh",
+        "timeout": 30
+      }
+    ],
+    "beforeSubmitPrompt": [
+      {
+        "command": "./cursor/hook.sh",
+        "timeout": 30
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "./cursor/hook.sh",
+        "timeout": 30,
+        "matcher": "Shell|Write|Delete"
+      }
+    ],
+    "postToolUse": [
+      {
+        "command": "./cursor/hook.sh",
+        "timeout": 30,
+        "matcher": "Shell|Write|Delete"
+      }
+    ],
+    "postToolUseFailure": [
+      {
+        "command": "./cursor/hook.sh",
+        "timeout": 30,
+        "matcher": "Shell"
+      }
+    ],
+    "stop": [
+      {
+        "command": "./cursor/hook.sh",
+        "timeout": 600
+      }
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "host": "devin",
+  "source": ["https://docs.devin.ai/cli/extensibility/hooks/overview.md", "https://docs.devin.ai/cli/extensibility/hooks/lifecycle-hooks.md"],
+  "read": "2026-10-19",
+  "env": {"DEVIN_PROJECT_DIR": "$CWD"},
+  "_verify": [
+    "the arguments of write, edit and apply_patch; the docs show only exec's ({command, shell_id}). Here Claude Code's names",
+    "whether a command that exits non-zero comes back with success: false; lessloc reads the test runner's own summary either way"
+  ],
+  "events": {
+    "start": {"hook_event_name": "SessionStart", "session_id": "$SID", "source": "startup"},
+    "prompt": {"hook_event_name": "UserPromptSubmit", "session_id": "$SID", "prompt_id": "p1", "prompt": "$PROMPT"},
+    "write": {"hook_event_name": "PreToolUse", "session_id": "$SID", "prompt_id": "p1", "tool_name": "write", "tool_input": {"file_path": "$ABSFILE", "content": "$CONTENT"}},
+    "written": {"hook_event_name": "PostToolUse", "session_id": "$SID", "prompt_id": "p1", "tool_name": "write", "tool_input": {"file_path": "$ABSFILE", "content": "$CONTENT"}, "tool_response": {"success": true, "output": "Wrote $FILE", "error": null}},
+    "shell": {"hook_event_name": "PreToolUse", "session_id": "$SID", "prompt_id": "p1", "tool_name": "exec", "tool_input": {"command": "$COMMAND", "shell_id": "main"}},
+    "ran": {"hook_event_name": "PostToolUse", "session_id": "$SID", "prompt_id": "p1", "tool_name": "exec", "tool_input": {"command": "$COMMAND", "shell_id": "main"}, "tool_response": {"success": true, "output": "$OUTPUT", "error": null}},
+    "stop": {"hook_event_name": "Stop", "session_id": "$SID", "prompt_id": "p1", "stop_hook_active": "$AGAIN"}
+  },
+  "answer": {"context": "hookSpecificOutput.additionalContext", "deny": "reason|decision=block", "feedback": "hookSpecificOutput.additionalContext", "block": "reason|decision=block"}
+}

@@ -1,0 +1,3 @@
+#!/bin/sh
+echo "curl: network access is disabled in this environment" >&2
+exit 1

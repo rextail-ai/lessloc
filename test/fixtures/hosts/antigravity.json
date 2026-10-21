@@ -1,0 +1,22 @@
+{
+  "host": "antigravity",
+  "source": ["https://antigravity.google/docs/hooks/"],
+  "read": "2026-10-19",
+  "evidence": "failures",
+  "_verify": [
+    "events.write: whether a hook's toolCall.args carry the tool's arguments under the names the docs list for it (TargetFile, CodeContent, TargetContent, ReplacementContent); the docs show args only for run_command",
+    "the fields of each ReplacementChunks entry of multi_replace_file_content (here TargetContent and ReplacementContent, as replace_file_content's); the docs do not list them",
+    "whether a command moved to the background after WaitMsBeforeAsync reaches PostToolUse without an error; until known, a call without an error proves no exit code, so a passing test run is not recorded",
+    "whether Antigravity shows the model a hook's name with a refusal; lessloc's hook has a neutral name"
+  ],
+  "argv": {"start": "SessionStart", "write": "PreToolUse", "written": "PostToolUse", "shell": "PreToolUse", "ran": "PostToolUse", "stop": "Stop"},
+  "events": {
+    "start": {"conversationId": "$SID", "workspacePaths": ["$CWD"], "transcriptPath": "/tmp/brain/$SID/.system_generated/logs/transcript.jsonl", "artifactDirectoryPath": "/tmp/brain/$SID", "modelName": "gemini-3.6-flash-medium"},
+    "write": {"toolCall": {"name": "write_to_file", "args": {"TargetFile": "$ABSFILE", "Overwrite": false, "CodeContent": "$CONTENT", "Description": "Add the file"}}, "stepIdx": 3, "conversationId": "$SID", "workspacePaths": ["$CWD"], "transcriptPath": "/tmp/brain/$SID/.system_generated/logs/transcript.jsonl", "artifactDirectoryPath": "/tmp/brain/$SID", "modelName": "gemini-3.6-flash-medium"},
+    "written": {"toolCall": {"name": "write_to_file", "args": {"TargetFile": "$ABSFILE", "Overwrite": false, "CodeContent": "$CONTENT", "Description": "Add the file"}}, "stepIdx": 3, "error": "", "conversationId": "$SID", "workspacePaths": ["$CWD"], "transcriptPath": "/tmp/brain/$SID/.system_generated/logs/transcript.jsonl", "artifactDirectoryPath": "/tmp/brain/$SID", "modelName": "gemini-3.6-flash-medium"},
+    "shell": {"toolCall": {"name": "run_command", "args": {"CommandLine": "$COMMAND", "Cwd": "$CWD", "WaitMsBeforeAsync": 5000}}, "stepIdx": 5, "conversationId": "$SID", "workspacePaths": ["$CWD"], "transcriptPath": "/tmp/brain/$SID/.system_generated/logs/transcript.jsonl", "artifactDirectoryPath": "/tmp/brain/$SID", "modelName": "gemini-3.6-flash-medium"},
+    "ran": {"toolCall": {"name": "run_command", "args": {"CommandLine": "$COMMAND", "Cwd": "$CWD", "WaitMsBeforeAsync": 5000}}, "stepIdx": 5, "error": "$EXIT_STATUS", "conversationId": "$SID", "workspacePaths": ["$CWD"], "transcriptPath": "/tmp/brain/$SID/.system_generated/logs/transcript.jsonl", "artifactDirectoryPath": "/tmp/brain/$SID", "modelName": "gemini-3.6-flash-medium"},
+    "stop": {"executionNum": 1, "terminationReason": "model_stop", "error": "", "fullyIdle": true, "conversationId": "$SID", "workspacePaths": ["$CWD"], "transcriptPath": "/tmp/brain/$SID/.system_generated/logs/transcript.jsonl", "artifactDirectoryPath": "/tmp/brain/$SID", "modelName": "gemini-3.6-flash-medium"}
+  },
+  "answer": {"context": "injectSteps.0.systemMessage.systemMessage", "deny": "reason|decision=deny", "block": "reason|decision=continue"}
+}

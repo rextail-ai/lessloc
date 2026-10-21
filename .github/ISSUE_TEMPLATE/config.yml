@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/rextail-ai/lessloc/security/advisories/new
+    about: Report it privately, never in a public issue.
+  - name: Documentation
+    url: https://lessloc.org/guide/getting-started
+    about: Installing, configuring and using lessloc.

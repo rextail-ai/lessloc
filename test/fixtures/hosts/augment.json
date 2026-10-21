@@ -1,0 +1,18 @@
+{
+  "host": "augment",
+  "source": ["https://docs.augmentcode.com/cli/hooks.md"],
+  "read": "2026-10-19",
+  "_verify": [
+    "the argument names of save-file (path, file_content), remove-files (file_paths) and launch-process (command, cwd, wait, max_wait_seconds); the docs show only str-replace-editor's (path, old_str_1, new_str_1) and launch-process's command",
+    "events.ran: how launch-process reports a command's exit code in tool_output; here as <return-code>, from Augment's tool output as agents see it. Without it, lessloc reads the test runner's own summary"
+  ],
+  "events": {
+    "start": {"hook_event_name": "SessionStart", "conversation_id": "$SID", "workspace_roots": ["$CWD"]},
+    "write": {"hook_event_name": "PreToolUse", "conversation_id": "$SID", "workspace_roots": ["$CWD"], "tool_name": "save-file", "tool_input": {"path": "$FILE", "file_content": "$CONTENT"}, "is_mcp_tool": false},
+    "written": {"hook_event_name": "PostToolUse", "conversation_id": "$SID", "workspace_roots": ["$CWD"], "tool_name": "save-file", "tool_input": {"path": "$FILE", "file_content": "$CONTENT"}, "tool_output": "File saved successfully.", "is_mcp_tool": false, "file_changes": [{"path": "$FILE", "changeType": "create", "content": "$CONTENT", "oldContent": ""}]},
+    "shell": {"hook_event_name": "PreToolUse", "conversation_id": "$SID", "workspace_roots": ["$CWD"], "tool_name": "launch-process", "tool_input": {"command": "$COMMAND", "cwd": "$CWD", "wait": true, "max_wait_seconds": 600}, "is_mcp_tool": false},
+    "ran": {"hook_event_name": "PostToolUse", "conversation_id": "$SID", "workspace_roots": ["$CWD"], "tool_name": "launch-process", "tool_input": {"command": "$COMMAND", "cwd": "$CWD", "wait": true, "max_wait_seconds": 600}, "tool_output": "Here are the results from executing the command.\n<return-code>\n$EXIT\n</return-code>\n<stdout>\n$OUTPUT\n</stdout>\n<stderr>\n\n</stderr>", "is_mcp_tool": false},
+    "stop": {"hook_event_name": "Stop", "conversation_id": "$SID", "workspace_roots": ["$CWD"], "agent_stop_cause": "end_turn", "conversation": {"timestamp": "$TIME", "userPrompt": "$PROMPT", "agentTextResponse": "Done.", "agentCodeResponse": [{"path": "shop/load.py", "changeType": "create", "content": "..."}]}}
+  },
+  "answer": {"context": "hookSpecificOutput.additionalContext", "deny": "hookSpecificOutput.permissionDecisionReason", "feedback": "hookSpecificOutput.additionalContext", "block": "reason"}
+}

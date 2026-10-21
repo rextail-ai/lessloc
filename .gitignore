@@ -1,0 +1,14 @@
+dist/
+node_modules/
+__pycache__/
+docs/node_modules/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+docs/patterns/
+docs/benchmarks.md
+docs/why-less-code.md
+docs/public/install.md
+# Local work that never ships: drafts, experiments, notes
+/scratch/
+/drafts/
+/.work/

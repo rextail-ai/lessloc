@@ -1,0 +1,28 @@
+name: New pattern
+description: Propose a bad practice of AI coding agents for the catalog
+labels: [pattern]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What agents do
+      description: A real example, with the agent tool and model if you know them.
+    validations:
+      required: true
+  - type: textarea
+    id: standard
+    attributes:
+      label: The standard that calls it bad
+      description: A CWE, a linter rule that ships enabled, a book or a paper.
+    validations:
+      required: true
+  - type: textarea
+    id: forms
+    attributes:
+      label: A bad form and a good form
+      description: The same intent written badly and well, short enough for test/cases.mjs.
+      render: text
+  - type: textarea
+    id: detect
+    attributes:
+      label: How it could be detected, or the rule that would prevent it

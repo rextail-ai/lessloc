@@ -1,0 +1,15 @@
+{
+  "host": "openhands",
+  "source": ["https://docs.openhands.dev/openhands/usage/customization/hooks.md", "https://github.com/OpenHands/software-agent-sdk/blob/main/openhands-sdk/openhands/sdk/hooks/manager.py", "https://github.com/OpenHands/software-agent-sdk/blob/main/openhands-sdk/openhands/sdk/hooks/conversation_hooks.py", "https://github.com/OpenHands/software-agent-sdk/blob/main/openhands-tools/openhands/tools/terminal/definition.py", "https://github.com/OpenHands/software-agent-sdk/blob/main/openhands-tools/openhands/tools/file_editor/definition.py"],
+  "read": "2026-10-19",
+  "events": {
+    "start": {"event_type": "SessionStart", "tool_name": null, "tool_input": null, "tool_response": null, "message": null, "session_id": "$SID", "working_dir": "$CWD", "metadata": {}},
+    "prompt": {"event_type": "UserPromptSubmit", "tool_name": null, "tool_input": null, "tool_response": null, "message": "$PROMPT", "session_id": "$SID", "working_dir": "$CWD", "metadata": {}},
+    "write": {"event_type": "PreToolUse", "tool_name": "file_editor", "tool_input": {"command": "create", "path": "$ABSFILE", "file_text": "$CONTENT", "old_str": null, "new_str": null, "insert_line": null, "view_range": null, "kind": "FileEditorAction"}, "tool_response": null, "message": null, "session_id": "$SID", "working_dir": "$CWD", "metadata": {}},
+    "written": {"event_type": "PostToolUse", "tool_name": "file_editor", "tool_input": {"command": "create", "path": "$ABSFILE", "file_text": "$CONTENT", "old_str": null, "new_str": null, "insert_line": null, "view_range": null, "kind": "FileEditorAction"}, "tool_response": {"content": [{"type": "text", "text": "File created successfully at: $ABSFILE"}], "is_error": false, "command": "create", "path": "$ABSFILE", "kind": "FileEditorObservation"}, "message": null, "session_id": "$SID", "working_dir": "$CWD", "metadata": {}},
+    "shell": {"event_type": "PreToolUse", "tool_name": "terminal", "tool_input": {"command": "$COMMAND", "is_input": false, "timeout": null, "reset": false, "kind": "TerminalAction"}, "tool_response": null, "message": null, "session_id": "$SID", "working_dir": "$CWD", "metadata": {}},
+    "ran": {"event_type": "PostToolUse", "tool_name": "terminal", "tool_input": {"command": "$COMMAND", "is_input": false, "timeout": null, "reset": false, "kind": "TerminalAction"}, "tool_response": {"content": [{"type": "text", "text": "$OUTPUT"}], "is_error": false, "command": "$COMMAND", "exit_code": "$EXIT", "timeout": false, "metadata": {"exit_code": "$EXIT", "pid": 4242, "working_dir": "$CWD"}, "kind": "TerminalObservation"}, "message": null, "session_id": "$SID", "working_dir": "$CWD", "metadata": {}},
+    "stop": {"event_type": "Stop", "tool_name": null, "tool_input": null, "tool_response": null, "message": null, "session_id": "$SID", "working_dir": "$CWD", "metadata": {}}
+  },
+  "answer": {"context": "additionalContext", "deny": "reason", "block": "reason"}
+}

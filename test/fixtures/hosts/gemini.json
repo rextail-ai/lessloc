@@ -1,0 +1,15 @@
+{
+  "host": "gemini",
+  "source": ["https://github.com/google-gemini/gemini-cli/blob/main/docs/hooks/reference.md", "https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/file-system.md", "https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/shell.md", "https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/tools/shell.ts"],
+  "read": "2026-10-19",
+  "events": {
+    "start": {"session_id": "$SID", "transcript_path": "/tmp/session.json", "cwd": "$CWD", "hook_event_name": "SessionStart", "timestamp": "$TIME", "source": "startup"},
+    "prompt": {"session_id": "$SID", "transcript_path": "/tmp/session.json", "cwd": "$CWD", "hook_event_name": "BeforeAgent", "timestamp": "$TIME", "prompt": "$PROMPT"},
+    "write": {"session_id": "$SID", "transcript_path": "/tmp/session.json", "cwd": "$CWD", "hook_event_name": "BeforeTool", "timestamp": "$TIME", "tool_name": "write_file", "tool_input": {"file_path": "$FILE", "content": "$CONTENT"}},
+    "written": {"session_id": "$SID", "transcript_path": "/tmp/session.json", "cwd": "$CWD", "hook_event_name": "AfterTool", "timestamp": "$TIME", "tool_name": "write_file", "tool_input": {"file_path": "$FILE", "content": "$CONTENT"}, "tool_response": {"llmContent": "Successfully created and wrote to new file: $ABSFILE.", "returnDisplay": "Wrote $FILE"}},
+    "shell": {"session_id": "$SID", "transcript_path": "/tmp/session.json", "cwd": "$CWD", "hook_event_name": "BeforeTool", "timestamp": "$TIME", "tool_name": "run_shell_command", "tool_input": {"command": "$COMMAND", "description": "Run the tests"}},
+    "ran": {"session_id": "$SID", "transcript_path": "/tmp/session.json", "cwd": "$CWD", "hook_event_name": "AfterTool", "timestamp": "$TIME", "tool_name": "run_shell_command", "tool_input": {"command": "$COMMAND", "description": "Run the tests"}, "tool_response": {"llmContent": "<untrusted_context>\nOutput: $OUTPUT$EXIT_LINE\nProcess Group PGID: 4242\n</untrusted_context>", "returnDisplay": "$OUTPUT"}},
+    "stop": {"session_id": "$SID", "transcript_path": "/tmp/session.json", "cwd": "$CWD", "hook_event_name": "AfterAgent", "timestamp": "$TIME", "prompt": "$PROMPT", "prompt_response": "Done.", "stop_hook_active": "$AGAIN"}
+  },
+  "answer": {"context": "hookSpecificOutput.additionalContext", "deny": "reason", "feedback": "hookSpecificOutput.additionalContext", "block": "reason"}
+}

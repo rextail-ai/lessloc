@@ -1,0 +1,19 @@
+{
+  "module": "cline/plugin.js",
+  "exports": {"Cline CLI and SDK": "lessloc"},
+  "source": ["https://docs.cline.bot/sdk/plugins.md", "https://github.com/cline/cline/blob/main/sdk/packages/agents/src/agent-runtime.ts", "https://github.com/cline/cline/blob/main/sdk/packages/core/src/extensions/tools/schemas.ts"],
+  "read": "2026-10-19",
+  "_verify": [
+    "written: the text of an editor result",
+    "ran: run_commands returns one {query, result, success, error} per command (from Cline's source, not its docs)",
+    "that a plugin file in ~/.cline/plugins loading another module by its file URL runs in Cline's plugin worker"
+  ],
+  "events": {
+    "prompt": {"snapshot": {"agentId": "agent_1", "conversationId": "$SID", "runId": "run_1", "iteration": 0, "messages": [{"role": "user", "content": [{"type": "text", "text": "$PROMPT"}]}]}},
+    "write": {"snapshot": {"agentId": "agent_1", "conversationId": "$SID", "runId": "run_1", "iteration": 1, "messages": []}, "toolCall": {"type": "tool-call", "toolCallId": "$ID", "toolName": "editor", "input": {"path": "$ABSFILE", "new_text": "$CONTENT"}}, "input": {"path": "$ABSFILE", "new_text": "$CONTENT"}},
+    "written": {"snapshot": {"agentId": "agent_1", "conversationId": "$SID", "runId": "run_1", "iteration": 1, "messages": []}, "toolCall": {"type": "tool-call", "toolCallId": "$ID", "toolName": "editor", "input": {"path": "$ABSFILE", "new_text": "$CONTENT"}}, "input": {"path": "$ABSFILE", "new_text": "$CONTENT"}, "result": {"output": "File created: $ABSFILE"}, "durationMs": 12},
+    "shell": {"snapshot": {"agentId": "agent_1", "conversationId": "$SID", "runId": "run_1", "iteration": 2, "messages": []}, "toolCall": {"type": "tool-call", "toolCallId": "$ID", "toolName": "run_commands", "input": {"commands": ["$COMMAND"]}}, "input": {"commands": ["$COMMAND"]}},
+    "ran": {"snapshot": {"agentId": "agent_1", "conversationId": "$SID", "runId": "run_1", "iteration": 2, "messages": []}, "toolCall": {"type": "tool-call", "toolCallId": "$ID", "toolName": "run_commands", "input": {"commands": ["$COMMAND"]}}, "input": {"commands": ["$COMMAND"]}, "result": {"output": [{"query": "$COMMAND", "result": "$OUTPUT", "success": "$OK"}]}, "durationMs": 840},
+    "stop": {"snapshot": {"agentId": "agent_1", "conversationId": "$SID", "runId": "run_1", "iteration": 3, "messages": []}, "result": {"status": "completed", "outputText": "Done.", "iterations": 3}}
+  }
+}

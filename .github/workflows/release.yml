@@ -1,0 +1,48 @@
+# Publishes each version tag that matches package.json, once the tests pass: a GitHub release with the Gemini CLI extension
+# (scripts/gemini-extension.mjs) as its one asset and the version's section of CHANGELOG.md as its notes, then the npm package.
+# Gemini CLI and Qwen Code install a release's only asset; with more assets than one, they take the source archive instead.
+# A re-run skips whatever is already published.
+name: release
+on:
+  push:
+    tags: ['v*']
+permissions: {}
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: test "v$(node -p 'require("./package.json").version')" = "$GITHUB_REF_NAME"
+      - run: npm test
+      - run: node scripts/gemini-extension.mjs dist/gemini
+      - run: tar -czf lessloc-gemini.tar.gz -C dist/gemini .
+      - run: awk -v v="## [${GITHUB_REF_NAME#v}]" 'index($0, v) == 1 {f = 1; next} /^## \[/ {f = 0} f' CHANGELOG.md > notes.md
+      - run: gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" lessloc-gemini.tar.gz --title "$GITHUB_REF_NAME" --notes-file notes.md
+        env:
+          GH_TOKEN: ${{ github.token }}
+  # npm trusted publishing (OIDC) with provenance, which needs npm 11.5.1 or later: Node 24 bundles it. NPM_TOKEN is for a
+  # first version only, since npm sets a trusted publisher on a package that exists; without the secret it is empty.
+  npm:
+    needs: release
+    if: github.repository == 'rextail-ai/lessloc'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - run: npm view "lessloc@${GITHUB_REF_NAME#v}" version > /dev/null 2>&1 || npm publish --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

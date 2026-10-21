@@ -1,0 +1,13 @@
+{
+  "name": "lessloc",
+  "version": "0.10.0",
+  "description": "Keeps AI coding agents such as Claude Code, Codex, GitHub Copilot, Gemini CLI and Cursor to the least code that does the job and still works: reuse hints and an edit gate while it writes, a review of exactly what it changed, a handoff record for the next agent, gates for commits and CI.",
+  "author": {"name": "lessloc", "url": "https://lessloc.org"},
+  "homepage": "https://lessloc.org",
+  "keywords": ["ai-coding-agent", "coding-agent", "agent-hooks", "code-review", "code-quality", "dead-code", "duplicate-code", "llm"],
+  "repository": "https://github.com/rextail-ai/lessloc",
+  "license": "Apache-2.0",
+  "logo": "docs/public/favicon-180.png",
+  "skills": [],
+  "hooks": "./cursor-hooks.json"
+}

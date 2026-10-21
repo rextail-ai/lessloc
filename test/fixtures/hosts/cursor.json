@@ -1,0 +1,16 @@
+{
+  "host": "cursor",
+  "source": ["https://cursor.com/docs/agent/hooks"],
+  "read": "2026-10-19",
+  "_verify": ["events.start: whether session_id equals conversation_id (the docs list both, and lessloc keys its state on the first it finds)"],
+  "events": {
+    "start": {"hook_event_name":"sessionStart","conversation_id":"$SID","generation_id":"g0","session_id":"$SID","cursor_version":"2.5.0","workspace_roots":["$CWD"],"is_background_agent":false,"composer_mode":"agent"},
+    "prompt": {"hook_event_name":"beforeSubmitPrompt","conversation_id":"$SID","generation_id":"g1","cursor_version":"2.5.0","workspace_roots":["$CWD"],"prompt":"$PROMPT","attachments":[]},
+    "write": {"hook_event_name":"preToolUse","conversation_id":"$SID","generation_id":"g1","cursor_version":"2.5.0","workspace_roots":["$CWD"],"tool_name":"Write","tool_use_id":"$ID","cwd":"$CWD","tool_input":{"file_path":"$ABSFILE","content":"$CONTENT"}},
+    "written": {"hook_event_name":"postToolUse","conversation_id":"$SID","generation_id":"g1","cursor_version":"2.5.0","workspace_roots":["$CWD"],"tool_name":"Write","tool_use_id":"$ID","cwd":"$CWD","tool_input":{"file_path":"$ABSFILE","content":"$CONTENT"},"tool_output":"{}","duration":12},
+    "shell": {"hook_event_name":"preToolUse","conversation_id":"$SID","generation_id":"g1","cursor_version":"2.5.0","workspace_roots":["$CWD"],"tool_name":"Shell","tool_use_id":"$ID","cwd":"$CWD","tool_input":{"command":"$COMMAND","working_directory":"$CWD"}},
+    "ran": {"hook_event_name":"postToolUse","conversation_id":"$SID","generation_id":"g1","cursor_version":"2.5.0","workspace_roots":["$CWD"],"tool_name":"Shell","tool_use_id":"$ID","cwd":"$CWD","tool_input":{"command":"$COMMAND"},"tool_output":"{\"exitCode\":$EXIT,\"stdout\":$OUTPUT_JSON}","duration":120},
+    "stop": {"hook_event_name":"stop","conversation_id":"$SID","generation_id":"g1","cursor_version":"2.5.0","workspace_roots":["$CWD"],"status":"completed","loop_count":"$LOOP"}
+  },
+  "answer": {"context":"additional_context","deny":"agent_message","feedback":"additional_context","block":"followup_message"}
+}

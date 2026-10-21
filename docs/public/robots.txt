@@ -1,0 +1,27 @@
+# Every crawler is welcome, search and AI alike. The groups below name the AI crawlers so their owners see it stated.
+# Plain-Markdown docs for AI agents: https://lessloc.org/llms.txt (index, with file sizes), https://lessloc.org/llms-full.txt (the docs)
+# and https://lessloc.org/llms-patterns.txt (the pattern pages)
+User-agent: *
+User-agent: Googlebot
+User-agent: Bingbot
+User-agent: Applebot
+User-agent: Applebot-Extended
+User-agent: Google-Extended
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: anthropic-ai
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: CCBot
+User-agent: DuckAssistBot
+User-agent: Meta-ExternalAgent
+User-agent: MistralAI-User
+User-agent: cohere-ai
+User-agent: Amazonbot
+Allow: /
+
+Sitemap: https://lessloc.org/sitemap.xml

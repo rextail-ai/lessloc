@@ -1,0 +1,20 @@
+{
+  "module": "opencode/server.js",
+  "exports": {"OpenCode 1.x": "default", "Kilo Code": "kilo"},
+  "source": ["https://kilo.ai/docs/automate/extending/plugins", "@opencode-ai/plugin 1.19.3, dist/index.d.ts (Hooks, PluginModule)", "https://github.com/Kilo-Org/kilocode/blob/main/packages/opencode/src/tool/edit.ts"],
+  "read": "2026-10-19",
+  "_verify": [
+    "write: that a tool call refused by throwing in tool.execute.before reaches the model as the call's error (the docs show a throw that blocks the call)",
+    "ran: that the bash tool's metadata carries the exit code as `exit`",
+    "stop: that a text part marked `synthetic` in client.session.prompt reaches the model and stays out of the user's view"
+  ],
+  "events": {
+    "prompt": {"input": {"sessionID": "$SID", "agent": "build", "messageID": "msg_1"}, "output": {"message": {"id": "msg_1", "sessionID": "$SID", "role": "user"}, "parts": [{"type": "text", "text": "$PROMPT"}]}},
+    "system": {"input": {"sessionID": "$SID", "model": {"id": "model"}}, "output": {"system": ["You are a coding agent."]}},
+    "write": {"input": {"tool": "write", "sessionID": "$SID", "callID": "$ID"}, "output": {"args": {"filePath": "$ABSFILE", "content": "$CONTENT"}}},
+    "written": {"input": {"tool": "write", "sessionID": "$SID", "callID": "$ID", "args": {"filePath": "$ABSFILE", "content": "$CONTENT"}}, "output": {"title": "$FILE", "output": "Wrote file successfully.", "metadata": {}}},
+    "shell": {"input": {"tool": "bash", "sessionID": "$SID", "callID": "$ID"}, "output": {"args": {"command": "$COMMAND", "description": "Run the tests"}}},
+    "ran": {"input": {"tool": "bash", "sessionID": "$SID", "callID": "$ID", "args": {"command": "$COMMAND", "description": "Run the tests"}}, "output": {"title": "$COMMAND", "output": "$OUTPUT", "metadata": {"output": "$OUTPUT", "exit": "$EXIT", "description": "Run the tests"}}},
+    "stop": {"event": {"type": "session.idle", "properties": {"sessionID": "$SID"}}}
+  }
+}

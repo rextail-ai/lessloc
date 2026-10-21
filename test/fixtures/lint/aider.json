@@ -1,0 +1,15 @@
+{
+  "tool": "aider",
+  "source": ["https://aider.chat/docs/usage/lint-test.html", "https://aider.chat/docs/config/aider_conf.html", "https://github.com/Aider-AI/aider/blob/main/aider/linter.py", "https://github.com/Aider-AI/aider/blob/main/aider/run_cmd.py", "https://github.com/Aider-AI/aider/blob/main/aider/coders/base_coder.py"],
+  "read": "2026-10-19",
+  "_notes": [
+    "run: Aider appends one edited file's path, relative to the repository's root, to the lint command, and runs it from that root through a shell, once per file (linter.py run_cmd). Its input is Aider's own terminal (run_cmd.py starts it without one of its own)",
+    "model: when the command exits non-zero, what it printed, after the command line itself, goes to the model as the next message once the user agrees to fix it (linter.py lint, base_coder.py)",
+    "system: Aider's system prompt lists its lint commands (base_coder.py get_platform_info)",
+    "read_only: a read-only file reaches the model under its path relative to the repository's root, then its content (base_coder.py get_read_only_files_content)"
+  ],
+  "run": "$LINT_CMD $FILE",
+  "model": "# Fix any errors below, if possible.\n\n## Running: $LINT_CMD $FILE\n\n$OUTPUT\n",
+  "system": "- The user's pre-commit runs these lint commands, don't suggest running them:\n  - $LINT_CMD\n",
+  "read_only": "$READ\n```\n$READ_CONTENT```\n"
+}
