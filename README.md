@@ -17,7 +17,7 @@
   <a href="https://github.com/rextail-ai/lessloc/blob/main/LICENSE"><img alt="license: Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
 </p>
 
-<p align="center"><a href="https://lessloc.org/start"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/rextail-ai/lessloc/installs/slime-dark.svg"><img alt="lessloc installs" src="https://raw.githubusercontent.com/rextail-ai/lessloc/installs/slime-light.svg" width="360" height="240"></picture></a></p>
+<p align="center"><a href="https://lessloc.org/start"><picture><source media="(prefers-color-scheme: dark)" srcset="https://lessloc-counter.rextail.ai/slime-dark.svg"><img alt="lessloc installs" src="https://lessloc-counter.rextail.ai/slime-light.svg" width="360" height="240"></picture></a></p>
 
 ## Install in one sentence
 
