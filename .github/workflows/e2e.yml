@@ -1,0 +1,34 @@
+# Runs the end-to-end tests (`npm run e2e`): each agent tool's own program, at the version test/e2e/tools.json pins, set up for
+# lessloc the documented way and driven by a local fake model. Weekly, on every push to main that changes the hooks, a bridge or
+# the harness, and before each release (release.yml calls it). It needs no secret: the fake model takes no key, and the tools
+# reach nothing but it. The tools are cached between runs, keyed by their pins.
+name: e2e
+on:
+  schedule:
+    - cron: '17 4 * * 1'
+  push:
+    branches: [main]
+    paths: ['hook.mjs', 'lib/**', 'bridge/**', 'opencode/**', 'cline/**', 'pi/**', 'amp/**', '.claude-plugin/**', '.codex-plugin/**', 'scripts/gemini-extension.mjs', 'test/e2e/**']
+  workflow_call:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/lessloc-e2e
+          key: e2e-tools-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('test/e2e/tools.json') }}
+      - run: npm run e2e
+        env:
+          E2E_INSTALL: '1'
