@@ -41,7 +41,7 @@ To build it, follow [Adding a pattern](ARCHITECTURE.md#adding-a-pattern). A new 
 
 ## Adding an agent tool
 
-Follow [Adding an agent tool](ARCHITECTURE.md#adding-an-agent-tool). The tool's status says "tested against documented payloads" until it has run live, and then "verified live on <version>" for exactly what ran.
+Follow [Adding an agent tool](ARCHITECTURE.md#adding-an-agent-tool). The tool's status says "tested against documented payloads" until a recorded end-to-end session backs it, and then "tested end to end on <version>" for exactly the version recorded.
 
 ## Benchmarks
 

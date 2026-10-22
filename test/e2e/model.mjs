@@ -21,6 +21,7 @@ export function args(schema, values) {
 
 // One protocol: `decode(body)` gives the tools offered, the assistant's actions so far, the first user message and each tool
 // result; `answer(res, act, body)` sends one step, a tool call or a text reply, streamed when the request asks for it.
+const sse = events => events.map(([type, data]) => `event: ${type}\ndata: ${JSON.stringify({ type, ...data })}\n\n`).join('');
 const PROTOCOLS = {
   anthropic: {
     route: /\/v1\/messages$/,
@@ -37,14 +38,66 @@ const PROTOCOLS = {
       const block = act.call ? { type: 'tool_use', id: act.id, name: act.call, input: act.args } : { type: 'text', text: act.reply };
       const stop = act.call ? 'tool_use' : 'end_turn', usage = { input_tokens: 10, output_tokens: 5 }, message = { id: `msg_${act.id}`, type: 'message', role: 'assistant', model: b.model || 'fake', stop_sequence: null };
       if (!b.stream) return send(res, 'application/json', JSON.stringify({ ...message, content: [block], stop_reason: stop, usage }));
-      const ev = (type, data) => `event: ${type}\ndata: ${JSON.stringify({ type, ...data })}\n\n`;
+      send(res, 'text/event-stream', sse([
+        ['message_start', { message: { ...message, content: [], stop_reason: null, usage } }],
+        ['content_block_start', { index: 0, content_block: act.call ? { ...block, input: {} } : { ...block, text: '' } }],
+        ['content_block_delta', { index: 0, delta: act.call ? { type: 'input_json_delta', partial_json: JSON.stringify(act.args) } : { type: 'text_delta', text: act.reply } }],
+        ['content_block_stop', { index: 0 }],
+        ['message_delta', { delta: { stop_reason: stop, stop_sequence: null }, usage }],
+        ['message_stop', {}],
+      ]));
+    },
+  },
+  // OpenAI Responses (Codex). A tool of type `custom` takes free text, Codex's apply_patch among them.
+  responses: {
+    route: /\/responses$/,
+    decode(b) {
+      const items = Array.isArray(b.input) ? b.input : [];
+      return {
+        offered: (b.tools || []).map(t => ({ name: t.name ?? t.type, schema: t.parameters, custom: t.type === 'custom' })),
+        actions: items.filter(i => /^(function_call|custom_tool_call|local_shell_call)$/.test(i.type) || (i.type === 'message' && i.role === 'assistant')).length,
+        firstUser: strings(items.find(i => i.role === 'user')?.content),
+        results: items.filter(i => /_call_output$/.test(i.type)).map(i => ({ id: i.call_id, text: strings(i.output) })),
+      };
+    },
+    answer(res, act, b) {
+      const item = !act.call ? { type: 'message', id: `msg_${act.id}`, role: 'assistant', content: [{ type: 'output_text', text: act.reply, annotations: [] }] }
+        : typeof act.args === 'string' ? { type: 'custom_tool_call', id: `ctc_${act.id}`, call_id: act.id, name: act.call, input: act.args, status: 'completed' }
+          : { type: 'function_call', id: `fc_${act.id}`, call_id: act.id, name: act.call, arguments: JSON.stringify(act.args) };
+      const usage = { input_tokens: 10, input_tokens_details: { cached_tokens: 0 }, output_tokens: 5, output_tokens_details: { reasoning_tokens: 0 }, total_tokens: 15 };
+      const response = { id: `resp_${act.id}`, object: 'response', created_at: 0, model: b.model || 'fake', status: 'in_progress', output: [] }, done = { ...response, status: 'completed', output: [item], usage };
+      if (!b.stream) return send(res, 'application/json', JSON.stringify(done));
+      send(res, 'text/event-stream', sse([
+        ['response.created', { response }],
+        ['response.output_item.added', { output_index: 0, item: act.call ? item : { ...item, content: [] } }],
+        ...(act.call ? [] : [['response.output_text.delta', { item_id: item.id, output_index: 0, content_index: 0, delta: act.reply }]]),
+        ['response.output_item.done', { output_index: 0, item }],
+        ['response.completed', { response: done }],
+      ]));
+    },
+  },
+  // OpenAI Chat Completions, the protocol most tools speak to a provider of the user's own.
+  chat: {
+    route: /\/chat\/completions$/,
+    decode(b) {
+      const msgs = b.messages || [];
+      return {
+        offered: (b.tools || []).map(t => ({ name: t.function?.name, schema: t.function?.parameters })),
+        actions: msgs.filter(m => m.role === 'assistant').reduce((n, m) => n + Math.max(1, m.tool_calls?.length || 0), 0),
+        firstUser: strings(msgs.find(m => m.role === 'user')?.content),
+        results: msgs.filter(m => m.role === 'tool').map(m => ({ id: m.tool_call_id, text: strings(m.content) })),
+      };
+    },
+    answer(res, act, b) {
+      const call = act.call && [{ index: 0, id: act.id, type: 'function', function: { name: act.call, arguments: JSON.stringify(act.args) } }];
+      const head = { id: `chatcmpl_${act.id}`, created: 0, model: b.model || 'fake' }, finish = act.call ? 'tool_calls' : 'stop', usage = { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 };
+      if (!b.stream) return send(res, 'application/json', JSON.stringify({ ...head, object: 'chat.completion', choices: [{ index: 0, message: { role: 'assistant', content: act.reply ?? null, ...(call && { tool_calls: call }) }, finish_reason: finish }], usage }));
+      const chunk = o => `data: ${JSON.stringify({ ...head, object: 'chat.completion.chunk', ...o })}\n\n`;
       send(res, 'text/event-stream', [
-        ev('message_start', { message: { ...message, content: [], stop_reason: null, usage } }),
-        ev('content_block_start', { index: 0, content_block: act.call ? { ...block, input: {} } : { ...block, text: '' } }),
-        ev('content_block_delta', { index: 0, delta: act.call ? { type: 'input_json_delta', partial_json: JSON.stringify(act.args) } : { type: 'text_delta', text: act.reply } }),
-        ev('content_block_stop', { index: 0 }),
-        ev('message_delta', { delta: { stop_reason: stop, stop_sequence: null }, usage }),
-        ev('message_stop', {}),
+        chunk({ choices: [{ index: 0, delta: { role: 'assistant', ...(call ? { tool_calls: call } : { content: act.reply }) }, finish_reason: null }] }),
+        chunk({ choices: [{ index: 0, delta: {}, finish_reason: finish }] }),
+        b.stream_options?.include_usage ? chunk({ choices: [], usage }) : '',
+        'data: [DONE]\n\n',
       ].join(''));
     },
   },
@@ -60,7 +113,7 @@ function plan(adapter, steps, d) {
   if (step.reply) return { reply: step.reply, id, main: true };
   const tool = d.offered.find(t => t.name === adapter.tools[step.tool]);
   if (!tool) throw new Error(`${adapter.tools[step.tool]} not offered; offered: ${d.offered.map(t => t.name).join(', ')}`);
-  return { call: tool.name, args: args(tool.schema, { ...step, ...adapter.args?.[step.tool] }), id, main: true };
+  return { call: tool.name, args: tool.custom ? adapter.text(step) : args(tool.schema, { ...step, ...adapter.args?.[step.tool] }), id, main: true };
 }
 
 export function start(adapter, steps) {

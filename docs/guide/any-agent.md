@@ -22,7 +22,7 @@ In Python, pass `plugins=[{"type": "local", "path": "/home/you/.lessloc"}]` to `
 
 ## Codex SDK
 
-The Codex SDK runs the Codex CLI, which reads your user-level hooks. Run `lessloc init --codex` once, and trust the hooks once in Codex (`/hooks`). Codex records that trust, so SDK runs use the same hooks. [Supported agent tools](/guide/getting-started#supported-agent-tools) says what was verified live in the Codex CLI.
+The Codex SDK runs the Codex CLI, which reads your user-level hooks. Run `lessloc init --codex` once, and trust the hooks once in Codex (`/hooks`). Codex records that trust, so SDK runs use the same hooks. [Supported agent tools](/guide/getting-started#supported-agent-tools) names the Codex CLI version `init --codex` was tested end to end on.
 
 ## OpenAI Agents SDK
 

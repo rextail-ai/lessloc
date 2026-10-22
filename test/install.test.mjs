@@ -509,8 +509,23 @@ test("Cursor's plugin install reads lessloc's Cursor manifest, which lists no sk
   assert.deepEqual(run(tmp('empty-bin-')).output.slice(1), ['', ''], 'no node: nothing, and every tool call goes ahead');
 });
 
-// The status table is generated from the rows in lib/install.mjs, so the getting-started guide and the rows cannot disagree, and
-// a status says "verified live" only beside the tool version it was verified on. The README links to it.
+// The status table is generated from the rows in lib/install.mjs, so the getting-started guide and the rows cannot disagree. The
+// README links to it.
+// A status, or a sentence of the README or the docs, names a version of a tool only beside a run of it that a committed
+// recording backs (test/fixtures/recorded, written by `E2E_RECORD=1 npm run e2e`): "tested end to end" needs one of that version
+// of the tool, "verified live" one of a live session. In a sentence, each tool name followed by a version is a claim.
+test('every claim of a run names a version of the tool that a committed recording ran', () => {
+  const dir = repoFile('test/fixtures/recorded/'), heads = fs.readdirSync(dir).map(f => JSON.parse(fs.readFileSync(new URL(f, dir), 'utf8').split('\n')[0]));
+  const pages = execFileSync('git', ['ls-files', 'README.md', 'docs/*.md'], { cwd: ROOT, encoding: 'utf8' }).split('\n').filter(Boolean).map(f => fs.readFileSync(repoFile(f), 'utf8'));
+  const named = new RegExp(`(${TOOLS.map(t => t.label).join('|')}) (\\d+\\.\\d+(?:\\.\\d+)*)`, 'g');
+  const claims = [
+    ...TOOLS.flatMap(t => (t.docs || []).flatMap(r => [...(r.status || '').matchAll(/(tested end to end|verified live) on (\d[\w.]*)/g)].map(m => [t, m[1], m[2]]))),
+    ...pages.flatMap(text => [...text.matchAll(/(tested end to end|verified live)(?:[^.|\n]|\.\d)*/gi)]).flatMap(([sentence, kind]) => [...sentence.matchAll(named)].map(m => [TOOLS.find(t => t.label === m[1]), kind.toLowerCase(), m[2]])),
+  ];
+  assert.ok(claims.length > 3);
+  for (const [t, kind, v] of claims) assert.ok(heads.some(h => h.host === t?.id && h.version === v && (kind === 'tested end to end' || h.live)), `${t?.label}: ${kind} on ${v}`);
+});
+
 test('the getting-started guide shows exactly the status table, and the README links to it', () => {
   const text = fs.readFileSync(repoFile('docs/guide/getting-started.md'), 'utf8'), readme = fs.readFileSync(repoFile('README.md'), 'utf8');
   assert.equal(text.split('<!-- hosts:start -->\n')[1]?.split('\n<!-- hosts:end -->')[0], hostTable(''), 'run `node lessloc.mjs hosts --write`');
@@ -520,5 +535,5 @@ test('the getting-started guide shows exactly the status table, and the README l
 
 test('the status table has a row for every tool lessloc sets up, naming how, and every status is worded exactly', () => {
   for (const t of TOOLS.filter(x => x.setUp)) assert.ok(t.docs?.some(r => r.how.includes(t.commands ? 'plugin' : `\`init --${t.id}`)), `${t.label} has a row with its install`);
-  for (const r of hostRows()) assert.match(r.status, /^(tested against documented payloads|rules tier: .*|(\`init --\w+\` )?verified live on \d+\.\d+[.\d]*\b.*)$/, r.name);
+  for (const r of hostRows()) assert.match(r.status, /^(tested against documented payloads|rules tier: .*|(\`init --\w+\` )?(verified live|tested end to end) on \d+\.\d+[.\d]*\b.*)$/, r.name);
 });

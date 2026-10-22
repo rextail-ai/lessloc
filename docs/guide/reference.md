@@ -22,7 +22,7 @@ Every command and flag, every finding kind, every file lessloc writes, and the e
 | [`init`](#init) | set up this clone, shared files on request, and agent tools' hooks |
 | [`remove`](#remove) | undo `init` and delete lessloc's own files |
 | [`catalog`](#catalog) | the pattern catalog's tables |
-| [`hosts`](#hosts) | each agent tool: how it installs and what was verified live |
+| [`hosts`](#hosts) | each agent tool: how it installs and how it was tested |
 | [`version`](#version) | print the version |
 
 A command that cannot start prints why and exits with 2: for example `check`, `verify`, `ci`, `init` and `remove` outside a git repository, `test` and `verify` without a test command, or `probe` without a `probe` command.
@@ -233,7 +233,7 @@ Prints the pattern catalog's tables as PATTERNS.md shows them, generated from `l
 lessloc hosts [--markdown] [--write]
 ```
 
-Prints each agent tool lessloc knows: how to install lessloc for it, and its status. A status says "verified live" only for what was run live in that tool, with the tool's version; otherwise it says "tested against documented payloads". `--markdown` prints it as the table that [Supported agent tools](/guide/getting-started#supported-agent-tools) shows. `--write` writes that table into lessloc's own getting-started guide, between its hosts markers. The rows live in `TOOLS` in `lib/install.mjs` ([ARCHITECTURE.md](https://github.com/rextail-ai/lessloc/blob/main/ARCHITECTURE.md#adding-an-agent-tool)).
+Prints each agent tool lessloc knows: how to install lessloc for it, and its status. A status names a version of the tool only where a recording in the repository backs it: "tested end to end on <version>" when that version of the tool's own program, set up the documented way, ran lessloc's hooks through a scripted session and passed every check, and "verified live on <version>" when a session with a real model did. Otherwise it says "tested against documented payloads". `--markdown` prints it as the table that [Supported agent tools](/guide/getting-started#supported-agent-tools) shows. `--write` writes that table into lessloc's own getting-started guide, between its hosts markers. The rows live in `TOOLS` in `lib/install.mjs` ([ARCHITECTURE.md](https://github.com/rextail-ai/lessloc/blob/main/ARCHITECTURE.md#adding-an-agent-tool)).
 
 ### version
 

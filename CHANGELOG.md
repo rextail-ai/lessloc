@@ -28,6 +28,7 @@ Every release of lessloc, newest first. Versions follow [Semantic Versioning](ht
 
 ### Works in more tools
 
+- Tested end to end: Claude Code 2.1.306, Codex 0.163.0 (`init --codex`) and OpenCode 2.1.2, each set up the documented way, work through one scripted session against a local model, and the standard, the hints, the gate, the note after a write, the agent's test runs, the held turn and the handoff each reach the agent or the record. `npm test` replays each session's recorded hook calls offline, and the status table names the version each tool was tested on.
 - GitHub Copilot CLI: the agent's test runs are read from the exit code the CLI gives after a command's output.
 - Junie: the hooks work in the project the payload names in `project_path`.
 - Antigravity CLI: its own file tools, `write_file` and `edit_file`, are gated and tracked, and a turn it ends normally is reviewed.

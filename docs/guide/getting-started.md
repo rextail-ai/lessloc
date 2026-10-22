@@ -25,10 +25,10 @@ Recommended:
 <!-- hosts:start -->
 | Agent tool | Install | Status |
 |---|---|---|
-| Claude Code | [plugin](/guide/getting-started#claude-code) | verified live on 2.1.303 |
-| Codex | [`init --codex` or the Codex plugin](/guide/getting-started#codex) | `init --codex` verified live on 0.163; the Codex plugin: tested against documented payloads |
+| Claude Code | [plugin](/guide/getting-started#claude-code) | tested end to end on 2.1.306 |
+| Codex | [`init --codex` or the Codex plugin](/guide/getting-started#codex) | `init --codex` tested end to end on 0.163.0; the Codex plugin: tested against documented payloads |
 | Cursor | [`init --cursor` or the Cursor plugin](/guide/getting-started#cursor) | tested against documented payloads |
-| OpenCode 2.x | [`init --opencode`](/guide/getting-started#opencode-2-x) | verified live on 2.0.10 |
+| OpenCode 2.x | [`init --opencode`](/guide/getting-started#opencode-2-x) | tested end to end on 2.1.2 |
 | OpenCode 1.x | [`init --opencode`](/guide/getting-started#opencode-1-x-and-kilo-code) | tested against documented payloads |
 | Kilo Code | [`init --kilo`](/guide/getting-started#opencode-1-x-and-kilo-code) | tested against documented payloads |
 | Amp | [`init --amp`](/guide/getting-started#amp) | tested against documented payloads |
@@ -64,7 +64,7 @@ Each tool below has up to three ways to install lessloc, in this order:
 
    > Install lessloc for this project by following https://lessloc.org/install.md
 
-   [That page](/install) is written for agents. The agent checks Node and git, clones lessloc into `~/.lessloc`, sets up every agent tool it finds and this repository, runs `doctor`, and tells you what changes. You only approve its commands. Status: verified live before release in Claude Code 2.1.303 and OpenCode 2.0.10, from a local copy of this page and the repository: the agent installed lessloc, `doctor` passed, and the next session's placeholder write was refused.
+   [That page](/install) is written for agents. The agent checks Node and git, clones lessloc into `~/.lessloc`, sets up every agent tool it finds and this repository, runs `doctor`, and tells you what changes. You only approve its commands.
 2. **In your tool's prompt box**, where the tool installs plugins itself.
 3. **In a terminal.** Get lessloc first:
 
@@ -102,7 +102,7 @@ This installs lessloc's hooks for every tool it finds and supports, in your home
 
 Start a new agent session afterwards. The plugin hooks every event lessloc uses: session start, each prompt, before and after tool calls, subagents, and the end of each turn.
 
-Verified live on Claude Code 2.1.303: the standard at session start, a refused placeholder and a held turn reach the agent, and none of these texts names lessloc.
+Tested end to end on Claude Code 2.1.306: with a subagent running in the background, the standard at session start, the hints, a refused placeholder, the note after a write and a held turn reach the agent, and none of these texts names lessloc.
 
 The plugin also adds a `/lessloc` skill for you. It is never listed to the agent. It can `setup`, `audit`, `review`, `consolidate` and `find`.
 
@@ -121,7 +121,7 @@ The plugin also adds a `/lessloc` skill for you. It is never listed to the agent
 
 Either way, Codex runs new hooks only after you trust them once: `/hooks` in Codex. Use the plugin or `init --codex`, not both; `doctor` warns when both are set up.
 
-`init --codex` is verified live on Codex 0.163: the model sees the standard and the hints as developer messages, never lessloc, and the agent's own test runs are recorded.
+`init --codex` is tested end to end on Codex 0.163.0: the standard, the hints, a refused placeholder patch, the note after a write and a held turn reach the agent, never lessloc, and the agent's own test runs are recorded.
 
 How lessloc works in Codex:
 
@@ -171,7 +171,7 @@ How lessloc works in Cursor:
 
 How lessloc works in OpenCode: the review at the end of a turn reaches the agent as a follow-up message.
 
-Verified live on OpenCode 2.0.10: OpenCode loads the plugin file that `init --opencode` writes, and the rules, the hints, the gate, the notes after writes and the follow-up at the end of a turn reach the agent. No agent call touches lessloc, and the follow-up names only unfinished work.
+Tested end to end on OpenCode 2.1.2: OpenCode loads the plugin file that `init --opencode` writes, and the rules, the hints, the gate, the notes after writes and the follow-up at the end of a turn reach the agent. No agent call touches lessloc.
 
 ### OpenCode 1.x and Kilo Code
 

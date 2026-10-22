@@ -430,7 +430,7 @@ Run `lessloc` with no command to print the usage. A command that cannot start pr
 | `doctor` | | whether lessloc works here, and what each hook costs |
 | `init` | `--rules`, `--config`, `--baseline`, `--ci`, `--agents`, a tool flag, `--repo` with `--copilot` | the commit gate for this clone, and lists the agent tools; shared files and tool hooks only with their flags |
 | `remove` | `--agents`, a tool flag, `--repo` with `--copilot` or `--agents` | undoes `init` for this clone, and takes out the hooks of the tools named |
-| `hosts` | `--markdown`, `--write` | each agent tool: how it installs and what was verified live |
+| `hosts` | `--markdown`, `--write` | each agent tool: how it installs and how it was tested |
 | `catalog` | `--write` | the pattern catalog's tables |
 | `version` | | the version |
 

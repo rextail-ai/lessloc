@@ -31,7 +31,7 @@ function catalog() {
   return 0;
 }
 
-// Each agent tool: how it installs and what was verified live, from the rows in lib/install.mjs. Printed, as a Markdown table, or
+// Each agent tool: how it installs and how it was tested, from the rows in lib/install.mjs. Printed, as a Markdown table, or
 // written as one between the markers of the getting-started guide, with links within the site.
 const HOSTS_BLOCK = /(<!-- hosts:start -->\n)[\s\S]*?(\n<!-- hosts:end -->)/;
 function hosts() {
@@ -439,7 +439,7 @@ Usage: lessloc <command> [flags]
                            outside a repository, only those hooks
   catalog [--write]        the pattern catalog's tables (PATTERNS.md); --write is for contributors
   hosts [--markdown] [--write]
-                           each agent tool: how it installs and what was verified live; --write is for contributors
+                           each agent tool: how it installs and how it was tested; --write is for contributors
   version, --version, -v   print the version
 
 Docs: https://lessloc.org/guide/reference`;

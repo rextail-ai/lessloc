@@ -1,3 +1,5 @@
 {
-  "claude": { "npm": "@anthropic-ai/claude-code-{platform}-{arch}", "version": "2.1.306", "bin": "claude" }
+  "claude": { "npm": "@anthropic-ai/claude-code-{platform}-{arch}", "version": "2.1.306", "bin": "claude" },
+  "codex": { "npm": "@openai/codex", "version": "0.163.0", "bin": "bin/codex.js" },
+  "opencode2": { "npm": "@opencode/cli-{platform}-{arch}", "version": "2.1.2", "bin": "bin/opencode" }
 }

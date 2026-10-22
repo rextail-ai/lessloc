@@ -3,7 +3,9 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
-import { ENTRY, tmp } from './helpers.mjs';
+import { STANDARD } from '../lib/voice.mjs';
+import { QUIET, SAYS, at, outcomes, parse } from './e2e/record.mjs';
+import { CLI, ENTRY, tmp } from './helpers.mjs';
 
 // test/golden/claude.jsonl is one Claude Code session, recorded through hook.mjs with no host flag. Each line is the
 // repository's files, a file change the agent's tool made, or a hook call with Claude Code's payload and what lessloc
@@ -45,9 +47,11 @@ function stateOf(state, dir, trees) {
 }
 
 // Replays the session's lines in a fresh repository and hands each hook line with what the hook did now to `check`: its
-// output and the state files it changed (only the new lines of a log).
+// output and the state files it changed (only the new lines of a log). A line may carry the hook's arguments and the variables
+// the tool set; $REPO, $HOME, $TMP and $RUN in them, and in the payload, are the sandbox's folders.
 function play(lines, claude, check) {
   const { dir, env, state } = sandbox(claude), trees = new Map(), json = s => JSON.stringify(s).slice(1, -1);
+  const fill = (s, q = x => x) => [['$REPO', dir], ['$HOME', env.HOME], ['$TMP', env.TMPDIR], ['$RUN', path.dirname(dir)]].reduce((t, [k, v]) => t.replaceAll(k, q(v)), s);
   let before = {};
   for (const line of lines) {
     for (const [f, text] of Object.entries(line.files || {})) {
@@ -61,12 +65,14 @@ function play(lines, claude, check) {
       git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'init');
     }
     if (!line.hook) continue;
-    const r = spawnSync(process.execPath, [ENTRY], { cwd: dir, env, input: JSON.stringify(line.hook).replaceAll('$REPO', json(dir)), encoding: 'utf8' });
+    const vars = Object.fromEntries(Object.entries(line.env || {}).map(([k, v]) => [k, fill(v)]));
+    const r = spawnSync(process.execPath, [ENTRY, ...(line.argv || []).map(a => fill(a))], { cwd: dir, env: { ...vars, ...env }, input: fill(JSON.stringify(line.hook), json), encoding: 'utf8' });
     const now = stateOf(state, dir, trees), changed = {};
     for (const k of new Set([...Object.keys(before), ...Object.keys(now)])) if (before[k] !== now[k]) changed[k] = before[k] && now[k]?.startsWith(before[k]) ? { append: now[k].slice(before[k].length) } : now[k] ?? null;
     before = now;
     check(line, { stdout: r.stdout.replaceAll(json(dir), '$REPO'), stderr: r.stderr.replaceAll(dir, '$REPO'), code: r.status, state: changed });
   }
+  return { dir, env, state };
 }
 
 const lines = fs.readFileSync(GOLDEN, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
@@ -82,3 +88,32 @@ const replay = claude => () => {
 };
 test('Claude Code gets the same answers, byte for byte, and lessloc keeps the same state, on every event of a recorded session', replay(true));
 test('the same holds with none of the variables Claude Code sets', replay(false));
+
+// test/fixtures/recorded/*.jsonl are sessions of the end-to-end tests (`E2E_RECORD=1 npm run e2e`): a real tool's hook calls with
+// its own arguments, variables and payloads, and the checks the session passed. Replayed offline, lessloc refuses and holds
+// exactly the calls it refused and held in the session, so every recorded call after them could happen, and its answers and
+// state pass the same checks. Outcomes, not bytes: a change of wording passes, a payload lessloc misreads fails. A recording is
+// re-made only when the tool's pinned version moves.
+const RECORDED = new URL('./fixtures/recorded/', import.meta.url);
+for (const name of fs.readdirSync(RECORDED)) {
+  const [head, ...session] = fs.readFileSync(new URL(name, RECORDED), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
+  test(`replay: ${head.tool} ${head.version}: lessloc's answers and state pass the session's checks again`, () => {
+    const said = [], { dir, env, state } = play(session, false, (line, now) => said.push({ now: parse(now.stdout), then: parse(line.stdout) }));
+    for (const k of ['deny', 'block']) assert.deepEqual(said.map(x => !!at(x.now, head.answer[k])), said.map(x => !!at(x.then, head.answer[k])), `the calls answered with ${k}`);
+    const says = k => said.map(x => at(x.now, head.answer[k])).filter(x => typeof x === 'string');
+    const o = outcomes({ state: path.join(state, fs.readdirSync(state).find(n => n.startsWith('shop-'))), work: dir, env, cli: CLI, sid: session.find(l => l.hook?.session_id)?.hook.session_id, prompt: head.prompt });
+    // A9, A11, A12 and A13 are what the tool itself did (the events it fired, the network and home it left alone, its exit, its
+    // setup as doctor sees it), which the recording already holds.
+    const tool = () => {};
+    const checks = {
+      ...o, A9: tool, A11: tool, A12: tool, A13: tool,
+      A1: () => assert.ok(says('context').some(x => x.includes(STANDARD.slice(0, 60)))),
+      A2: () => assert.match([...says('context'), ...says('feedback')].join('\n'), /formatMoney/),
+      A3: () => assert.match(says('deny').join('\n'), SAYS.placeholder),
+      A4: () => assert.match([...says('context'), ...says('feedback')].join('\n'), SAYS.note),
+      A6: () => assert.deepEqual(says('block').map(x => SAYS.hold.test(x)), [true]),
+      A10: () => Object.keys(head.answer).flatMap(says).forEach(x => assert.doesNotMatch(x, QUIET)),
+    };
+    for (const c of head.checks) checks[c]();
+  });
+}
