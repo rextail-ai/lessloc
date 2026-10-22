@@ -4,8 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
 import { STANDARD } from '../lib/voice.mjs';
-import { QUIET, SAYS, at, outcomes, parse } from './e2e/record.mjs';
-import { CLI, ENTRY, tmp } from './helpers.mjs';
+import { QUIET, SAYS, at, outcomes, parse, shape } from './e2e/record.mjs';
+import { CLI, ENTRY, fill, tmp } from './helpers.mjs';
 
 // test/golden/claude.jsonl is one Claude Code session, recorded through hook.mjs with no host flag. Each line is the
 // repository's files, a file change the agent's tool made, or a hook call with Claude Code's payload and what lessloc
@@ -115,5 +115,25 @@ for (const name of fs.readdirSync(RECORDED)) {
       A10: () => Object.keys(head.answer).flatMap(says).forEach(x => assert.doesNotMatch(x, QUIET)),
     };
     for (const c of head.checks) checks[c]();
+  });
+}
+
+// A host fixture is the tool's documented payloads, which the contract test sends. Each of its events, with its placeholders
+// filled, has only key paths and value types that the tool's recorded event of the same name and tool has: a fixture that
+// disagrees with the real tool is corrected by hand from its recording. Events the session never fires are not compared.
+for (const name of fs.readdirSync(RECORDED)) {
+  const [head, ...session] = fs.readFileSync(new URL(name, RECORDED), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
+  const file = new URL(`./fixtures/hosts/${head.host}.json`, import.meta.url);
+  if (!fs.existsSync(file)) continue;
+  test(`fixture shapes: test/fixtures/hosts/${head.host}.json has only what ${head.tool} ${head.version} sends`, () => {
+    const fx = JSON.parse(fs.readFileSync(file, 'utf8')), vars = { AGAIN: false, LOOP: 0, EXIT: 0, TIME_MS: 0, OUTPUT_JSON: '""', ABSFILE_JSON: '"/r/a"', CONTENT_JSON: '""' };
+    const tool = e => e.tool_name ?? e.toolName;
+    for (const [step, raw] of Object.entries(fx.events)) {
+      const e = fill(raw, vars), event = e.hook_event_name ?? fx.argv?.[step];
+      const seen = session.filter(l => l.hook && l.step === event && tool(l.hook) === tool(e)).map(l => shape(l.hook));
+      if (!seen.length) continue;
+      const missing = s => [...shape(e)].filter(p => !s.has(p));
+      assert.deepEqual(seen.map(missing).sort((a, b) => a.length - b.length)[0], [], `${step}: key paths and types the tool does not send`);
+    }
   });
 }

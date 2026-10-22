@@ -464,7 +464,7 @@ How lessloc works in Junie:
    lessloc init --openhands
    ```
 
-   This adds lessloc's entries to `~/.openhands/hooks.json` (`$OH_PERSISTENCE_DIR/hooks.json` when that is set). OpenHands reads this file only for a repository that has no `.openhands/hooks.json` of its own. It applies where OpenHands runs on your machine, as its CLI does. OpenHands Cloud runs in its own sandbox, without this file.
+   This adds lessloc's entries to `~/.openhands/hooks.json`. OpenHands reads this file only for a repository that has no `.openhands/hooks.json` of its own. It applies where OpenHands runs on your machine, as its CLI does. OpenHands Cloud runs in its own sandbox, without this file.
 
 How lessloc works in OpenHands:
 
@@ -487,6 +487,8 @@ How lessloc works in OpenHands:
    - a plugin folder, `~/.agents/plugins/review/`, with `plugin.json` and `hooks/hooks.json`. goose shows the model a plugin's name when a hook refuses a call or holds a turn, so the folder has a neutral name. If a plugin of yours already has that name, `init` leaves it alone and says so.
    - the working standard in `~/.config/goose/.goosehints` (under `$XDG_CONFIG_HOME` when that is set), between `<!-- working-standard -->` markers, after anything already there.
 
+   When `GOOSE_PATH_ROOT` is set, both go under it, where goose reads them: `$GOOSE_PATH_ROOT/.agents/plugins/review/` and `$GOOSE_PATH_ROOT/config/.goosehints`.
+
 How lessloc works in goose:
 
 - goose's hooks cannot add context. The working standard comes from `.goosehints`. The agent gets no hints about existing code, no project rules, no notes right after a write and no note from the last session.
@@ -505,7 +507,7 @@ How lessloc works in goose:
    lessloc init --devin
    ```
 
-   This adds lessloc's entries under `hooks` in `~/.config/devin/config.json` (`%APPDATA%\devin\config.json` on Windows), for all your projects, and keeps your other settings.
+   This adds lessloc's entries under `hooks` in `~/.config/devin/config.json` (under `$XDG_CONFIG_HOME` when that is set; `%APPDATA%\devin\config.json` on Windows), for all your projects, and keeps your other settings.
 
 How lessloc works in Devin CLI:
 

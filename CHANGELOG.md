@@ -32,6 +32,9 @@ Every release of lessloc, newest first. Versions follow [Semantic Versioning](ht
 - GitHub Copilot CLI: the agent's test runs are read from the exit code the CLI gives after a command's output.
 - Junie: the hooks work in the project the payload names in `project_path`.
 - Antigravity CLI: its own file tools, `write_file` and `edit_file`, are gated and tracked, and a turn it ends normally is reviewed.
+- OpenHands: `init --openhands` writes `~/.openhands/hooks.json`, the file its CLI reads, whatever `OH_PERSISTENCE_DIR` says.
+- goose: with `GOOSE_PATH_ROOT` set, `init --goose` puts its plugin folder and `.goosehints` block under it, where goose reads them.
+- Devin CLI: `init --devin` follows `XDG_CONFIG_HOME`, as Devin does.
 - Cline CLI and SDK: the plugin file from `init --cline` imports lessloc in the form Cline loads. `doctor` points out a plugin file written by an earlier lessloc; run `lessloc init --cline` again to replace it.
 
 ## [0.10.0]

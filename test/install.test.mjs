@@ -511,6 +511,22 @@ test("Cursor's plugin install reads lessloc's Cursor manifest, which lists no sk
 
 // The status table is generated from the rows in lib/install.mjs, so the getting-started guide and the rows cannot disagree. The
 // README links to it.
+// Each hook file is where the tool itself reads it (from its source): OpenHands' CLI reads only the home folder's, whatever
+// OH_PERSISTENCE_DIR says; goose moves its plugins and config under an absolute GOOSE_PATH_ROOT; Devin CLI follows
+// XDG_CONFIG_HOME.
+test('hook files follow the variables each tool follows', () => {
+  const vars = { OH_PERSISTENCE_DIR: '/oh', GOOSE_PATH_ROOT: '/g', XDG_CONFIG_HOME: '/x' }, before = Object.fromEntries(Object.keys(vars).map(k => [k, process.env[k]]));
+  Object.assign(process.env, vars);
+  try {
+    assert.equal(HOSTS.openhands.hooks.file(), path.join(ENV.HOME, '.openhands', 'hooks.json'));
+    assert.equal(HOSTS.goose.hooks.file(), path.join('/g', '.agents', 'plugins', 'review', 'hooks', 'hooks.json'));
+    assert.equal(HOSTS.goose.rules(), path.join('/g', 'config', '.goosehints'));
+    if (process.platform !== 'win32') assert.equal(HOSTS.devin.hooks.file(), path.join('/x', 'devin', 'config.json'));
+  } finally {
+    for (const [k, v] of Object.entries(before)) v === undefined ? delete process.env[k] : (process.env[k] = v);
+  }
+});
+
 // A status, or a sentence of the README or the docs, names a version of a tool only beside a run of it that a committed
 // recording backs (test/fixtures/recorded, written by `E2E_RECORD=1 npm run e2e`): "tested end to end" needs one of that version
 // of the tool, "verified live" one of a live session. In a sentence, each tool name followed by a version is a claim.

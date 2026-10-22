@@ -15,7 +15,7 @@ export const tmp = prefix => fs.mkdtempSync(path.join(ROOT, prefix));
 export const STATE = tmp('state-');
 // A home folder of its own, so no test reads or writes the agent tools' real settings, and no marker of the agent tool that
 // runs the tests (Claude Code's CLAUDECODE, for one) makes lessloc think it runs inside that tool.
-const AGENT_ENV = ['CLAUDECODE', 'CLAUDE_PID', 'CLAUDE_CONFIG_DIR', 'CODEX_HOME', 'CODEX_THREAD_ID', 'CURSOR_AGENT', 'OPENCODE_TERMINAL', 'GEMINI_CLI', 'COPILOT_CLI', 'COPILOT_HOME', 'KILO_PID', 'CLINE_ACTIVE', 'CLINE_DIR', 'PI_CODING_AGENT', 'PI_CODING_AGENT_DIR', 'QWEN_CODE', 'AUGMENT_AGENT', 'GOOSE_TERMINAL', 'DEVIN_PROJECT_DIR', 'OH_PERSISTENCE_DIR', 'CRUSH', 'CRUSH_GLOBAL_CONFIG', 'XDG_CONFIG_HOME'];
+const AGENT_ENV = ['CLAUDECODE', 'CLAUDE_PID', 'CLAUDE_CONFIG_DIR', 'CODEX_HOME', 'CODEX_THREAD_ID', 'CURSOR_AGENT', 'OPENCODE_TERMINAL', 'GEMINI_CLI', 'COPILOT_CLI', 'COPILOT_HOME', 'KILO_PID', 'CLINE_ACTIVE', 'CLINE_DIR', 'PI_CODING_AGENT', 'PI_CODING_AGENT_DIR', 'QWEN_CODE', 'AUGMENT_AGENT', 'GOOSE_TERMINAL', 'DEVIN_PROJECT_DIR', 'GOOSE_PATH_ROOT', 'CRUSH', 'CRUSH_GLOBAL_CONFIG', 'XDG_CONFIG_HOME'];
 export const ENV = Object.assign(process.env, { LESSLOC_STATE: STATE, LESSLOC_OFF: '', LESSLOC: '', HOME: tmp('home-') }, Object.fromEntries(AGENT_ENV.map(k => [k, ''])));
 
 export const write = (dir, files) => {

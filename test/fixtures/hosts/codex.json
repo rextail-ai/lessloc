@@ -3,7 +3,7 @@
   "source": ["https://developers.openai.com/codex/hooks"],
   "read": "2026-10-19",
   "events": {
-    "start": {"hook_event_name":"SessionStart","session_id":"$SID","cwd":"$CWD","transcript_path":null,"model":"gpt-5","source":"startup"},
+    "start": {"hook_event_name":"SessionStart","session_id":"$SID","cwd":"$CWD","transcript_path":"/home/user/.codex/sessions/2026/10/21/rollout-2026-10-21T09-00-00-$SID.jsonl","model":"gpt-5","source":"startup"},
     "prompt": {"hook_event_name":"UserPromptSubmit","session_id":"$SID","turn_id":"t1","cwd":"$CWD","prompt":"$PROMPT"},
     "write": {"hook_event_name":"PreToolUse","session_id":"$SID","turn_id":"t1","cwd":"$CWD","tool_name":"apply_patch","tool_use_id":"$ID","tool_input":{"command":"$PATCH"}},
     "written": {"hook_event_name":"PostToolUse","session_id":"$SID","turn_id":"t1","cwd":"$CWD","tool_name":"apply_patch","tool_use_id":"$ID","tool_input":{"command":"$PATCH"},"tool_response":"Success. Updated the following files:\nA $FILE"},

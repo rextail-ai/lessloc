@@ -182,9 +182,9 @@ It also lists the agent tools installed for your user, under "Agent tools for th
 | `--augment` | lessloc's entries under `hooks` in `~/.augment/settings.json`, for Auggie and Augment's VS Code and IntelliJ extensions in all your projects. They run `augment/hook.sh` from your clone |
 | `--kiro` | the hook file `~/.kiro/hooks/lessloc.json`, for Kiro's CLI in all your projects |
 | `--junie` | lessloc's entries under `hooks` in `~/.junie/config.json`, and the working standard in `~/.junie/AGENTS.md` between `<!-- working-standard -->` markers |
-| `--openhands` | lessloc's entries in `~/.openhands/hooks.json` (`$OH_PERSISTENCE_DIR/hooks.json`), which OpenHands reads for repositories without their own `.openhands/hooks.json` |
-| `--goose` | the plugin folder `~/.agents/plugins/review/`, and the working standard in `~/.config/goose/.goosehints` between `<!-- working-standard -->` markers. A plugin of yours named `review` is left alone |
-| `--devin` | lessloc's entries under `hooks` in `~/.config/devin/config.json` (`%APPDATA%\devin\config.json` on Windows), for all your projects |
+| `--openhands` | lessloc's entries in `~/.openhands/hooks.json`, which OpenHands reads for repositories without their own `.openhands/hooks.json` |
+| `--goose` | the plugin folder `~/.agents/plugins/review/`, and the working standard in `~/.config/goose/.goosehints` between `<!-- working-standard -->` markers (both under `$GOOSE_PATH_ROOT` when that is set, as goose reads them). A plugin of yours named `review` is left alone |
+| `--devin` | lessloc's entries under `hooks` in `~/.config/devin/config.json` (under `$XDG_CONFIG_HOME` when that is set; `%APPDATA%\devin\config.json` on Windows), for all your projects |
 | `--crush` | lessloc's entry under `hooks` in `~/.config/crush/crush.json` (`$CRUSH_GLOBAL_CONFIG/crush.json`), and the working standard in `~/.config/crush/CRUSH.md` between `<!-- working-standard -->` markers |
 | `--antigravity` | a hook named `review` in `~/.gemini/config/hooks.json`, for Antigravity's app, CLI and IDE in all your projects. A hook of yours named `review` is left alone |
 | `--aider` | a block in `~/.aider.conf.yml` between `# >>> lessloc` and `# <<< lessloc` lines, with `lint-cmd`, `read` and `git-commit-verify: true`, each only where you set no value; and the folder `~/.config/agent-standard/` with the lint command, `check`, and the working standard, `CONVENTIONS.md` |
@@ -432,7 +432,7 @@ None of these files is shared with your team: they live in your account's cache,
 | `~/.augment/settings.json`, the `hooks` key | `init --augment` |
 | `~/.kiro/hooks/lessloc.json` | `init --kiro` |
 | `~/.junie/config.json`, the `hooks` key, and a block in `~/.junie/AGENTS.md` | `init --junie` |
-| `~/.openhands/hooks.json`, or `$OH_PERSISTENCE_DIR/hooks.json` | `init --openhands` |
+| `~/.openhands/hooks.json` | `init --openhands` |
 | `~/.agents/plugins/review/`: `plugin.json`, `hooks/hooks.json`, and a block in `~/.config/goose/.goosehints` | `init --goose` |
 | `~/.config/devin/config.json` (`%APPDATA%\devin\config.json` on Windows), the `hooks` key | `init --devin` |
 | `~/.config/crush/crush.json`, or `$CRUSH_GLOBAL_CONFIG/crush.json`, the `hooks` key, and a block in `~/.config/crush/CRUSH.md` | `init --crush` |
@@ -456,9 +456,9 @@ In the system's temporary folder, lessloc creates clean checkouts (`lessloc-chec
 | `LESSLOC_PROFILE=1` | prints each detector's time |
 | `LESSLOC_SOURCE` | where the workflow from `init --ci` installs lessloc from, instead of the npm package at exactly this version, `lessloc@<version>` |
 | `XDG_CACHE_HOME`, `LOCALAPPDATA` | the user cache that lessloc's folder goes in |
-| `XDG_CONFIG_HOME` | where `init --opencode`, `--kilo` and `--amp` put their plugin files, `init --goose` and `--crush` their rules blocks, `init --crush` its hook entry and `init --aider` its `agent-standard` folder, and where `init` and `doctor` look for the settings folders of OpenCode, Amp, Kilo Code, goose, Crush and Zed |
+| `XDG_CONFIG_HOME` | where `init --opencode`, `--kilo` and `--amp` put their plugin files, `init --goose` and `--crush` their rules blocks, `init --crush` its hook entry, `init --devin` its hook entries and `init --aider` its `agent-standard` folder, and where `init` and `doctor` look for the settings folders of OpenCode, Amp, Kilo Code, goose, Crush and Zed |
 | `CRUSH_GLOBAL_CONFIG` | the folder of Crush's `crush.json`, as Crush reads it, for `init --crush` |
-| `OH_PERSISTENCE_DIR` | where `init --openhands` writes OpenHands' hook file, as OpenHands reads it |
+| `GOOSE_PATH_ROOT` | where `init --goose` puts its plugin folder and rules block, as goose reads them |
 | `CLINE_DIR` | where `init --cline` puts the Cline plugin, and where `init` and `doctor` look for Cline's folder |
 | `CODEX_HOME` | where `init --codex` finds Codex's `hooks.json`, and `init` and `doctor` find Codex's `config.toml` |
 | `COPILOT_HOME` | where `init --copilot` writes Copilot's hook file, and where `init` and `doctor` find Copilot's installed plugins |

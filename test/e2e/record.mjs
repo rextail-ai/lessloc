@@ -58,6 +58,16 @@ export const parse = s => {
   try { return JSON.parse(s || '{}'); } catch { return {}; }
 };
 
+// A payload's key paths with their value types, also inside JSON-encoded strings (after `#`): what a fixture's event must
+// share with the tool's recorded one.
+export function shape(v, at = '', out = new Set()) {
+  const type = v === null ? 'null' : Array.isArray(v) ? 'array' : typeof v;
+  out.add(`${at}:${type}`);
+  if (type === 'object' || type === 'array') for (const [k, x] of Object.entries(v)) shape(x, `${at}.${type === 'array' ? '[]' : k}`, out);
+  else if (type === 'string' && /^\s*[[{]/.test(v) && Object.keys(parse(v)).length) shape(parse(v), `${at}#`, out);
+  return out;
+}
+
 // The recording's calls in the order they started, each with its end once it has one, and the payload parsed. A line a hook is
 // still writing is skipped.
 export function calls(file) {
