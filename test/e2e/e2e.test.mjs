@@ -6,7 +6,8 @@
 // controls: E2E_OFF=gate,lines switches parts of lessloc off, E2E_BARE=1 leaves it uninstalled; each must fail what it covers.
 // E2E_RECORD=1 writes each session that passes every check to test/fixtures/recorded/, which npm test replays offline.
 // `npm run e2e:netns` runs the same inside a network namespace with only loopback, where the tools that try the internet
-// whatever they are told run too; their pins are installed beforehand, by a run with E2E_INSTALL=1.
+// whatever they are told run too; their pins are installed beforehand, by a run with E2E_INSTALL=1. E2E_LATEST=1 runs the newest
+// version of each npm and Python tool instead of its pin, which must still send what its pinned version's recording has.
 import assert from 'node:assert/strict';
 import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -18,7 +19,7 @@ import { fileURLToPath } from 'node:url';
 import { HOSTS } from '../../lib/hosts.mjs';
 import { STANDARD } from '../../lib/voice.mjs';
 import { start } from './model.mjs';
-import { QUIET, SAYS, at, calls, event, outcomes, parse, save, sessionOf, wrap } from './record.mjs';
+import { QUIET, SAYS, at, calls, event, outcomes, parse, save, sessionOf, shape, wrap } from './record.mjs';
 import { ADAPTERS, CACHE, bin } from './tools.mjs';
 
 const REPO = fileURLToPath(new URL('../../', import.meta.url));
@@ -227,6 +228,13 @@ describe('end to end', { concurrency: Number(process.env.E2E_JOBS || 4) }, () =>
       await check('A12: the tool ended by itself, with every hook call finished', () => assert.deepEqual({ code: s.code, timedOut: s.timedOut, ended: s.ended, left: s.left }, { code: 0, timedOut: false, ended: true, left: false }));
       if (a.doctor) await check('A13: doctor reports the tool set up, and its hooks run', () => {
         assert.match(spawnSync(process.execPath, [path.join(s.t.lessloc, 'lessloc.mjs'), 'doctor'], { cwd: s.t.work, env: { ...s.env, LESSLOC_STATE: s.t.state }, encoding: 'utf8' }).stdout, new RegExp(`^✓ ${a.doctor}: set up .*; its hooks last ran here`, 'm'));
+      });
+      // On a newer version than the pin, every event and key path the pinned version's recording has must still come.
+      const pinned = path.join(REPO, 'test/fixtures/recorded', `${a.id}.jsonl`);
+      if (process.env.E2E_LATEST && fs.existsSync(pinned)) await check('drift: the tool still sends every event and field its pinned version sent', () => {
+        const paths = list => new Set(list.flatMap(([name, hook]) => [...shape(hook)].map(p => `${name} ${hook.tool_name ?? hook.toolName ?? ''}${p}`)));
+        const now = paths(s.calls.map(c => [event(a.host, c.input, c.argv), c.input])), then = paths(read(pinned).split('\n').filter(Boolean).map(l => JSON.parse(l)).filter(l => l.hook).map(l => [l.step, l.hook]));
+        assert.deepEqual([...then].filter(x => !now.has(x)), []);
       });
       if (process.env.E2E_RECORD && passed.length === tried) {
         const version = /\d+\.\d+\.\d+/.exec(spawnSync(exe, ['--version'], { env: s.env, encoding: 'utf8' }).stdout)?.[0];

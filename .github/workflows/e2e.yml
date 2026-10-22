@@ -1,7 +1,8 @@
 # Runs the end-to-end tests (`npm run e2e`): each agent tool's own program, at the version test/e2e/tools.json pins, set up for
 # lessloc the documented way and driven by a local fake model. Weekly, on every push to main that changes the hooks, a bridge or
-# the harness, and before each release (release.yml calls it). It needs no secret: the fake model takes no key, and the tools
-# reach nothing but it. The tools are cached between runs, keyed by their pins.
+# the harness, and before each release (release.yml calls it). Weekly and by hand, also the newest version of each npm and
+# Python tool (E2E_LATEST), which must still send every event and field its pinned version's recording has. It needs no secret:
+# the fake model takes no key, and the tools reach nothing but it. The tools are cached between runs, keyed by their pins.
 name: e2e
 on:
   schedule:
@@ -16,7 +17,13 @@ permissions:
 jobs:
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        latest: ${{ fromJSON((github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && '["", "1"]' || '[""]') }}
+    env:
+      E2E_LATEST: ${{ matrix.latest }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -28,7 +35,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ~/.cache/lessloc-e2e
-          key: e2e-tools-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('test/e2e/tools.json') }}
+          key: e2e-tools-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('test/e2e/tools.json') }}${{ matrix.latest && '-latest' || '' }}
       # Codex's own sandbox, and the network namespace of `e2e:netns`, need unprivileged user namespaces, which the runner's
       # AppArmor restricts. uv installs the Python tools (Aider, OpenHands).
       - run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 && sudo apt-get install -y bubblewrap && pipx install uv

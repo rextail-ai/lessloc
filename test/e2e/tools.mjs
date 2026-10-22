@@ -26,11 +26,22 @@ const answer = host => fixture(host).answer;
 // package where the main one fetches the binary in a postinstall), a release file for this platform with the hash its vendor
 // publishes (a .tar.gz with `strip` folders around the binary, default 1; a .zip; or the binary itself), or a Python package
 // that uv installs on a pinned Python, uv's own folders all in the cache. A JVM tool takes its home from the user database, not
-// HOME, so the JVM is told where it is. Each is checked by --version before it is used.
+// HOME, so the JVM is told where it is. Each is checked by --version before it is used. With E2E_LATEST=1, an npm or Python pin
+// takes the newest version its registry has, and inside a network namespace the one a run outside it found; a release pin stays,
+// since its file's hash is pinned with it.
+function newest(pin, p, name) {
+  const file = path.join(CACHE, `${pin}.latest`);
+  if (process.env.E2E_NETNS) return fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : p.version;
+  const version = (p.npm ? spawnSync('npm', ['view', name, 'version'], { encoding: 'utf8' }).stdout.trim() : p.uv ? parse(spawnSync('curl', ['-fsSL', `https://pypi.org/pypi/${p.uv}/json`], { encoding: 'utf8' }).stdout).info?.version : '') || p.version;
+  fs.mkdirSync(CACHE, { recursive: true });
+  fs.writeFileSync(file, version);
+  return version;
+}
 export function bin(pin) {
   const given = process.env[`E2E_BIN_${pin.toUpperCase()}`];
   if (given) return given;
-  const p = PINS[pin], release = p.release?.[`${process.platform}-${process.arch}`], name = p.npm?.replace('{platform}', process.platform).replace('{arch}', process.arch) ?? pin, dir = path.join(CACHE, `${pin}@${p.version}`);
+  const pinned = PINS[pin], name = pinned.npm?.replace('{platform}', process.platform).replace('{arch}', process.arch) ?? pin;
+  const p = process.env.E2E_LATEST ? { ...pinned, version: newest(pin, pinned, name) } : pinned, release = p.release?.[`${process.platform}-${process.arch}`], dir = path.join(CACHE, `${pin}@${p.version}`);
   const exe = p.npm ? path.join(dir, 'node_modules', name, p.bin) : path.join(dir, p.bin);
   const env = { PATH: `${path.dirname(process.execPath)}:/usr/bin:/bin`, HOME: dir, JAVA_TOOL_OPTIONS: `-Duser.home=${dir} -Djava.io.tmpdir=${dir} -XX:-UsePerfData` };
   if (!fs.existsSync(path.join(dir, '.ok'))) {
