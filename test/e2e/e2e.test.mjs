@@ -98,7 +98,9 @@ async function session(a, exe, dir) {
       HTTPS_PROXY: t.url, HTTP_PROXY: t.url, ALL_PROXY: t.url, NO_PROXY: '127.0.0.1,localhost', ...a.env(t),
     };
     const started = Date.now();
-    wrap(t.lessloc, { record: t.record, state: t.state, off: process.env.E2E_OFF || '', work: t.work, given: Object.keys(env) });
+    // The wrapper goes into lessloc's copy, and into any folder a route builds from it (an extension).
+    t.wrap = dir => wrap(dir, { record: t.record, state: t.state, off: process.env.E2E_OFF || '', work: t.work, given: Object.keys(env) });
+    t.wrap(t.lessloc);
     for (const [f, text] of Object.entries(a.files?.(t) || {})) fs.mkdirSync(path.dirname(f), { recursive: true }), fs.writeFileSync(f, text);
     // What a route runs: the tool's own commands, or lessloc's init from the copy, in the work repository.
     Object.assign(t, { exe, env, tool: args => spawnSync(exe, args, { cwd: t.work, env, encoding: 'utf8', timeout: 60000 }), init: (...args) => spawnSync(process.execPath, [path.join(t.lessloc, 'lessloc.mjs'), 'init', ...args], { cwd: t.work, env, encoding: 'utf8', timeout: 60000 }) });
@@ -153,7 +155,9 @@ describe('end to end', { concurrency: Number(process.env.E2E_JOBS || 4) }, () =>
       const step = (k, n = 0) => s.plan.filter(x => (k === 'reply' ? x.reply : x.tool === k)).map(x => s.plan.indexOf(x))[n];
       const sid = s.calls.find(c => c.input.session_id)?.input.session_id, passed = [];
       let tried = 0;
-      const check = (name, f) => (tried++, t.test(name, () => (f(), passed.push(name.split(':')[0]))));
+      // A check an adapter marks `todo` names the lessloc defect that fails it; it is reported on every run, and stays out of
+      // the recording's checks.
+      const check = (name, f, id = name.split(':')[0], todo = a.todo?.[id]) => (todo || tried++, t.test(name, { todo }, () => (f(), todo || passed.push(id))));
       const o = outcomes({ state: s.state, work: s.t.work, env: { ...s.env, LESSLOC_STATE: s.t.state }, cli: path.join(s.t.lessloc, 'lessloc.mjs'), sid, prompt: PROMPT });
       assert.ok(s.routed, 'lessloc is set up the documented way');
       assert.deepEqual(s.server.errors, [], 'every step the session asked for was offered');
