@@ -169,7 +169,7 @@ How lessloc works in Cursor:
 
    This writes a small plugin, `~/.config/opencode/plugins/lessloc.js` (under `$XDG_CONFIG_HOME` when that is set). It loads lessloc's bridge from your clone, for all your projects.
 
-How lessloc works in OpenCode: the review at the end of a turn reaches the agent as a follow-up message.
+How lessloc works in OpenCode: the review at the end of a turn reaches the agent as a follow-up message, sent through OpenCode's server, which its TUI and `opencode run --server` use. `opencode run --standalone` runs no server and ends no turn, so there nothing is reviewed at the end of a turn.
 
 Tested end to end on OpenCode 2.1.2: OpenCode loads the plugin file that `init --opencode` writes, and the rules, the hints, the gate, the notes after writes and the follow-up at the end of a turn reach the agent. No agent call touches lessloc.
 
@@ -209,6 +209,7 @@ How lessloc works in Amp:
 - Where lessloc would ask you, the call is refused and the agent asks you instead.
 - The working standard and the hints are added to your prompt as hidden text.
 - The note at the end of a turn is a follow-up message that starts one more turn. A subagent's thread is never held.
+- In execute mode (`amp -x`), give Amp `--plugin-ready-timeout 10`, so it waits for lessloc's plugin to start before the first prompt.
 
 ### Cline
 
@@ -404,11 +405,11 @@ How lessloc works in Droid: Droid asks you where lessloc asks, as Claude Code do
    lessloc init --augment
    ```
 
-   This adds lessloc's entries under `hooks` in `~/.augment/settings.json`, for all your projects, and keeps your other settings. Auggie and Augment's VS Code and IntelliJ extensions all read this file. Augment runs only script files as hooks, so the entries run `augment/hook.sh` from your clone. On Windows, Augment runs only `.ps1`, `.cmd` and `.bat` hooks, which `init --augment` does not write.
+   This adds lessloc's entries under `hooks` in `~/.augment/settings.json`, for all your projects, and keeps your other settings, and writes the working standard to `~/.augment/rules/working-standard.md`, between `<!-- working-standard -->` markers. Auggie and Augment's VS Code and IntelliJ extensions all read both. Augment runs only script files as hooks, so the entries run `augment/hook.sh` from your clone. On Windows, Augment runs only `.ps1`, `.cmd` and `.bat` hooks, which `init --augment` does not write.
 
 How lessloc works in Augment:
 
-- Augment has no prompt hook. The agent gets no hints about existing code, and lessloc reads the turn's request when the turn ends.
+- Augment has no prompt hook, and drops what its session start hook says. The working standard comes from the rules file, the agent gets no hints about existing code and no note from the last session, and lessloc reads the turn's request when the turn ends.
 - Augment's hooks can refuse a call but not ask you. Where lessloc would ask you, the call is refused, and the agent is told to ask you instead.
 
 ### Kiro

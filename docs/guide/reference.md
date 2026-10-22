@@ -179,7 +179,7 @@ It also lists the agent tools installed for your user, under "Agent tools for th
 | `--pi` | the extension `~/.pi/agent/extensions/lessloc.js` (`$PI_CODING_AGENT_DIR/extensions/lessloc.js`), for all your projects |
 | `--qwen` | lessloc's entries under `hooks` in `~/.qwen/settings.json`, for all your projects. Qwen Code's other settings stay as they are |
 | `--droid` | lessloc's entries in `~/.factory/hooks.json`, or under `hooks` in `~/.factory/settings.json` when Droid keeps your hooks there and the first file does not exist |
-| `--augment` | lessloc's entries under `hooks` in `~/.augment/settings.json`, for Auggie and Augment's VS Code and IntelliJ extensions in all your projects. They run `augment/hook.sh` from your clone |
+| `--augment` | lessloc's entries under `hooks` in `~/.augment/settings.json`, for Auggie and Augment's VS Code and IntelliJ extensions in all your projects, and the working standard in `~/.augment/rules/working-standard.md` between `<!-- working-standard -->` markers. The entries run `augment/hook.sh` from your clone |
 | `--kiro` | the hook file `~/.kiro/hooks/lessloc.json`, for Kiro's CLI in all your projects |
 | `--junie` | lessloc's entries under `hooks` in `~/.junie/config.json`, and the working standard in `~/.junie/AGENTS.md` between `<!-- working-standard -->` markers |
 | `--openhands` | lessloc's entries in `~/.openhands/hooks.json`, which OpenHands reads for repositories without their own `.openhands/hooks.json` |
@@ -429,7 +429,7 @@ None of these files is shared with your team: they live in your account's cache,
 | `~/.pi/agent/extensions/lessloc.js`, or `$PI_CODING_AGENT_DIR/extensions/lessloc.js` | `init --pi` |
 | `~/.qwen/settings.json`, the `hooks` key | `init --qwen` |
 | `~/.factory/hooks.json`, or the `hooks` key of `~/.factory/settings.json` | `init --droid` |
-| `~/.augment/settings.json`, the `hooks` key | `init --augment` |
+| `~/.augment/settings.json`, the `hooks` key, and a block in `~/.augment/rules/working-standard.md` | `init --augment` |
 | `~/.kiro/hooks/lessloc.json` | `init --kiro` |
 | `~/.junie/config.json`, the `hooks` key, and a block in `~/.junie/AGENTS.md` | `init --junie` |
 | `~/.openhands/hooks.json` | `init --openhands` |

@@ -268,10 +268,11 @@ test('init writes the user-level hook file of Qwen Code, Factory Droid, Augment,
   const read = f => JSON.parse(fs.readFileSync(path.join(m.home, f), 'utf8')), text = f => fs.readFileSync(path.join(m.home, f), 'utf8');
   const flags = ['--qwen', '--droid', '--augment', '--kiro', '--junie', '--openhands', '--goose', '--devin'];
   const before = tree(m.home), out = m.cli(['init', ...flags]).stdout;
-  for (const [label, file] of [['Qwen Code', '.qwen/settings.json'], ['Factory Droid', '.factory/hooks.json'], ['Augment', '.augment/settings.json'], ['Kiro', '.kiro/hooks/lessloc.json'], ['OpenHands', '.openhands/hooks.json'], ['Devin CLI', '.config/devin/config.json']]) {
+  for (const [label, file] of [['Qwen Code', '.qwen/settings.json'], ['Factory Droid', '.factory/hooks.json'], ['Kiro', '.kiro/hooks/lessloc.json'], ['OpenHands', '.openhands/hooks.json'], ['Devin CLI', '.config/devin/config.json']]) {
     assert.match(out, new RegExp(`^- ${label} hooks installed in .*${file.replaceAll('.', '\\.')}, for all your projects`, 'm'));
   }
   assert.match(out, /^- Junie hooks installed in .*\.junie\/config\.json and .*\.junie\/AGENTS\.md, for all your projects\. Junie runs hooks only in its CLI's Early Access build$/m);
+  assert.match(out, /^- Augment hooks installed in .*\.augment\/settings\.json and .*\.augment\/rules\/working-standard\.md, for all your projects$/m);
   assert.match(out, /^- goose plugin installed in .*\.agents\/plugins\/review and .*\.config\/goose\/\.goosehints, for all your projects$/m);
 
   const qwen = read('.qwen/settings.json');
@@ -296,6 +297,7 @@ test('init writes the user-level hook file of Qwen Code, Factory Droid, Augment,
   assert.ok(read('.agents/plugins/review/hooks/hooks.json').hooks.PreToolUse[0].hooks[0].command.endsWith('--host goose'));
   assert.ok(text('.junie/AGENTS.md').startsWith('# My rules\n\nUse tabs.\n\n<!-- working-standard -->\n'), 'the rules block goes after the user\'s own rules');
   assert.equal(text('.config/goose/.goosehints'), `Prefer small functions.\n<!-- working-standard -->\n${STANDARD}\n<!-- /working-standard -->\n`);
+  assert.equal(text('.augment/rules/working-standard.md'), `<!-- working-standard -->\n${STANDARD}\n<!-- /working-standard -->\n`, "Augment drops its session start hook's answer, and always applies its user rules");
   assert.ok(read('.config/devin/config.json').hooks.SessionStart);
 
   const doctor = m.cli(['doctor']).stdout;

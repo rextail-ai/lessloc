@@ -34,6 +34,7 @@ Every release of lessloc, newest first. Versions follow [Semantic Versioning](ht
 - Antigravity CLI: its own file tools, `write_file` and `edit_file`, are gated and tracked, and a turn it ends normally is reviewed.
 - Factory Droid: in `droid exec`, which runs no prompt hook and no hook after a command that failed, the request and the failed test runs are read from the session's transcript, and a command's exit code from the end of its output.
 - Antigravity CLI: the turn's request and every command's exit code are read from the transcript each hook names, so the request is checked and handed on, and passing test runs are recorded too.
+- Augment: the working standard reaches the agent from `~/.augment/rules/`, since Augment drops what its session start hook says.
 - Junie CLI (Early Access): a refused tool call is answered in the form its build acts on, so the call does not run.
 - Aider: the notes right after a write reach the model when Aider commits the edit before it lints it, as it does by default.
 - OpenHands: `init --openhands` writes `~/.openhands/hooks.json`, the file its CLI reads, whatever `OH_PERSISTENCE_DIR` says.
