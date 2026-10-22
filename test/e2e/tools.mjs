@@ -9,9 +9,9 @@ import path from 'node:path';
 import readline from 'node:readline';
 import { HOSTS } from '../../lib/hosts.mjs';
 import { event, parse } from './record.mjs';
+import PINS from './tools.json' with { type: 'json' };
 
 export const CACHE = process.env.E2E_CACHE || path.join(os.homedir(), '.cache', 'lessloc-e2e');
-const PINS = JSON.parse(fs.readFileSync(new URL('./tools.json', import.meta.url), 'utf8'));
 const PLUGIN = JSON.parse(fs.readFileSync(new URL('../../.claude-plugin/plugin.json', import.meta.url), 'utf8'));
 // The events a tool's hook file sets up, in lessloc's names (Gemini's BeforeTool is PreToolUse, Copilot's agentStop Stop,
 // OpenHands' pre_tool_use, which its payloads name in event_type, PreToolUse).
@@ -49,8 +49,9 @@ export function bin(pin) {
     fs.mkdirSync(dir, { recursive: true });
     if (release) {
       const file = path.join(dir, path.basename(release.url)), [kind, sum] = Object.entries(release).find(([k]) => k.startsWith('sha'));
-      spawnSync('curl', ['-fsSL', '-o', file, release.url], { env, stdio: 'ignore' });
-      if (!fs.existsSync(file) || crypto.createHash(kind).update(fs.readFileSync(file)).digest('hex') !== sum) throw new Error(`${release.url} is not the pinned file`);
+      const data = spawnSync('curl', ['-fsSL', release.url], { env, maxBuffer: 2 ** 30 }).stdout;
+      if (!data?.length || crypto.createHash(kind).update(data).digest('hex') !== sum) throw new Error(`${release.url} is not the pinned file`);
+      fs.writeFileSync(file, data);
       if (file.endsWith('.zip')) spawnSync('unzip', ['-qo', file, '-d', dir], { stdio: 'ignore' });
       else if (file.endsWith('gz')) spawnSync('tar', ['-xzf', file, '-C', dir, `--strip-components=${p.strip ?? 1}`], { stdio: 'ignore' });
       else fs.chmodSync(file, 0o755);
