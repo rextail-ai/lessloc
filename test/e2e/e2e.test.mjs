@@ -96,6 +96,8 @@ async function session(a, exe, dir) {
     const env = {
       PATH: `${path.dirname(process.execPath)}:/usr/bin:/bin`, HOME: t.home, TMPDIR: t.tmp, TERM: 'dumb', XDG_CONFIG_HOME: path.join(t.home, '.config'),
       XDG_CACHE_HOME: d('cache'), XDG_DATA_HOME: path.join(t.home, '.local/share'), XDG_STATE_HOME: path.join(t.home, '.local/state'),
+      // The scenario's own `npm test` would otherwise ask the registry for a newer npm.
+      npm_config_update_notifier: 'false',
       // Outside a network namespace, the fake model is also the proxy, and refuses and keeps every try to reach the internet.
       ...(!process.env.E2E_NETNS && { HTTPS_PROXY: t.url, HTTP_PROXY: t.url, ALL_PROXY: t.url, NO_PROXY: '127.0.0.1,localhost' }), ...a.env(t),
     };

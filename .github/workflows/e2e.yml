@@ -29,6 +29,10 @@ jobs:
         with:
           path: ~/.cache/lessloc-e2e
           key: e2e-tools-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('test/e2e/tools.json') }}
+      # Codex's own sandbox, and the network namespace of `e2e:netns`, need unprivileged user namespaces, which the runner's
+      # AppArmor restricts.
+      - run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 && sudo apt-get install -y bubblewrap
       - run: npm run e2e
         env:
           E2E_INSTALL: '1'
+      - run: npm run e2e:netns
