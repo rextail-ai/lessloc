@@ -2,7 +2,7 @@
   "host": "goose",
   "source": ["https://github.com/aaif-goose/goose/blob/main/documentation/docs/guides/context-engineering/hooks.md"],
   "read": "2026-10-19",
-  "evidence": false,
+  "evidence": "failures",
   "events": {
     "start": {"event": "SessionStart", "session_id": "$SID"},
     "prompt": {"event": "UserPromptSubmit", "session_id": "$SID", "matcher_context": "$PROMPT", "message": "$PROMPT"},
@@ -10,6 +10,7 @@
     "written": {"event": "PostToolUse", "session_id": "$SID", "matcher_context": "write", "tool_name": "write", "tool_input": {"path": "$ABSFILE", "content": "$CONTENT"}, "working_dir": "$CWD", "tool_call_id": "$ID"},
     "shell": {"event": "PreToolUse", "session_id": "$SID", "matcher_context": "shell", "tool_name": "shell", "tool_input": {"command": "$COMMAND"}, "working_dir": "$CWD", "tool_call_id": "$ID"},
     "ran": {"event": "PostToolUse", "session_id": "$SID", "matcher_context": "shell", "tool_name": "shell", "tool_input": {"command": "$COMMAND"}, "working_dir": "$CWD", "tool_call_id": "$ID"},
+    "failed": {"event": "PostToolUseFailure", "session_id": "$SID", "matcher_context": "shell", "tool_name": "shell", "tool_input": {"command": "$COMMAND"}, "working_dir": "$CWD", "tool_call_id": "$ID"},
     "stop": {"event": "Stop", "session_id": "$SID", "last_assistant_message": "Done."}
   },
   "answer": {"deny": "reason", "block": "reason"}

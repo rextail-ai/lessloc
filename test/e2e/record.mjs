@@ -9,7 +9,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { parse as readHook } from '../../lib/hosts.mjs';
+import { HOSTS, parse as readHook } from '../../lib/hosts.mjs';
 
 const main = C => {
   const { spawn } = C.spawn, line = o => C.fs.appendFileSync(C.record, `${JSON.stringify({ pid: process.pid, ...o })}\n`);
@@ -27,7 +27,15 @@ const main = C => {
   line({ start: Date.now(), argv: process.argv.slice(2) });
   const child = spawn(process.execPath, [C.real, ...process.argv.slice(2)], { env: { ...process.env, LESSLOC_STATE: C.state, LESSLOC_OFF: C.off }, stdio: 'pipe' });
   let stdin = '', stdout = '', stderr = '';
-  process.stdin.on('data', d => ((stdin += d), child.stdin.write(d))).on('end', () => child.stdin.end());
+  // The transcript the payload names, as the hook may read it, for the hosts lessloc reads one of (lib/hosts.mjs `transcript`).
+  let transcript;
+  process.stdin.on('data', d => ((stdin += d), child.stdin.write(d))).on('end', () => {
+    child.stdin.end();
+    try {
+      const input = JSON.parse(stdin), f = input.transcript_path ?? input.transcriptPath;
+      if (f) transcript = { path: f, text: C.fs.readFileSync(f, 'utf8') };
+    } catch { /* none, or not readable */ }
+  });
   child.stdin.on('error', () => {});
   child.stdout.on('data', d => (stdout += d));
   child.stderr.on('data', d => (stderr += d));
@@ -35,7 +43,7 @@ const main = C => {
     process.stdout.write(stdout);
     process.stderr.write(stderr);
     const ours = `${process.cwd()}\n${stdin}`.includes(C.work);
-    line(ours ? { end: Date.now(), env, tree, stdin, stdout, stderr, code } : { end: Date.now(), elsewhere: true });
+    line(ours ? { end: Date.now(), env, tree, transcript, stdin, stdout, stderr, code } : { end: Date.now(), elsewhere: true });
     process.exit(code ?? 1);
   });
 };
@@ -86,16 +94,18 @@ export function calls(file) {
 
 // Nothing lessloc says may name it or show its command, a kind tag or a citation (the unit tests' pattern).
 export const QUIET = /lessloc|\bnode\s|\.mjs\b|\[[a-z]+(?:-[a-z]+)*\]|\(CWE-|et al\./i;
-// What lessloc says at each moment of the scenario, the same in what reaches the model and in the hook's answer.
-export const SAYS = { placeholder: /Not applied: it adds a placeholder/, note: /shop\/load\.js:\d+: swallowed error/, hold: /Before you finish[\s\S]*shop\/load\.js/ };
+// What lessloc says at each moment of the scenario, the same in what reaches the model and in the hook's answer; `lint`, the
+// placeholder as Aider's lint command reports it.
+export const SAYS = { hints: /Existing code that may already do part of this[\s\S]{0,400}?formatMoney/, placeholder: /Not applied: it adds a placeholder/, note: /shop\/load\.js:\d+: swallowed error/, hold: /Before you finish[\s\S]*shop\/load\.js/, lint: /shop\/total\.js:\d+: placeholder: delete/ };
 
-// The session a hook call belongs to, as the tool names it in its payload.
-export const sessionOf = input => input?.session_id ?? input?.sessionId;
+// The session a hook call belongs to, read as lessloc reads it.
+export const sessionOf = (host, input, argv = []) => readHook(input, host, {}, argv.at(-1)).sid;
 
 // The checks that read lessloc's state (the repository's folder in it) and the work repository, the same after a real session
 // and after its replay. `cli` is lessloc.mjs, `env` runs it with that state. A tool may wrap the request (OpenCode's `run`
-// quotes it), and the handoff keeps it as the tool passed it on.
-export const outcomes = ({ state, work, env, cli, sid, prompt }) => ({
+// quotes it), and the handoff keeps it as the tool passed it on. `evidence` is the fixture's: where hooks see no passing run,
+// the final state is recorded as unverified.
+export const outcomes = ({ state, work, env, cli, sid, prompt, evidence }) => ({
   A5: () => {
     const ev = path.join(state, 'evidence');
     assert.ok(fs.readdirSync(ev).map(f => JSON.parse(fs.readFileSync(path.join(ev, f), 'utf8'))).some(r => r.ok === false && r.test.includes('npm test')));
@@ -108,24 +118,30 @@ export const outcomes = ({ state, work, env, cli, sid, prompt }) => ({
     const f = path.join(state, 'ledger', `${sid}.json`), e = fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : {};
     assert.ok(e.prompt?.includes(prompt), `the request, as the tool passed it on: ${e.prompt}`);
     assert.ok(e.files?.includes('shop/load.js'));
-    assert.equal(e.verified, 'tests passed');
+    assert.equal(e.verified, evidence == null ? 'tests passed' : 'tests not run');
   },
 });
 
 // Writes the recording the replay in npm test plays: a header (the tool, its version, the answer paths, the checks the session
-// passed), the work repository's first commit, then each hook call with the files changed since the call before. The run's
+// passed), the work repository's first commit, then each hook call with the files changed since the call before and, for a host
+// whose transcript lessloc reads, what the transcript gained. The run's
 // folders, and the slugs tools make of them, become $REPO, $HOME, $TMP and $RUN, and the tools' cache $CACHE; a recording that still
 // names a machine path, its user, its host or a key is refused.
 export function save(file, header, first, calls, t) {
-  let before = first;
-  const lines = [header, { step: 'the repository at its last commit', files: first, commit: true }, ...calls.map(c => {
+  let before = first, said = {};
+  const read = HOSTS[header.host]?.transcript, lines = [header, { step: 'the repository at its last commit', files: first, commit: true }, ...calls.map(c => {
     const files = Object.fromEntries([...new Set([...Object.keys(before), ...Object.keys(c.tree)])].filter(f => before[f] !== c.tree[f]).map(f => [f, c.tree[f] ?? null]));
     before = c.tree;
-    return { step: event(header.host, c.input, c.argv), argv: c.argv, env: c.env, files, hook: c.input, stdout: c.stdout, stderr: c.stderr, code: c.code };
+    const tr = read && c.transcript, old = tr && said[tr.path], transcript = tr && (old != null && tr.text.startsWith(old) ? { path: tr.path, append: tr.text.slice(old.length) } : { path: tr.path, text: tr.text });
+    if (tr) said[tr.path] = tr.text;
+    return { step: event(header.host, c.input, c.argv), argv: c.argv, env: c.env, files, ...(transcript && { transcript }), hook: c.input, stdout: c.stdout, stderr: c.stderr, code: c.code };
   })];
-  const slug = p => p.replace(/[^a-zA-Z0-9]/g, '-');
+  // A slug has a dash for every other character, or only for each slash (Droid's session folders).
+  const slugs = p => [p.replace(/[^a-zA-Z0-9]/g, '-'), p.replaceAll('/', '-')];
   let text = lines.map(l => `${JSON.stringify(l)}\n`).join('');
-  for (const [p, name] of [[t.work, '$REPO'], [t.home, '$HOME'], [t.tmp, '$TMP'], [t.dir, '$RUN'], [t.cache, '$CACHE']]) text = text.replaceAll(p, name).replaceAll(slug(p), slug(name));
+  for (const [p, name] of [[t.work, '$REPO'], [t.home, '$HOME'], [t.tmp, '$TMP'], [t.dir, '$RUN'], [t.cache, '$CACHE']]) text = slugs(p).reduce((s, x, i) => s.replaceAll(x, slugs(name)[i]), text.replaceAll(p, name));
+  // OpenHands' terminal results name the machine's user and host as whole values, which become $USER and $HOST.
+  for (const [v, name] of [[os.userInfo().username, '$USER'], [os.hostname(), '$HOST']]) text = text.replaceAll(`"${v}"`, `"${name}"`).replaceAll(`\\"${v}\\"`, `\\"${name}\\"`);
   const leak = new RegExp(`(?<!\\w)[/-](?:tmp|home)[/-]|sk-test|x-api-key|\\b(${os.userInfo().username}|${os.hostname()})\\b`, 'i').exec(text);
   if (leak) throw new Error(`${file} would hold ${leak[0]}: ${text.slice(Math.max(0, leak.index - 80), leak.index + 80)}`);
   fs.mkdirSync(path.dirname(file), { recursive: true });

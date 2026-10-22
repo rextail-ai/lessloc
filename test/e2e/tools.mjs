@@ -13,29 +13,39 @@ import { event, parse } from './record.mjs';
 export const CACHE = process.env.E2E_CACHE || path.join(os.homedir(), '.cache', 'lessloc-e2e');
 const PINS = JSON.parse(fs.readFileSync(new URL('./tools.json', import.meta.url), 'utf8'));
 const PLUGIN = JSON.parse(fs.readFileSync(new URL('../../.claude-plugin/plugin.json', import.meta.url), 'utf8'));
-// The events a tool's hook file sets up, in lessloc's names (Gemini's BeforeTool is PreToolUse, Copilot's agentStop Stop).
-const named = (host, events) => events.map(e => event(host, { hook_event_name: e }, [e]));
+// The events a tool's hook file sets up, in lessloc's names (Gemini's BeforeTool is PreToolUse, Copilot's agentStop Stop,
+// OpenHands' pre_tool_use, which its payloads name in event_type, PreToolUse).
+const named = (host, events) => events.map(e => event(host, { hook_event_name: e, event_type: e }, [e]));
 // Where a tool reads each part of lessloc's answer, and which test runs its hooks can see (`evidence`): its host fixture's, as
 // in the contract tests.
 const fixture = host => JSON.parse(fs.readFileSync(new URL(`../fixtures/hosts/${host}.json`, import.meta.url), 'utf8'));
 const answer = host => fixture(host).answer;
 
 // The tool's binary: an absolute path in E2E_BIN_<PIN>, or the pinned version in the cache, installed with E2E_INSTALL=1. Never
-// one found on PATH, where a wrapper may stand in for the tool. Null when it is not there. A tool whose npm package fetches its
-// binary in a postinstall is pinned to its release tarball for this platform, and that file's sha256.
+// one found on PATH, where a wrapper may stand in for the tool. Null when it is not there. A pin is an npm package (the platform
+// package where the main one fetches the binary in a postinstall), a release file for this platform with the hash its vendor
+// publishes (a .tar.gz with `strip` folders around the binary, default 1; a .zip; or the binary itself), or a Python package
+// that uv installs on a pinned Python, uv's own folders all in the cache. A JVM tool takes its home from the user database, not
+// HOME, so the JVM is told where it is. Each is checked by --version before it is used.
 export function bin(pin) {
   const given = process.env[`E2E_BIN_${pin.toUpperCase()}`];
   if (given) return given;
-  const p = PINS[pin], tarball = p.tarball?.[`${process.platform}-${process.arch}`], name = p.npm?.replace('{platform}', process.platform).replace('{arch}', process.arch) ?? pin, dir = path.join(CACHE, `${pin}@${p.version}`);
-  const exe = tarball ? path.join(dir, p.bin) : path.join(dir, 'node_modules', name, p.bin), env = { PATH: `${path.dirname(process.execPath)}:/usr/bin:/bin`, HOME: dir };
+  const p = PINS[pin], release = p.release?.[`${process.platform}-${process.arch}`], name = p.npm?.replace('{platform}', process.platform).replace('{arch}', process.arch) ?? pin, dir = path.join(CACHE, `${pin}@${p.version}`);
+  const exe = p.npm ? path.join(dir, 'node_modules', name, p.bin) : path.join(dir, p.bin);
+  const env = { PATH: `${path.dirname(process.execPath)}:/usr/bin:/bin`, HOME: dir, JAVA_TOOL_OPTIONS: `-Duser.home=${dir} -Djava.io.tmpdir=${dir} -XX:-UsePerfData` };
   if (!fs.existsSync(path.join(dir, '.ok'))) {
     if (!process.env.E2E_INSTALL) return null;
     fs.mkdirSync(dir, { recursive: true });
-    if (tarball) {
-      const file = path.join(dir, path.basename(tarball.url));
-      spawnSync('curl', ['-fsSL', '-o', file, tarball.url], { env, stdio: 'ignore' });
-      if (!fs.existsSync(file) || crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex') !== tarball.sha256) throw new Error(`${tarball.url} is not the pinned file`);
-      spawnSync('tar', ['-xzf', file, '-C', dir, '--strip-components=1'], { stdio: 'ignore' });
+    if (release) {
+      const file = path.join(dir, path.basename(release.url)), [kind, sum] = Object.entries(release).find(([k]) => k.startsWith('sha'));
+      spawnSync('curl', ['-fsSL', '-o', file, release.url], { env, stdio: 'ignore' });
+      if (!fs.existsSync(file) || crypto.createHash(kind).update(fs.readFileSync(file)).digest('hex') !== sum) throw new Error(`${release.url} is not the pinned file`);
+      if (file.endsWith('.zip')) spawnSync('unzip', ['-qo', file, '-d', dir], { stdio: 'ignore' });
+      else if (file.endsWith('gz')) spawnSync('tar', ['-xzf', file, '-C', dir, `--strip-components=${p.strip ?? 1}`], { stdio: 'ignore' });
+      else fs.chmodSync(file, 0o755);
+    } else if (p.uv) {
+      const uv = { UV_TOOL_DIR: path.join(dir, 'tools'), UV_TOOL_BIN_DIR: path.join(dir, 'bin'), UV_PYTHON_INSTALL_DIR: path.join(dir, 'python'), UV_CACHE_DIR: path.join(dir, 'uv-cache'), UV_PYTHON_PREFERENCE: 'only-managed', UV_NO_MODIFY_PATH: '1', UV_NO_CONFIG: '1' };
+      spawnSync('uv', ['tool', 'install', '--python', p.python, `${p.uv}==${p.version}`], { env: { ...env, ...uv, PATH: `${env.PATH}:${process.env.PATH}` }, stdio: 'ignore' });
     } else spawnSync('npm', ['install', '--prefix', dir, '--ignore-scripts', '--no-save', '--no-audit', '--no-fund', `${name}@${p.version}`], { env, stdio: 'ignore' });
     // The plugin SDK of the same version, which the tool installs from the registry into a config folder that holds a plugin.
     if (p.sdk) spawnSync('npm', ['install', '--prefix', path.join(dir, 'sdk'), '--ignore-scripts', '--save-exact', '--no-audit', '--no-fund', `${p.sdk}@${p.version}`], { env, stdio: 'ignore' });
@@ -91,7 +101,8 @@ const codex = {
   files: t => ({ [path.join(t.config, 'config.toml')]: `model = "gpt-5.5"\nmodel_provider = "fake"\ncheck_for_update_on_startup = false\n\n[model_providers.fake]\nname = "fake"\nbase_url = "${t.url}/v1"\nenv_key = "FAKE_API_KEY"\nwire_api = "responses"\n\n[features]\nplugins = false\n\n[analytics]\nenabled = false\n\n[feedback]\nenabled = false\n` }),
   route: async t => await t.init('--codex') === 0 && trust(t),
   env: t => ({ CODEX_HOME: t.config, FAKE_API_KEY: 'sk-test' }),
-  run: (t, prompt) => ['exec', '--json', '--sandbox', 'workspace-write', prompt],
+  // In a network namespace, Codex's own sandbox (bwrap) cannot make its namespaces; the namespace is the sandbox there.
+  run: (t, prompt) => ['exec', '--json', '--sandbox', process.env.E2E_NETNS ? 'danger-full-access' : 'workspace-write', prompt],
   doctor: 'Codex',
   timeout: 90,
 };
@@ -244,4 +255,115 @@ const crush = {
   timeout: 60,
 };
 
-export const ADAPTERS = [claude(false), claude(true), codex, opencode2, pi, copilot, qwen(false), qwen(true), opencode1, kilo, gemini(false), gemini(true), cline, crush];
+// Codex from its plugin: the marketplace is the copy, and the plugin's hooks are trusted as with `init --codex`. Plugin hooks
+// load only with plugins on.
+const codexPlugin = {
+  ...codex, id: 'codex-plugin',
+  files: t => Object.fromEntries(Object.entries(codex.files(t)).map(([f, text]) => [f, text.replace('plugins = false', 'plugins = true')])),
+  route: async t => await t.tool(['plugin', 'marketplace', 'add', t.lessloc]) === 0 && await t.tool(['plugin', 'add', 'lessloc@lessloc']) === 0 && trust(t),
+  namespace: 'with plugins on, every start syncs the curated plugin list from github.com and chatgpt.com, and no setting turns that off',
+  todo: { A10: 'lessloc: row 21, the hold reaches the model in <hook_prompt hook_run_id="stop:...">, whose hook path is under plugins/cache/lessloc (open by the owner\'s decision)' },
+};
+// Codex with only `init --rules`: no hook and no answer, so the standard reaches its model from AGENTS.md alone.
+const codexRules = { ...codex, id: 'codex-rules', events: [], answer: {}, route: async t => await t.init('--rules') === 0 };
+
+// goose with `init --goose`, from its OpenAI provider pointed at the fake model (OPENAI_HOST without /v1: goose adds it). Its
+// hooks can refuse and hold, and show the model nothing else, so the standard reaches it from the .goosehints init writes.
+const goose = {
+  id: 'goose', host: 'goose', pin: 'goose', protocol: 'chat',
+  tools: { write: 'write', edit: 'edit', shell: 'shell' },
+  events: Object.keys(HOSTS.goose.hooks.events), homes: ['.config/goose', '.local/share/goose', '.local/state/goose', '.agents/plugins'], answer: answer('goose'), evidence: fixture('goose').evidence,
+  route: async t => await t.init('--goose') === 0,
+  env: t => ({ GOOSE_PROVIDER: 'openai', GOOSE_MODEL: 'fake-model', OPENAI_HOST: t.url, OPENAI_API_KEY: 'sk-test', GOOSE_DISABLE_KEYRING: '1', GOOSE_TELEMETRY_ENABLED: 'false', GOOSE_DISABLE_SESSION_NAMING: 'true' }),
+  run: (t, prompt) => ['run', '--no-session', '-q', '-t', prompt],
+  namespace: 'every start fetches its model catalog from models.dev, and no setting turns that off (crates/goose/src/model_catalog.rs)',
+  doctor: 'goose',
+  timeout: 90,
+};
+
+// Factory Droid with `init --droid`, from a custom model of the user's own, which needs no Factory sign-in.
+const droid = {
+  id: 'droid', host: 'droid', pin: 'droid', protocol: 'chat',
+  tools: { write: 'Create', edit: 'Edit', shell: 'Execute' },
+  events: Object.keys(HOSTS.droid.hooks.events), homes: ['.factory'], answer: answer('droid'),
+  unfired: { UserPromptSubmit: 'not fired by droid exec 0.247.0' },
+  files: t => ({ [path.join(t.home, '.factory/settings.json')]: JSON.stringify({ cloudSessionSync: false, customModels: [{ model: 'fake-model', displayName: 'Fake', baseUrl: `${t.url}/v1`, apiKey: 'sk-test', provider: 'generic-chat-completion-api', maxOutputTokens: 1024 }] }) }),
+  route: async t => await t.init('--droid') === 0,
+  env: () => ({}),
+  // --auto low lets exec write files and run low-risk commands.
+  run: (t, prompt) => ['exec', '-m', 'custom:fake-model', '--auto', 'low', '-o', 'json', prompt],
+  namespace: 'it sends telemetry to Factory\'s hosts even with a model of the user\'s own and no sign-in, and no setting turns that off',
+  doctor: 'Factory Droid',
+  timeout: 90,
+};
+
+// Junie CLI's Early Access build (the release runs no hooks) with `init --junie`, through its LiteLLM provider pointed at the
+// fake: it runs only a model it knows, and a turn ends only with its submit tool. Its one subagent in a headless run is its docs
+// agent, so the session has no agent step. A JVM app ignores HOME and TMPDIR, so the JVM gets the run's folders, and keeps no
+// perf data in /tmp.
+const junie = {
+  id: 'junie', host: 'junie', pin: 'junie', protocol: 'chat', model: 'gpt-5.5',
+  tools: { write: 'create', edit: 'search_replace', shell: 'bash', reply: 'submit' },
+  events: Object.keys(HOSTS.junie.hooks.events), homes: ['.junie'], answer: answer('junie'), evidence: fixture('junie').evidence,
+  route: async t => await t.init('--junie') === 0,
+  namespace: 'every start fetches its usage-statistics config from resources.jetbrains.com and an analytics token from ingrazzio-cloud-prod.labs.jb.gg, whatever --share-anonymous-statistics says',
+  env: t => ({ JAVA_TOOL_OPTIONS: `-Duser.home=${t.home} -Djava.io.tmpdir=${t.tmp} -XX:-UsePerfData`, JUNIE_SKIP_UPDATE_CHECK: '1' }),
+  run: (t, prompt) => ['--provider=litellm', `--litellm-url=${t.url}`, '--litellm-api-key=sk-test', `--model=${junie.model}`, '--skip-update-check', '--share-anonymous-statistics=false', '--output-format=json', prompt],
+  doctor: 'Junie',
+  timeout: 60,
+};
+
+// Antigravity CLI with `init --antigravity`, from the Gemini API at a base URL of the user's own: with modelProvider "gemini" it
+// needs no Google sign-in, which it would otherwise wait for in a browser. A command waits up to 10 s for its exit before it
+// goes to the background, where its failure would not reach the after-tool hook.
+const antigravity = {
+  id: 'antigravity', host: 'antigravity', pin: 'antigravity', protocol: 'gemini',
+  tools: { write: 'write_file', edit: 'edit_file', shell: 'run_command', agent: 'invoke_subagent' }, args: { agent: { TypeName: 'research', Role: 'File Lister' }, shell: { WaitMsBeforeAsync: 10000 } },
+  // Its CLI's payloads are not its app's, so they have a fixture of their own; its transcript gives every command's exit code
+  // (lib/hosts.mjs), so every test run is seen.
+  events: Object.keys(HOSTS.antigravity.hooks.events), homes: ['.gemini'], fixture: 'antigravity-cli', answer: answer('antigravity-cli'),
+  files: t => ({ [path.join(t.home, '.gemini/antigravity-cli/settings.json')]: JSON.stringify({ modelProvider: 'gemini' }) }),
+  route: async t => await t.init('--antigravity') === 0,
+  env: t => ({ GEMINI_API_KEY: 'sk-test', GOOGLE_GEMINI_BASE_URL: t.url }),
+  run: (t, prompt) => ['-p', prompt, '--dangerously-skip-permissions', '--output-format', 'json'],
+  namespace: 'it updates itself in the background, and no setting turns that off',
+  doctor: 'Antigravity',
+  timeout: 90,
+};
+
+// Aider with `init --aider`, from a provider of the user's own. Its model is offered no tools: it writes each file whole in its
+// reply (the edit step's old text is the whole file), as Aider keeps it in the conversation, trimmed; and it runs no commands,
+// so lessloc sees no test run. Its commits need a git identity, and the model's metadata spares it a fetch of LiteLLM's. Its
+// histories would otherwise go into the work repository.
+const whole = s => `${s.path}\n\`\`\`\n${s.content ?? s.new}\`\`\``;
+const aider = {
+  id: 'aider', host: 'aider', pin: 'aider', protocol: 'chat', tools: {}, text: whole,
+  events: [], homes: ['.aider', '.aider.conf.yml'], answer: {}, evidence: false,
+  files: t => ({
+    [path.join(t.home, '.gitconfig')]: '[user]\n\tname = t\n\temail = t@t\n',
+    [path.join(t.dir, 'models.json')]: JSON.stringify({ 'openai/fake-model': { max_input_tokens: 128000, max_output_tokens: 4096, input_cost_per_token: 0, output_cost_per_token: 0, litellm_provider: 'openai', mode: 'chat' } }),
+  }),
+  route: async t => await t.init('--aider') === 0,
+  env: () => ({ AIDER_ANALYTICS_DISABLE: 'true', AIDER_CHECK_UPDATE: 'false', LITELLM_LOCAL_MODEL_COST_MAP: 'True' }),
+  run: (t, prompt) => ['--model', 'openai/fake-model', '--model-metadata-file', path.join(t.dir, 'models.json'), '--openai-api-base', `${t.url}/v1`, '--openai-api-key', 'sk-test', '--edit-format', 'whole', '--yes-always', '--no-pretty', '--no-fancy-input', '--no-show-release-notes', '--no-show-model-warnings', '--no-gitignore', '--map-tokens', '0', '--chat-history-file', path.join(t.dir, 'aider-chat.md'), '--input-history-file', path.join(t.dir, 'aider-input'), '--message', prompt],
+  doctor: 'Aider',
+  timeout: 90,
+};
+
+// OpenHands CLI with `init --openhands`, from a provider of the user's own, which it reaches through LiteLLM without streaming.
+// Its editor's `command` says what a call does: a write is `create` and an edit `str_replace`, where the enum rule would pick
+// `view`.
+const openhands = {
+  id: 'openhands', host: 'openhands', pin: 'openhands', protocol: 'chat',
+  tools: { write: 'file_editor', edit: 'file_editor', shell: 'terminal' }, args: { write: { command: 'create' }, edit: { command: 'str_replace' } },
+  events: named('openhands', Object.keys(HOSTS.openhands.hooks.events)), homes: ['.openhands'], answer: answer('openhands'),
+  route: async t => await t.init('--openhands') === 0,
+  // The LLM_* variables count only with --override-with-envs; LiteLLM's local cost map spares it a fetch of the remote one.
+  env: t => ({ LLM_MODEL: 'openai/fake-model', LLM_BASE_URL: `${t.url}/v1`, LLM_API_KEY: 'sk-test', OPENHANDS_SUPPRESS_BANNER: '1', LITELLM_LOCAL_MODEL_COST_MAP: 'True' }),
+  run: (t, prompt) => ['--headless', '--override-with-envs', '-t', prompt],
+  namespace: 'every start clones or pulls github.com/OpenHands/extensions for its public skills (openhands_cli/stores/agent_store.py, load_public_skills=True) and asks pypi.org for a newer release (version_check.py), and no setting turns either off',
+  doctor: 'OpenHands',
+  timeout: 120,
+};
+
+export const ADAPTERS = [claude(false), claude(true), codex, opencode2, pi, copilot, qwen(false), qwen(true), opencode1, kilo, gemini(false), gemini(true), cline, crush, codexPlugin, codexRules, goose, droid, junie, antigravity, aider, openhands];

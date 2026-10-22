@@ -15,8 +15,8 @@ import { session } from './reference-agent.mjs';
 // Optional: `flag`, the host the hook command names when it is another row's (VS Code runs Copilot's hook file); `argv`, the
 // event each step's command names, for a tool whose payloads do not; `evidence: false`, the tool gives its hooks no command
 // output, so no test run can be read, and `evidence: "failures"`, it gives only whether a command failed, so a passing run cannot
-// be told from one still running; `text: true`, the tool reads plain text on stdout as context (`text` in the answer);
-// `env`, variables the tool sets for its hooks. A step the tool has no event for is skipped. An answer path may end in
+// be told from one still running; a `failed` event, the one a tool sends for a failing command instead of `ran`; `text: true`,
+// the tool reads plain text on stdout as context (`text` in the answer); `env`, variables the tool sets for its hooks. A step the tool has no event for is skipped. An answer path may end in
 // `|field=value`, read only when the answer's field has that value. A tool with no `block` in its answer cannot hold the
 // end of a turn.
 const FIXTURES = new URL('./fixtures/hosts/', import.meta.url);
@@ -94,7 +94,7 @@ for (const fx of fixtures) {
     const tests = (exit, output) => {
       const vars = { COMMAND: 'python3 -m pytest -q', EXIT: exit, OUTPUT: output, ID: `t${exit}${n}` };
       send('shell', vars);
-      send('ran', vars);
+      send(exit && fx.events.failed ? 'failed' : 'ran', vars);
     };
     tests(1, 'F\n1 failed in 0.05s\n');
     if (fx.evidence !== false) assert.match(verified(), /tests FAILED at this exact state/);
@@ -302,7 +302,41 @@ test(`aider: its lint command reports what a gate would refuse and what is cheap
   assert.match(swallowed.out, /^shop\/load\.py:4: swallowed error/);
   assert.deepEqual(await lint('shop/clean.py'), { code: 0, out: '' }, 'a clean file: no lint error');
   assert.deepEqual(await lint('shop/money.py'), { code: 0, out: '' }, 'an unchanged file');
+  // Aider commits an edit, with its trailer, before it lints it.
+  spawnSync('git', ['add', 'shop/load.py'], { cwd: dir, env });
+  spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'feat: load\n\nCo-authored-by: aider (gpt-5) <aider@aider.chat>'], { cwd: dir, env });
+  assert.match((await lint('shop/load.py')).out, /^shop\/load\.py:4: swallowed error/, 'an edit Aider committed before its lint');
   assert.equal(vars.READ_CONTENT, `${STANDARD}\n`);
   const shown = [fill(AIDER.model, { ...vars, FILE: 'shop/b.py', OUTPUT: placeholder.out }), fill(AIDER.system, vars), fill(AIDER.read_only, vars)];
   shown.map(t => t.replaceAll(home, '/home/user')).forEach(quiet);
+});
+
+// Droid's exec fires no prompt event and nothing after a failed command, and Antigravity CLI's hooks never get a command's
+// exit code; their transcripts, which every payload names, hold both. A hook call stores the turn's request; after the failed
+// test run lands in the transcript, the next call records it for the state now, once.
+test('droid and antigravity: the request and the test runs their hooks lack are read from the transcript each payload names', () => {
+  const runs = [
+    ['droid', [], sid => ({ hook_event_name: 'PreToolUse', session_id: sid, tool_name: 'Execute', tool_input: { command: 'ls' } }), [
+      { type: 'message', message: { role: 'user', content: [{ type: 'text', text: 'show the money totals' }] } },
+      { type: 'message', message: { role: 'assistant', content: [{ type: 'tool_use', id: 'c1', name: 'Execute', input: { command: 'python3 -m pytest -q' } }] } },
+      { type: 'message', message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'c1', is_error: true, content: 'Error: Command failed (exit code: 1)\n1 failed' }] } },
+    ]],
+    ['antigravity', ['PreToolUse'], sid => ({ conversationId: sid, toolCall: { name: 'run_command', args: { CommandLine: 'ls' } } }), [
+      { step_index: 0, type: 'USER_INPUT', content: '<USER_REQUEST>\nshow the money totals\n</USER_REQUEST>' },
+      { step_index: 1, type: 'PLANNER_RESPONSE', tool_calls: [{ name: 'run_command', args: { CommandLine: 'python3 -m pytest -q' } }] },
+      { step_index: 2, type: 'GENERIC', content: 'Completed At: now\nCommand exited with code 1.\n\nCommand output:\n1 failed' },
+    ]],
+  ];
+  for (const [host, argv, payload, lines] of runs) {
+    const dir = repo(MONEY), transcript = path.join(tmp('transcript-'), 't.jsonl'), sid = `${host}-1`;
+    const send = () => spawnSync('node', [ENTRY, '--host', host, ...argv], { cwd: dir, input: JSON.stringify({ ...payload(sid), cwd: dir, workspacePaths: [dir], transcript_path: transcript, transcriptPath: transcript }), encoding: 'utf8', env: ENV });
+    fs.writeFileSync(transcript, `${JSON.stringify(lines[0])}\n`);
+    send();
+    fs.appendFileSync(transcript, lines.slice(1).map(l => `${JSON.stringify(l)}\n`).join(''));
+    send();
+    const state = path.join(ENV.LESSLOC_STATE, fs.readdirSync(ENV.LESSLOC_STATE).find(n => n.startsWith(`${path.basename(dir)}-`)), 'sessions', `${sid}.json`);
+    assert.equal(JSON.parse(fs.readFileSync(state, 'utf8')).prompt, 'show the money totals', host);
+    execFileSync('git', ['add', '-A'], { cwd: dir });
+    assert.match(run(dir, 'check', '--staged').stdout, /tests FAILED at this exact state/, host);
+  }
 });

@@ -3,16 +3,12 @@
   "source": ["https://junie.jetbrains.com/docs/junie-cli-hooks.html"],
   "read": "2026-10-19",
   "evidence": false,
-  "_verify": [
-    "the arguments of Write and Edit; the docs show only Bash's ({command, run_in_background, timeout}). Here Claude Code's, whose tool names Junie uses",
-    "whether Stop payloads carry session_id and project_path, as PreToolUse's do in Junie EAP 3813.3 (its cwd is Junie's own folder there); the docs' examples show neither, so lessloc counts them toward the session that started last, in the folder the hook runs in"
-  ],
   "events": {
     "start": {"hook_event_name": "SessionStart", "session_id": "$SID", "cwd": "/home/user/.junie", "project_path": "$CWD", "source": "startup"},
     "prompt": {"hook_event_name": "UserPromptSubmit", "session_id": "$SID", "cwd": "/home/user/.junie", "project_path": "$CWD", "prompt": "$PROMPT"},
     "write": {"hook_event_name": "PreToolUse", "session_id": "$SID", "cwd": "/home/user/.junie", "project_path": "$CWD", "tool_name": "Write", "tool_input": {"file_path": "$ABSFILE", "content": "$CONTENT"}},
-    "shell": {"hook_event_name": "PreToolUse", "session_id": "$SID", "cwd": "/home/user/.junie", "project_path": "$CWD", "tool_name": "Bash", "tool_input": {"command": "$COMMAND", "run_in_background": false, "timeout": 30}},
-    "stop": {"hook_event_name": "Stop", "stop_hook_active": "$AGAIN", "last_assistant_message": "Done."}
+    "shell": {"hook_event_name": "PreToolUse", "session_id": "$SID", "cwd": "/home/user/.junie", "project_path": "$CWD", "tool_name": "Bash", "tool_input": {"command": "$COMMAND", "run_in_background": false}},
+    "stop": {"hook_event_name": "Stop", "session_id": "$SID", "cwd": "/home/user/.junie", "project_path": "$CWD", "stop_hook_active": "$AGAIN", "last_assistant_message": "Done."}
   },
-  "answer": {"context": "additionalContext", "deny": "reason", "block": "reason"}
+  "answer": {"context": "additionalContext", "deny": "hookSpecificOutput.permissionDecisionReason", "block": "reason"}
 }

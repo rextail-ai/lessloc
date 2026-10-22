@@ -28,10 +28,14 @@ Every release of lessloc, newest first. Versions follow [Semantic Versioning](ht
 
 ### Works in more tools
 
-- Tested end to end: Claude Code 2.1.306, Codex 0.163.0 (`init --codex`), OpenCode 2.1.2 and 1.19.3, Kilo Code 7.8.15, Gemini CLI 0.65.0 and Qwen Code 0.26.0 (`init` and the extension), GitHub Copilot CLI 1.0.102, Pi 1.4.0, the Cline CLI 3.0.73 and Crush 0.98.1, each set up the documented way, work through one scripted session against a local model, and the standard, the hints, the gate, the note after a write, the agent's test runs, the held turn and the handoff each reach the agent or the record. `npm test` replays each session's recorded hook calls offline, and the status table names the version each tool was tested on.
+- Tested end to end: Claude Code 2.1.306, Codex 0.163.0 (`init --codex`), OpenCode 2.1.2 and 1.19.3, Kilo Code 7.8.15, Gemini CLI 0.65.0 and Qwen Code 0.26.0 (`init` and the extension), GitHub Copilot CLI 1.0.102, Pi 1.4.0, the Cline CLI 3.0.73, Crush 0.98.1, Factory Droid 0.247.0, goose 1.55.0, Junie CLI 26.10.20 (Early Access), OpenHands 1.16.0, the Antigravity CLI 1.4.5 and Aider 0.86.2, each set up the documented way, work through one scripted session against a local model, and the standard, the hints, the gate, the note after a write, the agent's test runs, the held turn and the handoff each reach the agent or the record. `npm test` replays each session's recorded hook calls offline, and the status table names the version each tool was tested on.
 - GitHub Copilot CLI: the agent's test runs are read from the exit code the CLI gives after a command's output.
 - Junie: the hooks work in the project the payload names in `project_path`.
 - Antigravity CLI: its own file tools, `write_file` and `edit_file`, are gated and tracked, and a turn it ends normally is reviewed.
+- Factory Droid: in `droid exec`, which runs no prompt hook and no hook after a command that failed, the request and the failed test runs are read from the session's transcript, and a command's exit code from the end of its output.
+- Antigravity CLI: the turn's request and every command's exit code are read from the transcript each hook names, so the request is checked and handed on, and passing test runs are recorded too.
+- Junie CLI (Early Access): a refused tool call is answered in the form its build acts on, so the call does not run.
+- Aider: the notes right after a write reach the model when Aider commits the edit before it lints it, as it does by default.
 - OpenHands: `init --openhands` writes `~/.openhands/hooks.json`, the file its CLI reads, whatever `OH_PERSISTENCE_DIR` says.
 - goose: with `GOOSE_PATH_ROOT` set, `init --goose` puts its plugin folder and `.goosehints` block under it, where goose reads them.
 - Devin CLI: `init --devin` follows `XDG_CONFIG_HOME`, as Devin does.

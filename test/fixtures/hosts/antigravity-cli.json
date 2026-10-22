@@ -1,0 +1,16 @@
+{
+  "host": "antigravity",
+  "source": ["Antigravity CLI 1.4.5, recorded by the end-to-end tests (test/fixtures/recorded/antigravity.jsonl)"],
+  "read": "2026-10-22",
+  "evidence": false,
+  "argv": {"start": "SessionStart", "write": "PreToolUse", "written": "PostToolUse", "shell": "PreToolUse", "ran": "PostToolUse", "stop": "Stop"},
+  "events": {
+    "start": {"artifactDirectoryPath": "/home/user/.gemini/antigravity-cli/brain/$SID", "conversationId": "$SID", "modelName": "gemini-3.1-pro-low", "transcriptPath": "/home/user/.gemini/antigravity-cli/brain/$SID/.system_generated/logs/transcript_full.jsonl", "workspacePaths": ["$CWD"]},
+    "write": {"artifactDirectoryPath": "/home/user/.gemini/antigravity-cli/brain/$SID", "conversationId": "$SID", "modelName": "gemini-3.1-pro-low", "transcriptPath": "/home/user/.gemini/antigravity-cli/brain/$SID/.system_generated/logs/transcript_full.jsonl", "workspacePaths": ["$CWD"], "stepIdx": 5, "toolCall": {"name": "write_file", "args": {"Content": "$CONTENT", "Path": "$ABSFILE"}}},
+    "written": {"artifactDirectoryPath": "/home/user/.gemini/antigravity-cli/brain/$SID", "conversationId": "$SID", "modelName": "gemini-3.1-pro-low", "transcriptPath": "/home/user/.gemini/antigravity-cli/brain/$SID/.system_generated/logs/transcript_full.jsonl", "workspacePaths": ["$CWD"], "error": "", "stepIdx": 5, "toolCall": {"name": "write_file", "args": {"Content": "$CONTENT", "Path": "$ABSFILE"}}},
+    "shell": {"artifactDirectoryPath": "/home/user/.gemini/antigravity-cli/brain/$SID", "conversationId": "$SID", "modelName": "gemini-3.1-pro-low", "transcriptPath": "/home/user/.gemini/antigravity-cli/brain/$SID/.system_generated/logs/transcript_full.jsonl", "workspacePaths": ["$CWD"], "stepIdx": 10, "toolCall": {"name": "run_command", "args": {"CommandLine": "$COMMAND", "WaitMsBeforeAsync": 10000, "toolSummary": ""}}},
+    "ran": {"artifactDirectoryPath": "/home/user/.gemini/antigravity-cli/brain/$SID", "conversationId": "$SID", "modelName": "gemini-3.1-pro-low", "transcriptPath": "/home/user/.gemini/antigravity-cli/brain/$SID/.system_generated/logs/transcript_full.jsonl", "workspacePaths": ["$CWD"], "error": "", "stepIdx": 10, "toolCall": {"name": "run_command", "args": {"CommandLine": "$COMMAND", "WaitMsBeforeAsync": 10000, "toolSummary": ""}}},
+    "stop": {"artifactDirectoryPath": "/home/user/.gemini/antigravity-cli/brain/$SID", "conversationId": "$SID", "modelName": "gemini-3.1-pro-low", "transcriptPath": "/home/user/.gemini/antigravity-cli/brain/$SID/.system_generated/logs/transcript_full.jsonl", "workspacePaths": ["$CWD"], "error": "", "executionNum": 0, "fullyIdle": true, "terminationReason": "NO_TOOL_CALL"}
+  },
+  "answer": {"context": "injectSteps.0.systemMessage.systemMessage", "deny": "reason|decision=deny", "block": "reason|decision=continue"}
+}

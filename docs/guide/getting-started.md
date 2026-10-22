@@ -38,16 +38,16 @@ Recommended:
 | Copilot cloud agent | [`init --copilot --repo` and a setup step](/guide/getting-started#copilot-cloud-agent) | tested against documented payloads |
 | Gemini CLI | [`init --gemini` or the Gemini CLI extension](/guide/getting-started#gemini-cli) | tested end to end on 0.65.0 |
 | Qwen Code | [`init --qwen` or the Qwen Code extension](/guide/getting-started#qwen-code) | tested end to end on 0.26.0 |
-| Factory Droid | [`init --droid`](/guide/getting-started#factory-droid) | tested against documented payloads |
+| Factory Droid | [`init --droid`](/guide/getting-started#factory-droid) | tested end to end on 0.247.0 |
 | Augment (CLI, VS Code, IntelliJ) | [`init --augment`](/guide/getting-started#augment) | tested against documented payloads |
 | Kiro CLI | [`init --kiro`](/guide/getting-started#kiro) | tested against documented payloads |
-| Junie CLI (Early Access) | [`init --junie`](/guide/getting-started#junie) | tested against documented payloads |
-| OpenHands | [`init --openhands`](/guide/getting-started#openhands) | tested against documented payloads |
-| goose | [`init --goose`](/guide/getting-started#goose) | tested against documented payloads |
+| Junie CLI (Early Access) | [`init --junie`](/guide/getting-started#junie) | tested end to end on 26.10.20 |
+| OpenHands | [`init --openhands`](/guide/getting-started#openhands) | tested end to end on 1.16.0 |
+| goose | [`init --goose`](/guide/getting-started#goose) | tested end to end on 1.55.0 |
 | Devin CLI | [`init --devin`](/guide/getting-started#devin-cli) | tested against documented payloads |
 | Crush | [`init --crush`](/guide/getting-started#crush) | tested end to end on 0.98.1 |
-| Antigravity (app, CLI, IDE) | [`init --antigravity`](/guide/getting-started#antigravity) | tested against documented payloads |
-| Aider | [`init --aider`](/guide/getting-started#aider) | tested against documented payloads |
+| Antigravity (app, CLI, IDE) | [`init --antigravity`](/guide/getting-started#antigravity) | tested end to end on 1.4.5 (CLI); the app and IDE: tested against documented payloads |
+| Aider | [`init --aider`](/guide/getting-started#aider) | tested end to end on 0.86.2 |
 | Your own agent | [the hook protocol](/guide/any-agent) | tested against documented payloads |
 | Claude Agent SDK, Codex SDK | [the plugin, or `init --codex`](/guide/any-agent) | tested against documented payloads |
 | OpenAI Agents SDK | [the hook protocol](/guide/any-agent#openai-agents-sdk), the git hooks and CI | tested against documented payloads |
@@ -391,7 +391,7 @@ How lessloc works in Qwen Code: where lessloc would ask you, the call is refused
 
    This adds lessloc's entries to `~/.factory/hooks.json`, for all your projects. If that file does not exist and `~/.factory/settings.json` holds your hooks, it adds them there instead, because Droid then reads hooks only from its settings.
 
-How lessloc works in Droid: Droid asks you where lessloc asks, as Claude Code does.
+How lessloc works in Droid: Droid asks you where lessloc asks, as Claude Code does. `droid exec` runs no prompt hook and no hook after a command that failed, so there lessloc reads the request and the failed test runs from the session's transcript.
 
 ### Augment
 
@@ -492,7 +492,7 @@ How lessloc works in OpenHands:
 How lessloc works in goose:
 
 - goose's hooks cannot add context. The working standard comes from `.goosehints`. The agent gets no hints about existing code, no project rules, no notes right after a write and no note from the last session.
-- goose gives hooks no command output, so lessloc sees only that a command failed, and cannot read the agent's test runs.
+- goose gives hooks no command output, so lessloc sees a test run only when it fails: the turn is held for it, and a passing run is not seen.
 - A refusal reaches the agent in goose's words: "Tool call denied by policy hook `review`:", then the reason.
 - Where lessloc would ask you, the call is refused, and the agent is told to ask you instead.
 
@@ -553,9 +553,9 @@ How lessloc works in Crush:
 
 How lessloc works in Antigravity:
 
-- Antigravity has no prompt hook. The agent gets no hints about existing code, and lessloc cannot check the turn's request or the agent's last reply.
+- Antigravity has no prompt hook, so the agent gets no hints about existing code. In its CLI, lessloc reads the turn's request from the transcript each hook names, checks it, and passes it to the next session; elsewhere it cannot check the turn's request or the agent's last reply.
 - Nothing an after-tool hook says reaches the agent, so there are no notes right after a write. The review at the end of the turn still sees each write.
-- After a command, Antigravity tells a hook only whether it failed. lessloc records a failed test run. It records no pass, because a command still running in the background looks the same. So when the agent reruns failing tests without changing code and they pass, lessloc may still hold the turn once for the failure.
+- After a command, Antigravity tells a hook only whether it failed. In its CLI, lessloc reads each command's exit code from the transcript and records every test run. Elsewhere it records a failed run and no pass, because a command still running in the background looks the same, so when the agent reruns failing tests without changing code and they pass, lessloc may still hold the turn once for the failure.
 - The note at the end of a turn reaches the agent as a system message, and the agent keeps working.
 - Where lessloc would ask you, the call is refused, and the agent is told to ask you instead.
 

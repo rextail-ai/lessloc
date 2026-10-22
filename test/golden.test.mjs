@@ -65,6 +65,11 @@ function play(lines, claude, check) {
       git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'init');
     }
     if (!line.hook) continue;
+    if (line.transcript) {
+      const f = fill(line.transcript.path);
+      fs.mkdirSync(path.dirname(f), { recursive: true });
+      line.transcript.text != null ? fs.writeFileSync(f, fill(line.transcript.text)) : fs.appendFileSync(f, fill(line.transcript.append));
+    }
     const vars = Object.fromEntries(Object.entries(line.env || {}).map(([k, v]) => [k, fill(v)]));
     const r = spawnSync(process.execPath, [ENTRY, ...(line.argv || []).map(a => fill(a))], { cwd: dir, env: { ...vars, ...env }, input: fill(JSON.stringify(line.hook), json), encoding: 'utf8' });
     const now = stateOf(state, dir, trees), changed = {};
@@ -102,7 +107,7 @@ for (const name of fs.readdirSync(RECORDED)) {
     for (const k of ['deny', 'block']) assert.deepEqual(said.map(x => !!at(x.now, head.answer[k])), said.map(x => !!at(x.then, head.answer[k])), `the calls answered with ${k}`);
     // The hold is never read on a pre-tool call, which refuses and may answer at the same path (Gemini's `reason`).
     const says = k => said.filter(x => k !== 'block' || x.event !== 'PreToolUse').map(x => at(x.now, head.answer[k])).filter(x => typeof x === 'string');
-    const o = outcomes({ state: path.join(state, fs.readdirSync(state).find(n => n.startsWith('shop-'))), work: dir, env, cli: CLI, sid: session.map(l => sessionOf(l.hook)).find(Boolean), prompt: head.prompt });
+    const o = outcomes({ state: path.join(state, fs.readdirSync(state).find(n => n.startsWith('shop-'))), work: dir, env, cli: CLI, sid: session.filter(l => l.step === 'PreToolUse').map(l => sessionOf(head.host, l.hook, l.argv))[0], prompt: head.prompt, evidence: head.evidence });
     // A9, A11, A12 and A13 are what the tool itself did (the events it fired, the network and home it left alone, its exit, its
     // setup as doctor sees it), which the recording already holds.
     const tool = () => {}, standard = o => String(at(o, head.answer.context) ?? '').includes(STANDARD.slice(0, 60));
@@ -125,9 +130,9 @@ for (const name of fs.readdirSync(RECORDED)) {
 // disagrees with the real tool is corrected by hand from its recording. Events the session never fires are not compared.
 for (const name of fs.readdirSync(RECORDED)) {
   const [head, ...session] = fs.readFileSync(new URL(name, RECORDED), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
-  const file = new URL(`./fixtures/hosts/${head.host}.json`, import.meta.url);
+  const file = new URL(`./fixtures/hosts/${head.fixture ?? head.host}.json`, import.meta.url);
   if (!fs.existsSync(file)) continue;
-  test(`fixture shapes: test/fixtures/hosts/${head.host}.json has only what ${head.tool} ${head.version} sends`, () => {
+  test(`fixture shapes: test/fixtures/hosts/${head.fixture ?? head.host}.json has only what ${head.tool} ${head.version} sends`, () => {
     const fx = JSON.parse(fs.readFileSync(file, 'utf8')), vars = { AGAIN: false, LOOP: 0, EXIT: 0, TIME_MS: 0, OUTPUT_JSON: '""', ABSFILE_JSON: '"/r/a"', CONTENT_JSON: '""' };
     const tool = e => e.tool_name ?? e.toolName;
     let compared = 0;

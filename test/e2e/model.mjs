@@ -9,7 +9,7 @@ export const strings = v => (typeof v === 'string' ? v : v && typeof v === 'obje
 // A tool's required arguments, filled by name from its own schema; `values` names them by role. A name may have two roles
 // (Cline's new_text is a new file's content and an edit's new text): it takes the one the step gives. A list takes the value as
 // its one item, and a list of objects (Pi's `edits`) gets one, filled the same way.
-const ROLES = { path: /^(file_path|path|filePath|Path|TargetFile)$/, content: /^(content|file_text|file_content|new_text|Content)$/, old: /^(old_string|oldString|old_str|old_text|oldText|before|Target)$/, new: /^(new_string|newString|new_str|new_text|newText|after|Replacement)$/, command: /^(commands?|cmd|CommandLine)$/, prompt: /^(prompt|message|task)$/, description: /^description$/ };
+const ROLES = { path: /^(file_path|path|filePath|Path|TargetFile|filename)$/, content: /^(content|file_text|file_content|new_text|Content)$/, old: /^(old_string|oldString|old_str|old_text|oldText|before|Target|search)$/, new: /^(new_string|newString|new_str|new_text|newText|after|Replacement|replace)$/, command: /^(commands?|cmd|CommandLine)$/, prompt: /^(prompt|message|task)$/, description: /^description$/, reply: /^solution_summary$/ };
 export function args(schema, values) {
   const out = {};
   for (const [k, p] of Object.entries(schema?.properties || {})) {
@@ -78,9 +78,11 @@ const PROTOCOLS = {
       ]));
     },
   },
-  // OpenAI Chat Completions, the protocol most tools speak to a provider of the user's own.
+  // OpenAI Chat Completions, the protocol most tools speak to a provider of the user's own. `info` is a LiteLLM proxy's model
+  // list, which a tool's LiteLLM provider reads first (Junie's runs only a model it names).
   chat: {
     route: /\/chat\/completions$/,
+    info: model => ({ data: [{ model_name: model, litellm_params: { model: `openai/${model}` }, model_info: { mode: 'chat', supports_function_calling: true } }] }),
     decode(b) {
       const msgs = b.messages || [];
       return {
@@ -88,6 +90,7 @@ const PROTOCOLS = {
         actions: msgs.filter(m => m.role === 'assistant').reduce((n, m) => n + Math.max(1, m.tool_calls?.length || 0), 0),
         firstUser: strings(msgs.find(m => m.role === 'user')?.content),
         results: msgs.filter(m => m.role === 'tool').map(m => ({ id: m.tool_call_id, text: strings(m.content) })),
+        stream: !!b.stream, said: msgs.filter(m => m.role === 'assistant').map(m => strings(m.content)),
       };
     },
     answer(res, act, b) {
@@ -111,7 +114,8 @@ const PROTOCOLS = {
       const contents = b.contents || [], parts = c => c.parts || [];
       return {
         offered: (b.tools || []).flatMap(t => t.functionDeclarations || []).map(f => ({ name: f.name, schema: f.parametersJsonSchema ?? f.parameters })),
-        actions: contents.filter(c => c.role === 'model').reduce((n, c) => n + Math.max(1, parts(c).filter(p => p.functionCall).length), 0),
+        // Antigravity sends the function responses back as the model's own content: they are no action of the model.
+        actions: contents.filter(c => c.role === 'model' && !parts(c).some(p => p.functionResponse)).reduce((n, c) => n + Math.max(1, parts(c).filter(p => p.functionCall).length), 0),
         firstUser: strings(contents.find(c => c.role === 'user')?.parts),
         results: contents.flatMap(parts).filter(p => p.functionResponse).map(p => ({ id: p.functionResponse.id, text: strings(p.functionResponse.response) })),
       };
@@ -127,15 +131,20 @@ const PROTOCOLS = {
 const send = (res, type, body) => (res.writeHead(200, { 'content-type': type }), res.end(body));
 
 // What one request gets. A subagent's request starts with the marker; one that does not offer the write tool is a side request
-// (a title, a summary). The main conversation plays `steps`, then gets the last reply again.
+// (a title, a summary). The main conversation plays `steps`, then gets the last reply again. A tool whose turn ends only with a
+// tool call (Junie's submit) names it as its `reply` tool, and each reply is a call of it. A tool whose model is offered no tools
+// (Aider) takes each step as a reply's text (adapter.text): its main requests are the streamed ones (its commit messages are
+// not), and its actions are the script's own replies among what the assistant said.
+const replies = (adapter, steps, d) => (adapter.tools.write ? d : { ...d, actions: d.said.filter(x => steps.some(s => x === (s.reply ?? adapter.text(s)))).length });
 function plan(adapter, steps, d) {
   if (/SUBTASK:/.test(d.firstUser)) return { reply: 'done' };
-  if (!d.offered.some(t => t.name === adapter.tools.write)) return { reply: 'ok' };
-  const step = steps[d.actions] ?? steps.findLast(s => s.reply), id = `call_${d.actions}`;
-  if (step.reply) return { reply: step.reply, id, main: true };
-  const tool = d.offered.find(t => t.name === adapter.tools[step.tool]);
-  if (!tool) throw new Error(`${adapter.tools[step.tool]} not offered; offered: ${d.offered.map(t => t.name).join(', ')}`);
-  return { call: tool.name, args: tool.custom ? adapter.text(step) : args(tool.schema, { ...step, ...adapter.args?.[step.tool] }), id, main: true };
+  if (adapter.tools.write ? !d.offered.some(t => t.name === adapter.tools.write) : !d.stream) return { reply: 'ok' };
+  const step = steps[d.actions] ?? steps.findLast(s => s.reply), id = `call_${d.actions}`, kind = step.tool ?? 'reply';
+  if (!adapter.tools.write) return { reply: step.reply ?? adapter.text(step), id, main: true };
+  if (step.reply && !adapter.tools.reply) return { reply: step.reply, id, main: true };
+  const tool = d.offered.find(t => t.name === adapter.tools[kind]);
+  if (!tool) throw new Error(`${adapter.tools[kind]} not offered; offered: ${d.offered.map(t => t.name).join(', ')}`);
+  return { call: tool.name, args: tool.custom ? adapter.text(step) : args(tool.schema, { ...step, ...adapter.args?.[kind] }), id, main: true };
 }
 
 export function start(adapter, steps) {
@@ -148,8 +157,11 @@ export function start(adapter, steps) {
       try { body = raw ? JSON.parse(raw) : {}; } catch { /* not JSON: an unknown route */ }
       try {
         if (req.method === 'POST' && /\/count_tokens$/.test(at)) return send(res, 'application/json', '{"input_tokens":100}');
+        // The model list a tool reads at start (goose).
+        if (req.method === 'GET' && /\/v1\/models$/.test(at)) return send(res, 'application/json', '{"object":"list","data":[{"id":"fake-model","object":"model","owned_by":"fake"}]}');
+        if (req.method === 'GET' && p.info && /\/model\/info$/.test(at)) return send(res, 'application/json', JSON.stringify(p.info(adapter.model)));
         if (req.method === 'POST' && p.route.test(at)) {
-          const d = p.decode(body), act = plan(adapter, steps, d);
+          const d = replies(adapter, steps, p.decode(body)), act = plan(adapter, steps, d);
           requests.push({ ...d, main: !!act.main, step: d.actions, act, text: strings(body) });
           return p.answer(res, act, body, at);
         }

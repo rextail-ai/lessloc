@@ -39,6 +39,7 @@ const BAD = "import fs from 'node:fs';\n\nexport function load() {\n  try {\n   
 const GOOD = "import fs from 'node:fs';\n\nexport function load() {\n  return JSON.parse(fs.readFileSync(new URL('../data.json', import.meta.url), 'utf8'));\n}\n";
 // The session: a subagent first (where the tool has one), a placeholder write, a bad write, a failing test run, "Done.", the
 // fix, a passing run, "Done.". A tool lessloc cannot hold ends its run at the first "Done.", so there the fix comes without it.
+// A tool whose model runs no commands (Aider) gets no test runs.
 const steps = (a, work) => [
   ...(a.tools.agent ? [{ tool: 'agent', description: 'List the files', prompt: 'SUBTASK: list the files' }] : []),
   { tool: 'write', path: path.join(work, 'shop/total.js'), content: PLACEHOLDER },
@@ -48,9 +49,10 @@ const steps = (a, work) => [
   { tool: 'edit', path: path.join(work, 'shop/load.js'), old: BAD, new: GOOD },
   { tool: 'shell', command: 'npm test', description: 'Run the tests' },
   { reply: 'Done.' },
-];
+].filter(x => x.tool !== 'shell' || a.tools.shell);
 
-const git = (dir, ...a) => execFileSync('git', a, { cwd: dir, stdio: 'ignore', env: { PATH: process.env.PATH, GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_NOSYSTEM: '1' } });
+const GIT = { PATH: process.env.PATH, GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_NOSYSTEM: '1' };
+const git = (dir, ...a) => execFileSync('git', a, { cwd: dir, stdio: 'ignore', env: GIT });
 function commit(dir) {
   git(dir, 'init', '-q');
   git(dir, 'add', '-A');
@@ -163,26 +165,37 @@ describe('end to end', { concurrency: Number(process.env.E2E_JOBS || 4) }, () =>
       fs.mkdirSync(RUNS, { recursive: true });
       const dir = fs.mkdtempSync(path.join(RUNS, 'run-'));
       t.after(() => (process.env.E2E_KEEP ? t.diagnostic(`kept ${dir}`) : fs.rmSync(dir, { recursive: true, force: true })));
-      const s = await session(a, exe, dir), caps = HOSTS[a.host], answer = a.answer, mains = s.server.requests.filter(r => r.main);
+      // Aider has no hooks, so no host row: lessloc's lint command answers each of its edits in its next request, and the commit
+      // gate keeps what it refuses out of its commits. Those checks read its requests and commits, which a replay of the lint
+      // calls cannot rebuild, so they stay out of the recording.
+      const lint = !HOSTS[a.host], s = await session(a, exe, dir), caps = HOSTS[a.host] ?? {}, answer = a.answer, mains = s.server.requests.filter(r => r.main);
+      const committed = f => spawnSync('git', ['show', `HEAD:${f}`], { cwd: s.t.work, encoding: 'utf8', env: GIT }).stdout;
       const main = i => mains.find(r => r.step === i), call = i => mains.flatMap(r => r.results).find(x => x.id === `call_${i}`);
       const step = (k, n = 0) => s.plan.filter(x => (k === 'reply' ? x.reply : x.tool === k)).map(x => s.plan.indexOf(x))[n];
-      const sid = s.calls.map(c => sessionOf(c.input)).find(Boolean), passed = [];
+      // The session of the first tool call: a tool may run its subagent as a session of its own, which can start and end first.
+      const sid = s.calls.filter(c => event(a.host, c.input, c.argv) === 'PreToolUse').map(c => sessionOf(a.host, c.input, c.argv))[0], passed = [];
       let tried = 0;
       // A check an adapter marks `todo` names the lessloc defect that fails it; it is reported on every run, and stays out of
       // the recording's checks.
       const check = (name, f, id = name.split(':')[0], todo = a.todo?.[id]) => (todo || tried++, t.test(name, { todo }, () => (f(), todo || passed.push(id))));
-      const o = outcomes({ state: s.state, work: s.t.work, env: { ...s.env, LESSLOC_STATE: s.t.state }, cli: path.join(s.t.lessloc, 'lessloc.mjs'), sid, prompt: PROMPT });
+      const o = outcomes({ state: s.state, work: s.t.work, env: { ...s.env, LESSLOC_STATE: s.t.state }, cli: path.join(s.t.lessloc, 'lessloc.mjs'), sid, prompt: PROMPT, evidence: a.evidence });
       assert.ok(s.routed, 'lessloc is set up the documented way');
       assert.deepEqual(s.server.errors, [], 'every step the session asked for was offered');
       await check('A1: the standard is in the first main request', () => assert.ok(mains[0]?.text.includes(STANDARD.slice(0, 60))));
-      // The hints come from the request, which only a prompt event shows lessloc; test runs only from hooks that see a
-      // command's exit (the fixture's `evidence`, as in the contract tests).
-      if (a.events.includes('UserPromptSubmit')) await check('A2: the hints about existing code reach the model', () => assert.match(caps.prompt ? mains[0]?.text : mains.flatMap(r => r.results.map(x => x.text)).join('\n'), /formatMoney/));
-      if (caps.gate !== false) await check('A3: the placeholder is refused, and never lands', () => {
+      // A route that sets up no hook (`init --rules`, the rules tier) has this one check: nothing of lessloc runs in the session,
+      // so there is no call to check or record either.
+      if (!a.events.length && !lint) return;
+      // The hints come from the request, which only a prompt event shows lessloc, and reach the model with the prompt or the
+      // first tool result; test runs only from hooks that see a command's exit (the fixture's `evidence`, as in the contract tests).
+      if (a.events.includes('UserPromptSubmit') && (caps.prompt || caps.feedback !== false)) await check('A2: the hints about existing code reach the model', () => assert.match(caps.prompt && s.calls.some(c => event(a.host, c.input, c.argv) === 'UserPromptSubmit') ? mains[0]?.text : mains.map(r => r.text).join('\n'), SAYS.hints));
+      if (caps.gate !== false) await check('A3: the placeholder is refused, and never lands', lint ? () => {
+        assert.match(main(step('write') + 1)?.text ?? '', SAYS.lint);
+        assert.deepEqual([committed('shop/total.js'), committed('shop/load.js')], ['', read(path.join(s.t.work, 'shop/load.js'))]);
+      } : () => {
         assert.match(call(step('write'))?.text ?? '', SAYS.placeholder);
         assert.ok(!fs.existsSync(path.join(s.t.work, 'shop/total.js')));
       });
-      if (caps.feedback !== false && caps.track !== 'turn') await check('A4: the swallowed error is noted right after the write, next to the tool\'s own result', () => {
+      if (caps.feedback !== false && caps.track !== 'turn') await check('A4: the swallowed error is noted right after the write, next to the tool\'s own result', lint ? () => assert.match(main(step('write', 1) + 1)?.text ?? '', SAYS.note) : () => {
         const bad = step('write', 1);
         assert.match(main(bad + 1)?.text ?? '', SAYS.note);
         assert.ok(call(bad)?.text);
@@ -201,7 +214,7 @@ describe('end to end', { concurrency: Number(process.env.E2E_JOBS || 4) }, () =>
         assert.deepEqual(a.events.filter(e => !fired.has(e) && !a.unfired?.[e]), []);
       });
       await check('A10: the model never reads lessloc\'s name, from lessloc or from the tool', () => {
-        const said = s.calls.flatMap(c => Object.values(answer).map(p => at(parse(c.stdout), p))).filter(x => typeof x === 'string' && x);
+        const said = s.calls.flatMap(c => (lint ? [c.stdout] : Object.values(answer).map(p => at(parse(c.stdout), p)))).filter(x => typeof x === 'string' && x);
         for (const x of said) {
           assert.doesNotMatch(x, QUIET);
           for (const r of s.server.requests) for (let i = r.text.indexOf(x.slice(0, 60)); i >= 0; i = r.text.indexOf(x.slice(0, 60), i + 1)) assert.doesNotMatch(r.text.slice(Math.max(0, i - 200), i + x.length + 200), NEAR);
@@ -217,7 +230,7 @@ describe('end to end', { concurrency: Number(process.env.E2E_JOBS || 4) }, () =>
       });
       if (process.env.E2E_RECORD && passed.length === tried) {
         const version = /\d+\.\d+\.\d+/.exec(spawnSync(exe, ['--version'], { env: s.env, encoding: 'utf8' }).stdout)?.[0];
-        save(path.join(REPO, 'test/fixtures/recorded', `${a.id}.jsonl`), { tool: a.id, host: a.host, version, live: false, prompt: PROMPT, answer: a.answer, checks: passed }, FILES, s.calls, s.t);
+        save(path.join(REPO, 'test/fixtures/recorded', `${a.id}.jsonl`), { tool: a.id, host: a.host, fixture: a.fixture, version, live: false, prompt: PROMPT, answer: a.answer, evidence: a.evidence, checks: lint ? passed.filter(c => !['A3', 'A4'].includes(c)) : passed }, FILES, s.calls, s.t);
       }
     });
   }
