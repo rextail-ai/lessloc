@@ -6,8 +6,9 @@ import { clineResult, clineTool } from '../lib/hosts.mjs';
 
 const sid = snapshot => snapshot.conversationId ?? snapshot.runId ?? snapshot.agentId;
 const text = content => (typeof content === 'string' ? content : (content || []).filter(p => p?.type === 'text').map(p => p.text).join(''));
-// The prompt that started the run; the context blocks hooks add are user messages too, shown as system ones.
-const prompt = snapshot => text([...(snapshot.messages || [])].reverse().find(m => m?.role === 'user' && m.metadata?.displayRole !== 'system')?.content);
+// The prompt that started the run; the context blocks hooks add are user messages too, shown as system ones. The Cline CLI
+// keeps what the user typed inside <user_input mode="act">.
+const prompt = snapshot => text([...(snapshot.messages || [])].reverse().find(m => m?.role === 'user' && m.metadata?.displayRole !== 'system')?.content).replace(/^\s*<user_input\b[^>]*>([\s\S]*)<\/user_input>\s*$/, '$1');
 
 // Cline gives each plugin hook 3 seconds and turns off a plugin whose hooks keep failing, so lessloc answers within `wait`
 // milliseconds: past that it says nothing for that call, and the hook still finishes its work.

@@ -1,5 +1,18 @@
 {
   "claude": { "npm": "@anthropic-ai/claude-code-{platform}-{arch}", "version": "2.1.306", "bin": "claude" },
   "codex": { "npm": "@openai/codex", "version": "0.163.0", "bin": "bin/codex.js" },
-  "opencode2": { "npm": "@opencode/cli-{platform}-{arch}", "version": "2.1.2", "bin": "bin/opencode" }
+  "opencode2": { "npm": "@opencode/cli-{platform}-{arch}", "version": "2.1.2", "bin": "bin/opencode" },
+  "pi": { "npm": "@earendil-works/pi-coding-agent", "version": "1.4.0", "bin": "dist/bundle/cli.js" },
+  "copilot": { "npm": "@github/copilot-{platform}-{arch}", "version": "1.0.102", "bin": "copilot" },
+  "qwen": { "npm": "@qwen-code/qwen-code", "version": "0.26.0", "bin": "cli-entry.js" },
+  "opencode1": { "npm": "opencode-{platform}-{arch}", "version": "1.19.3", "bin": "bin/opencode", "sdk": "@opencode-ai/plugin" },
+  "kilo": { "npm": "@kilocode/cli-{platform}-{arch}", "version": "7.8.15", "bin": "bin/kilo", "sdk": "@kilocode/plugin" },
+  "gemini": { "npm": "@google/gemini-cli", "version": "0.65.0", "bin": "bundle/gemini.js" },
+  "cline": { "npm": "cline", "version": "3.0.73", "bin": "bin/cline" },
+  "crush": { "version": "0.98.1", "bin": "crush", "tarball": {
+    "linux-x64": { "url": "https://github.com/charmbracelet/crush/releases/download/v0.98.1/crush_0.98.1_Linux_x86_64.tar.gz", "sha256": "d85d913effef350f0152f594a70bd9749ad455bf15af77bb0d2b731036079885" },
+    "linux-arm64": { "url": "https://github.com/charmbracelet/crush/releases/download/v0.98.1/crush_0.98.1_Linux_arm64.tar.gz", "sha256": "098e875c1d9501822d08ef14ab094f24cfc87396385af5402994bf741a673b99" },
+    "darwin-arm64": { "url": "https://github.com/charmbracelet/crush/releases/download/v0.98.1/crush_0.98.1_Darwin_arm64.tar.gz", "sha256": "178710f9e43abd3f1df29756309950f42ed229737e4f2fb9bc5f36aeff07a3c3" },
+    "darwin-x64": { "url": "https://github.com/charmbracelet/crush/releases/download/v0.98.1/crush_0.98.1_Darwin_x86_64.tar.gz", "sha256": "23e9f344d3dad67c5ec774f991e63a0f5eb566fc6b22a06a09ef84dc33114cd1" }
+  } }
 }

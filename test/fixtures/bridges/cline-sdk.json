@@ -9,7 +9,7 @@
     "that a plugin file in ~/.cline/plugins loading another module by its file URL runs in Cline's plugin worker"
   ],
   "events": {
-    "prompt": {"snapshot": {"agentId": "agent_1", "conversationId": "$SID", "runId": "run_1", "iteration": 0, "messages": [{"role": "user", "content": [{"type": "text", "text": "$PROMPT"}]}]}},
+    "prompt": {"snapshot": {"agentId": "agent_1", "conversationId": "$SID", "runId": "run_1", "iteration": 0, "messages": [{"role": "user", "content": [{"type": "text", "text": "<user_input mode=\"act\">$PROMPT</user_input>"}]}]}},
     "write": {"snapshot": {"agentId": "agent_1", "conversationId": "$SID", "runId": "run_1", "iteration": 1, "messages": []}, "toolCall": {"type": "tool-call", "toolCallId": "$ID", "toolName": "editor", "input": {"path": "$ABSFILE", "new_text": "$CONTENT"}}, "input": {"path": "$ABSFILE", "new_text": "$CONTENT"}},
     "written": {"snapshot": {"agentId": "agent_1", "conversationId": "$SID", "runId": "run_1", "iteration": 1, "messages": []}, "toolCall": {"type": "tool-call", "toolCallId": "$ID", "toolName": "editor", "input": {"path": "$ABSFILE", "new_text": "$CONTENT"}}, "input": {"path": "$ABSFILE", "new_text": "$CONTENT"}, "result": {"output": "File created: $ABSFILE"}, "durationMs": 12},
     "shell": {"snapshot": {"agentId": "agent_1", "conversationId": "$SID", "runId": "run_1", "iteration": 2, "messages": []}, "toolCall": {"type": "tool-call", "toolCallId": "$ID", "toolName": "run_commands", "input": {"commands": ["$COMMAND"]}}, "input": {"commands": ["$COMMAND"]}},

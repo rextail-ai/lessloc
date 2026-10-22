@@ -6,21 +6,23 @@ import http from 'node:http';
 // Every string in a request body, so a text is found whatever the channel (system, tool result, reminder) or the escaping.
 export const strings = v => (typeof v === 'string' ? v : v && typeof v === 'object' ? Object.values(v).map(strings).join('\n') : '');
 
-// A tool's required arguments, filled by name from its own schema; `values` names them by role.
-const ROLES = { path: /^(file_path|path|filePath|Path|TargetFile)$/, content: /^(content|file_text|file_content|new_text|Content)$/, old: /^(old_string|oldString|old_str|old_text|before|Target)$/, new: /^(new_string|newString|new_str|after|Replacement)$/, command: /^(command|cmd|CommandLine)$/, prompt: /^(prompt|message|task)$/, description: /^description$/ };
+// A tool's required arguments, filled by name from its own schema; `values` names them by role. A name may have two roles
+// (Cline's new_text is a new file's content and an edit's new text): it takes the one the step gives. A list takes the value as
+// its one item, and a list of objects (Pi's `edits`) gets one, filled the same way.
+const ROLES = { path: /^(file_path|path|filePath|Path|TargetFile)$/, content: /^(content|file_text|file_content|new_text|Content)$/, old: /^(old_string|oldString|old_str|old_text|oldText|before|Target)$/, new: /^(new_string|newString|new_str|new_text|newText|after|Replacement)$/, command: /^(commands?|cmd|CommandLine)$/, prompt: /^(prompt|message|task)$/, description: /^description$/ };
 export function args(schema, values) {
   const out = {};
   for (const [k, p] of Object.entries(schema?.properties || {})) {
-    const role = Object.keys(ROLES).find(r => ROLES[r].test(k));
-    if (role && values[role] != null) out[k] = values[role];
+    const role = Object.keys(ROLES).find(r => ROLES[r].test(k) && values[r] != null);
+    if (role) out[k] = p.type === 'array' ? [values[role]] : values[role];
     else if (values[k] != null) out[k] = values[k];
-    else if (schema.required?.includes(k)) out[k] = p.enum ? p.enum.find(e => /^low$/i.test(e)) ?? p.enum[0] : { boolean: false, number: 0, integer: 0 }[p.type] ?? '';
+    else if (schema.required?.includes(k)) out[k] = p.items?.properties ? [args(p.items, values)] : p.enum ? p.enum.find(e => /^low$/i.test(e)) ?? p.enum[0] : { boolean: false, number: 0, integer: 0 }[p.type] ?? '';
   }
   return out;
 }
 
 // One protocol: `decode(body)` gives the tools offered, the assistant's actions so far, the first user message and each tool
-// result; `answer(res, act, body)` sends one step, a tool call or a text reply, streamed when the request asks for it.
+// result; `answer(res, act, body, path)` sends one step, a tool call or a text reply, streamed when the request asks for it.
 const sse = events => events.map(([type, data]) => `event: ${type}\ndata: ${JSON.stringify({ type, ...data })}\n\n`).join('');
 const PROTOCOLS = {
   anthropic: {
@@ -101,6 +103,26 @@ const PROTOCOLS = {
       ].join(''));
     },
   },
+  // Gemini generateContent (Gemini CLI): `functionCall` parts out, `functionResponse` parts back with the call's id; streamed
+  // when the route says so.
+  gemini: {
+    route: /\/models\/[^/:]+:(stream)?[gG]enerateContent$/,
+    decode(b) {
+      const contents = b.contents || [], parts = c => c.parts || [];
+      return {
+        offered: (b.tools || []).flatMap(t => t.functionDeclarations || []).map(f => ({ name: f.name, schema: f.parametersJsonSchema ?? f.parameters })),
+        actions: contents.filter(c => c.role === 'model').reduce((n, c) => n + Math.max(1, parts(c).filter(p => p.functionCall).length), 0),
+        firstUser: strings(contents.find(c => c.role === 'user')?.parts),
+        results: contents.flatMap(parts).filter(p => p.functionResponse).map(p => ({ id: p.functionResponse.id, text: strings(p.functionResponse.response) })),
+      };
+    },
+    answer(res, act, b, at) {
+      const part = act.call ? { functionCall: { id: act.id, name: act.call, args: act.args } } : { text: act.reply };
+      const done = JSON.stringify({ candidates: [{ content: { role: 'model', parts: [part] }, finishReason: 'STOP', index: 0 }], usageMetadata: { promptTokenCount: 10, candidatesTokenCount: 5, totalTokenCount: 15 }, modelVersion: 'fake' });
+      if (!at.endsWith(':streamGenerateContent')) return send(res, 'application/json', done);
+      send(res, 'text/event-stream', `data: ${done}\n\n`);
+    },
+  },
 };
 const send = (res, type, body) => (res.writeHead(200, { 'content-type': type }), res.end(body));
 
@@ -129,7 +151,7 @@ export function start(adapter, steps) {
         if (req.method === 'POST' && p.route.test(at)) {
           const d = p.decode(body), act = plan(adapter, steps, d);
           requests.push({ ...d, main: !!act.main, step: d.actions, act, text: strings(body) });
-          return p.answer(res, act, body);
+          return p.answer(res, act, body, at);
         }
       } catch (e) {
         errors.push(String(e.message || e));
@@ -140,7 +162,7 @@ export function start(adapter, steps) {
     });
   });
   // Any CONNECT is a try to reach the internet: refused and kept.
-  server.on('connect', (req, socket) => (connects.push(req.url), socket.end('HTTP/1.1 403 Forbidden\r\n\r\n')));
+  server.on('connect', (req, socket) => (connects.push(req.url), socket.on('error', () => {}).end('HTTP/1.1 403 Forbidden\r\n\r\n')));
   server.on('clientError', (e, socket) => socket.destroy());
   return new Promise(resolve => server.listen(0, '127.0.0.1', () => resolve({
     url: `http://127.0.0.1:${server.address().port}`, requests, connects, unknown, errors,

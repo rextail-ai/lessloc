@@ -539,7 +539,7 @@ test('every claim of a run names a version of the tool that a committed recordin
     ...pages.flatMap(text => [...text.matchAll(/(tested end to end|verified live)(?:[^.|\n]|\.\d)*/gi)]).flatMap(([sentence, kind]) => [...sentence.matchAll(named)].map(m => [TOOLS.find(t => t.label === m[1]), kind.toLowerCase(), m[2]])),
   ];
   assert.ok(claims.length > 3);
-  for (const [t, kind, v] of claims) assert.ok(heads.some(h => h.host === t?.id && h.version === v && (kind === 'tested end to end' || h.live)), `${t?.label}: ${kind} on ${v}`);
+  for (const [t, kind, v] of claims) assert.ok(heads.some(h => [t?.id, ...(t?.via || [])].includes(h.host) && h.version === v && (kind === 'tested end to end' || h.live)), `${t?.label}: ${kind} on ${v}`);
 });
 
 test('the getting-started guide shows exactly the status table, and the README links to it', () => {

@@ -9,6 +9,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { parse as readHook } from '../../lib/hosts.mjs';
 
 const main = C => {
   const { spawn } = C.spawn, line = o => C.fs.appendFileSync(C.record, `${JSON.stringify({ pid: process.pid, ...o })}\n`);
@@ -21,7 +22,8 @@ const main = C => {
     }
     return out;
   };
-  const tree = files(C.work), env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !C.given.includes(k) && !/KEY|TOKEN|SECRET|AUTH|PASSWORD|CREDENTIAL/i.test(k)));
+  // GIT_CONFIG_KEY_<n> holds a git setting's name (Copilot sets one), and git fails on a GIT_CONFIG_COUNT that lacks it.
+  const tree = files(C.work), env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !C.given.includes(k) && !/(?<!^GIT_CONFIG_)KEY|TOKEN|SECRET|AUTH|PASSWORD|CREDENTIAL/i.test(k)));
   line({ start: Date.now(), argv: process.argv.slice(2) });
   const child = spawn(process.execPath, [C.real, ...process.argv.slice(2)], { env: { ...process.env, LESSLOC_STATE: C.state, LESSLOC_OFF: C.off }, stdio: 'pipe' });
   let stdin = '', stdout = '', stderr = '';
@@ -68,6 +70,9 @@ export function shape(v, at = '', out = new Set()) {
   return out;
 }
 
+// A hook call's event in lessloc's names (Gemini's BeforeTool is PreToolUse, its AfterAgent Stop), read as lessloc reads it.
+export const event = (host, input, argv = []) => readHook(input, host, {}, argv.at(-1)).event ?? argv.at(-1);
+
 // The recording's calls in the order they started, each with its end once it has one, and the payload parsed. A line a hook is
 // still writing is skipped.
 export function calls(file) {
@@ -83,6 +88,9 @@ export function calls(file) {
 export const QUIET = /lessloc|\bnode\s|\.mjs\b|\[[a-z]+(?:-[a-z]+)*\]|\(CWE-|et al\./i;
 // What lessloc says at each moment of the scenario, the same in what reaches the model and in the hook's answer.
 export const SAYS = { placeholder: /Not applied: it adds a placeholder/, note: /shop\/load\.js:\d+: swallowed error/, hold: /Before you finish[\s\S]*shop\/load\.js/ };
+
+// The session a hook call belongs to, as the tool names it in its payload.
+export const sessionOf = input => input?.session_id ?? input?.sessionId;
 
 // The checks that read lessloc's state (the repository's folder in it) and the work repository, the same after a real session
 // and after its replay. `cli` is lessloc.mjs, `env` runs it with that state. A tool may wrap the request (OpenCode's `run`
@@ -113,7 +121,7 @@ export function save(file, header, first, calls, t) {
   const lines = [header, { step: 'the repository at its last commit', files: first, commit: true }, ...calls.map(c => {
     const files = Object.fromEntries([...new Set([...Object.keys(before), ...Object.keys(c.tree)])].filter(f => before[f] !== c.tree[f]).map(f => [f, c.tree[f] ?? null]));
     before = c.tree;
-    return { step: c.input.hook_event_name ?? c.argv.at(-1), argv: c.argv, env: c.env, files, hook: c.input, stdout: c.stdout, stderr: c.stderr, code: c.code };
+    return { step: event(header.host, c.input, c.argv), argv: c.argv, env: c.env, files, hook: c.input, stdout: c.stdout, stderr: c.stderr, code: c.code };
   })];
   const slug = p => p.replace(/[^a-zA-Z0-9]/g, '-');
   let text = lines.map(l => `${JSON.stringify(l)}\n`).join('');

@@ -29,15 +29,15 @@ Recommended:
 | Codex | [`init --codex` or the Codex plugin](/guide/getting-started#codex) | `init --codex` tested end to end on 0.163.0; the Codex plugin: tested against documented payloads |
 | Cursor | [`init --cursor` or the Cursor plugin](/guide/getting-started#cursor) | tested against documented payloads |
 | OpenCode 2.x | [`init --opencode`](/guide/getting-started#opencode-2-x) | tested end to end on 2.1.2 |
-| OpenCode 1.x | [`init --opencode`](/guide/getting-started#opencode-1-x-and-kilo-code) | tested against documented payloads |
-| Kilo Code | [`init --kilo`](/guide/getting-started#opencode-1-x-and-kilo-code) | tested against documented payloads |
+| OpenCode 1.x | [`init --opencode`](/guide/getting-started#opencode-1-x-and-kilo-code) | tested end to end on 1.19.3 |
+| Kilo Code | [`init --kilo`](/guide/getting-started#opencode-1-x-and-kilo-code) | tested end to end on 7.8.15 |
 | Amp | [`init --amp`](/guide/getting-started#amp) | tested against documented payloads |
-| Cline | [`init --cline`](/guide/getting-started#cline) | tested against documented payloads |
-| Pi | [`init --pi` or the Pi package](/guide/getting-started#pi) | tested against documented payloads |
-| GitHub Copilot CLI, VS Code agent mode | [`init --copilot` or the Copilot CLI plugin](/guide/getting-started#github-copilot-cli-and-vs-code) | tested against documented payloads |
+| Cline | [`init --cline`](/guide/getting-started#cline) | tested end to end on 3.0.73 (Cline CLI); the IDE's hook files: tested against documented payloads |
+| Pi | [`init --pi` or the Pi package](/guide/getting-started#pi) | tested end to end on 1.4.0 |
+| GitHub Copilot CLI, VS Code agent mode | [`init --copilot` or the Copilot CLI plugin](/guide/getting-started#github-copilot-cli-and-vs-code) | tested end to end on 1.0.102 (Copilot CLI); VS Code agent mode: tested against documented payloads |
 | Copilot cloud agent | [`init --copilot --repo` and a setup step](/guide/getting-started#copilot-cloud-agent) | tested against documented payloads |
-| Gemini CLI | [`init --gemini` or the Gemini CLI extension](/guide/getting-started#gemini-cli) | tested against documented payloads |
-| Qwen Code | [`init --qwen` or the Qwen Code extension](/guide/getting-started#qwen-code) | tested against documented payloads |
+| Gemini CLI | [`init --gemini` or the Gemini CLI extension](/guide/getting-started#gemini-cli) | tested end to end on 0.65.0 |
+| Qwen Code | [`init --qwen` or the Qwen Code extension](/guide/getting-started#qwen-code) | tested end to end on 0.26.0 |
 | Factory Droid | [`init --droid`](/guide/getting-started#factory-droid) | tested against documented payloads |
 | Augment (CLI, VS Code, IntelliJ) | [`init --augment`](/guide/getting-started#augment) | tested against documented payloads |
 | Kiro CLI | [`init --kiro`](/guide/getting-started#kiro) | tested against documented payloads |
@@ -45,7 +45,7 @@ Recommended:
 | OpenHands | [`init --openhands`](/guide/getting-started#openhands) | tested against documented payloads |
 | goose | [`init --goose`](/guide/getting-started#goose) | tested against documented payloads |
 | Devin CLI | [`init --devin`](/guide/getting-started#devin-cli) | tested against documented payloads |
-| Crush | [`init --crush`](/guide/getting-started#crush) | tested against documented payloads |
+| Crush | [`init --crush`](/guide/getting-started#crush) | tested end to end on 0.98.1 |
 | Antigravity (app, CLI, IDE) | [`init --antigravity`](/guide/getting-started#antigravity) | tested against documented payloads |
 | Aider | [`init --aider`](/guide/getting-started#aider) | tested against documented payloads |
 | Your own agent | [the hook protocol](/guide/any-agent) | tested against documented payloads |

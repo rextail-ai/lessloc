@@ -9,8 +9,8 @@
   "events": {
     "start": {"sessionId": "$SID", "timestamp": "$TIME_MS", "cwd": "$CWD", "source": "startup"},
     "prompt": {"sessionId": "$SID", "timestamp": "$TIME_MS", "cwd": "$CWD", "prompt": "$PROMPT"},
-    "write": {"sessionId": "$SID", "timestamp": "$TIME_MS", "cwd": "$CWD", "toolName": "create", "toolArgs": "{\"path\":$ABSFILE_JSON,\"file_text\":$CONTENT_JSON}"},
-    "written": {"sessionId": "$SID", "timestamp": "$TIME_MS", "cwd": "$CWD", "toolName": "create", "toolArgs": "{\"path\":$ABSFILE_JSON,\"file_text\":$CONTENT_JSON}", "toolResult": {"resultType": "success", "textResultForLlm": "Created file $ABSFILE"}},
+    "write": {"sessionId": "$SID", "timestamp": "$TIME_MS", "cwd": "$CWD", "toolName": "create", "toolArgs": {"path": "$ABSFILE", "file_text": "$CONTENT"}},
+    "written": {"sessionId": "$SID", "timestamp": "$TIME_MS", "cwd": "$CWD", "toolName": "create", "toolArgs": {"path": "$ABSFILE", "file_text": "$CONTENT"}, "toolResult": {"resultType": "success", "textResultForLlm": "Created file $ABSFILE with 20 characters"}},
     "shell": {"sessionId": "$SID", "timestamp": "$TIME_MS", "cwd": "$CWD", "toolName": "bash", "toolArgs": {"command": "$COMMAND", "description": "Run the tests"}},
     "ran": {"sessionId": "$SID", "timestamp": "$TIME_MS", "cwd": "$CWD", "toolName": "bash", "toolArgs": {"command": "$COMMAND", "description": "Run the tests"}, "toolResult": {"resultType": "success", "textResultForLlm": "$OUTPUT\n<shellId: 0 completed with exit code $EXIT>"}},
     "stop": {"sessionId": "$SID", "timestamp": "$TIME_MS", "cwd": "$CWD", "transcriptPath": "/tmp/transcript.jsonl", "stopReason": "end_turn", "stop_hook_active": "$AGAIN"}

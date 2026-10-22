@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
 import { STANDARD } from '../lib/voice.mjs';
-import { QUIET, SAYS, at, outcomes, parse, shape } from './e2e/record.mjs';
+import { QUIET, SAYS, at, event, outcomes, parse, sessionOf, shape } from './e2e/record.mjs';
 import { CLI, ENTRY, fill, tmp } from './helpers.mjs';
 
 // test/golden/claude.jsonl is one Claude Code session, recorded through hook.mjs with no host flag. Each line is the
@@ -98,16 +98,18 @@ const RECORDED = new URL('./fixtures/recorded/', import.meta.url);
 for (const name of fs.readdirSync(RECORDED)) {
   const [head, ...session] = fs.readFileSync(new URL(name, RECORDED), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
   test(`replay: ${head.tool} ${head.version}: lessloc's answers and state pass the session's checks again`, () => {
-    const said = [], { dir, env, state } = play(session, false, (line, now) => said.push({ now: parse(now.stdout), then: parse(line.stdout) }));
+    const said = [], { dir, env, state } = play(session, false, (line, now) => said.push({ now: parse(now.stdout), then: parse(line.stdout), event: event(head.host, line.hook, line.argv) }));
     for (const k of ['deny', 'block']) assert.deepEqual(said.map(x => !!at(x.now, head.answer[k])), said.map(x => !!at(x.then, head.answer[k])), `the calls answered with ${k}`);
-    const says = k => said.map(x => at(x.now, head.answer[k])).filter(x => typeof x === 'string');
-    const o = outcomes({ state: path.join(state, fs.readdirSync(state).find(n => n.startsWith('shop-'))), work: dir, env, cli: CLI, sid: session.find(l => l.hook?.session_id)?.hook.session_id, prompt: head.prompt });
+    // The hold is never read on a pre-tool call, which refuses and may answer at the same path (Gemini's `reason`).
+    const says = k => said.filter(x => k !== 'block' || x.event !== 'PreToolUse').map(x => at(x.now, head.answer[k])).filter(x => typeof x === 'string');
+    const o = outcomes({ state: path.join(state, fs.readdirSync(state).find(n => n.startsWith('shop-'))), work: dir, env, cli: CLI, sid: session.map(l => sessionOf(l.hook)).find(Boolean), prompt: head.prompt });
     // A9, A11, A12 and A13 are what the tool itself did (the events it fired, the network and home it left alone, its exit, its
     // setup as doctor sees it), which the recording already holds.
-    const tool = () => {};
+    const tool = () => {}, standard = o => String(at(o, head.answer.context) ?? '').includes(STANDARD.slice(0, 60));
     const checks = {
       ...o, A9: tool, A11: tool, A12: tool, A13: tool,
-      A1: () => assert.ok(says('context').some(x => x.includes(STANDARD.slice(0, 60)))),
+      // The standard where the session's answers gave it; a tool that reads it from a rules file of its own needs none.
+      A1: () => said.filter(x => standard(x.then)).forEach(x => assert.ok(standard(x.now), 'the standard, where the session gave it')),
       A2: () => assert.match([...says('context'), ...says('feedback')].join('\n'), /formatMoney/),
       A3: () => assert.match(says('deny').join('\n'), SAYS.placeholder),
       A4: () => assert.match([...says('context'), ...says('feedback')].join('\n'), SAYS.note),
@@ -128,12 +130,15 @@ for (const name of fs.readdirSync(RECORDED)) {
   test(`fixture shapes: test/fixtures/hosts/${head.host}.json has only what ${head.tool} ${head.version} sends`, () => {
     const fx = JSON.parse(fs.readFileSync(file, 'utf8')), vars = { AGAIN: false, LOOP: 0, EXIT: 0, TIME_MS: 0, OUTPUT_JSON: '""', ABSFILE_JSON: '"/r/a"', CONTENT_JSON: '""' };
     const tool = e => e.tool_name ?? e.toolName;
+    let compared = 0;
     for (const [step, raw] of Object.entries(fx.events)) {
-      const e = fill(raw, vars), event = e.hook_event_name ?? fx.argv?.[step];
-      const seen = session.filter(l => l.hook && l.step === event && tool(l.hook) === tool(e)).map(l => shape(l.hook));
+      const e = fill(raw, vars), name = event(head.host, e, fx.argv ? [fx.argv[step]] : []);
+      const seen = session.filter(l => l.hook && l.step === name && tool(l.hook) === tool(e)).map(l => shape(l.hook));
       if (!seen.length) continue;
+      compared++;
       const missing = s => [...shape(e)].filter(p => !s.has(p));
       assert.deepEqual(seen.map(missing).sort((a, b) => a.length - b.length)[0], [], `${step}: key paths and types the tool does not send`);
     }
+    assert.ok(compared, 'no fixture event matches a recorded call');
   });
 }

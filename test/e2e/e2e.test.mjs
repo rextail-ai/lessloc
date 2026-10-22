@@ -5,6 +5,8 @@
 // E2E_INSTALL=1 installs missing pins, E2E_JOBS runs that many at once, E2E_KEEP=1 keeps each run's folder. The negative
 // controls: E2E_OFF=gate,lines switches parts of lessloc off, E2E_BARE=1 leaves it uninstalled; each must fail what it covers.
 // E2E_RECORD=1 writes each session that passes every check to test/fixtures/recorded/, which npm test replays offline.
+// `npm run e2e:netns` runs the same inside a network namespace with only loopback, where the tools that try the internet
+// whatever they are told run too; their pins are installed beforehand, by a run with E2E_INSTALL=1.
 import assert from 'node:assert/strict';
 import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -16,7 +18,7 @@ import { fileURLToPath } from 'node:url';
 import { HOSTS } from '../../lib/hosts.mjs';
 import { STANDARD } from '../../lib/voice.mjs';
 import { start } from './model.mjs';
-import { QUIET, SAYS, at, calls, outcomes, parse, save, wrap } from './record.mjs';
+import { QUIET, SAYS, at, calls, event, outcomes, parse, save, sessionOf, wrap } from './record.mjs';
 import { ADAPTERS, CACHE, bin } from './tools.mjs';
 
 const REPO = fileURLToPath(new URL('../../', import.meta.url));
@@ -28,7 +30,6 @@ const NEAR = /lessloc/i;
 const PROMPT = 'Add load() to shop/load.js: it returns the parsed data.json. Then show the money totals.';
 const FILES = {
   'package.json': '{"type": "module", "scripts": {"test": "node --test"}}\n',
-  '.lessloc.json': '{"test": "npm test"}\n',
   'shop/money.js': 'export function formatMoney(amount) {\n  return `$${amount.toFixed(2)}`;\n}\n',
   'data.json': '{"total": 3}\n',
   'test/load.test.js': "import { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { load } from '../shop/load.js';\n\ntest('load', () => assert.deepEqual(load(), { total: 3 }));\n",
@@ -37,13 +38,13 @@ const PLACEHOLDER = "import { formatMoney } from './money.js';\n// ... existing 
 const BAD = "import fs from 'node:fs';\n\nexport function load() {\n  try {\n    return JSON.parse(fs.readFileSync(new URL('../data.jsn', import.meta.url), 'utf8'));\n  } catch {}\n  console.log('debug');\n}\n";
 const GOOD = "import fs from 'node:fs';\n\nexport function load() {\n  return JSON.parse(fs.readFileSync(new URL('../data.json', import.meta.url), 'utf8'));\n}\n";
 // The session: a subagent first (where the tool has one), a placeholder write, a bad write, a failing test run, "Done.", the
-// fix, a passing run, "Done.".
+// fix, a passing run, "Done.". A tool lessloc cannot hold ends its run at the first "Done.", so there the fix comes without it.
 const steps = (a, work) => [
   ...(a.tools.agent ? [{ tool: 'agent', description: 'List the files', prompt: 'SUBTASK: list the files' }] : []),
   { tool: 'write', path: path.join(work, 'shop/total.js'), content: PLACEHOLDER },
   { tool: 'write', path: path.join(work, 'shop/load.js'), content: BAD },
   { tool: 'shell', command: 'npm test', description: 'Run the tests' },
-  { reply: 'Done.' },
+  ...(a.answer.block ? [{ reply: 'Done.' }] : []),
   { tool: 'edit', path: path.join(work, 'shop/load.js'), old: BAD, new: GOOD },
   { tool: 'shell', command: 'npm test', description: 'Run the tests' },
   { reply: 'Done.' },
@@ -95,20 +96,28 @@ async function session(a, exe, dir) {
     const env = {
       PATH: `${path.dirname(process.execPath)}:/usr/bin:/bin`, HOME: t.home, TMPDIR: t.tmp, TERM: 'dumb', XDG_CONFIG_HOME: path.join(t.home, '.config'),
       XDG_CACHE_HOME: d('cache'), XDG_DATA_HOME: path.join(t.home, '.local/share'), XDG_STATE_HOME: path.join(t.home, '.local/state'),
-      HTTPS_PROXY: t.url, HTTP_PROXY: t.url, ALL_PROXY: t.url, NO_PROXY: '127.0.0.1,localhost', ...a.env(t),
+      // Outside a network namespace, the fake model is also the proxy, and refuses and keeps every try to reach the internet.
+      ...(!process.env.E2E_NETNS && { HTTPS_PROXY: t.url, HTTP_PROXY: t.url, ALL_PROXY: t.url, NO_PROXY: '127.0.0.1,localhost' }), ...a.env(t),
     };
     const started = Date.now();
-    // The wrapper goes into lessloc's copy, and into any folder a route builds from it (an extension).
-    t.wrap = dir => wrap(dir, { record: t.record, state: t.state, off: process.env.E2E_OFF || '', work: t.work, given: Object.keys(env) });
+    // The wrapper goes into lessloc's copy, and into any folder a route builds from it (an extension). Such a folder's hook.mjs is
+    // the copy's wrapper, so it gets the real hook back first, or its wrapper would run itself.
+    t.wrap = dir => (dir !== t.lessloc && fs.copyFileSync(path.join(t.lessloc, 'hook.real.mjs'), path.join(dir, 'hook.mjs')), wrap(dir, { record: t.record, state: t.state, off: process.env.E2E_OFF || '', work: t.work, given: Object.keys(env) }));
     t.wrap(t.lessloc);
     for (const [f, text] of Object.entries(a.files?.(t) || {})) fs.mkdirSync(path.dirname(f), { recursive: true }), fs.writeFileSync(f, text);
     // What a route runs: the tool's own commands, or lessloc's init from the copy, in the work repository.
-    Object.assign(t, { exe, env, tool: args => spawnSync(exe, args, { cwd: t.work, env, encoding: 'utf8', timeout: 60000 }), init: (...args) => spawnSync(process.execPath, [path.join(t.lessloc, 'lessloc.mjs'), 'init', ...args], { cwd: t.work, env, encoding: 'utf8', timeout: 60000 }) });
+    // A route's command runs apart from this process, so the fake model can answer, and refuse, what it asks of the network.
+    const exec = (cmd, args) => new Promise(resolve => {
+      const p = spawn(cmd, args, { cwd: t.work, env, stdio: 'ignore' }), timer = setTimeout(() => p.kill('SIGKILL'), 60000);
+      p.on('close', code => (clearTimeout(timer), resolve(code)));
+    });
+    Object.assign(t, { exe, env, tool: args => exec(exe, args), init: (...args) => exec(process.execPath, [path.join(t.lessloc, 'lessloc.mjs'), 'init', ...args]) });
     const routed = t.bare || await a.route(t);
-    // A tool that runs its turns in a server: the server first, in its own process group, until it answers.
+    // A tool that runs its turns in a server: the server first, in its own process group, until it answers. A request that
+    // comes while it starts may never be answered (OpenCode 1.x), so each try gives up after 2 s.
     if (a.serve) {
       served = spawn(exe, a.serve(t), { cwd: t.work, env, detached: true, stdio: ['ignore', fs.openSync(d('serve.txt'), 'w'), fs.openSync(d('serve-err.txt'), 'w')] });
-      await until(() => fetch(`http://127.0.0.1:${t.port}/`).then(() => true, () => false), 30000);
+      await until(() => fetch(`http://127.0.0.1:${t.port}/`, { signal: AbortSignal.timeout(2000) }).then(() => true, () => false), 30000);
     }
     const child = spawn(exe, a.run(t, PROMPT), { cwd: t.work, env, detached: true, stdio: ['ignore', fs.openSync(d('out.jsonl'), 'w'), fs.openSync(d('err.txt'), 'w')] });
     let timedOut = false;
@@ -146,14 +155,16 @@ const only = process.env.E2E_TOOLS?.split(',');
 describe('end to end', { concurrency: Number(process.env.E2E_JOBS || 4) }, () => {
   for (const a of ADAPTERS.filter(x => !only || only.includes(x.id))) {
     const exe = bin(a.pin);
-    test(`${a.id}: one scripted session through the real tool`, { skip: !exe && `${a.pin} is not installed (E2E_INSTALL=1 installs it)` }, async t => {
+    // A tool that tries the internet whatever it is told (`namespace` says why) runs only in a network namespace, where A11 can
+    // pass: `npm run e2e:netns`, which sets E2E_NETNS.
+    test(`${a.id}: one scripted session through the real tool`, { skip: (!exe && `${a.pin} is not installed (E2E_INSTALL=1 installs it)`) || (a.namespace && !process.env.E2E_NETNS && `${a.id} runs only in a network namespace (npm run e2e:netns): ${a.namespace}`) }, async t => {
       fs.mkdirSync(RUNS, { recursive: true });
       const dir = fs.mkdtempSync(path.join(RUNS, 'run-'));
       t.after(() => (process.env.E2E_KEEP ? t.diagnostic(`kept ${dir}`) : fs.rmSync(dir, { recursive: true, force: true })));
       const s = await session(a, exe, dir), caps = HOSTS[a.host], answer = a.answer, mains = s.server.requests.filter(r => r.main);
       const main = i => mains.find(r => r.step === i), call = i => mains.flatMap(r => r.results).find(x => x.id === `call_${i}`);
       const step = (k, n = 0) => s.plan.filter(x => (k === 'reply' ? x.reply : x.tool === k)).map(x => s.plan.indexOf(x))[n];
-      const sid = s.calls.find(c => c.input.session_id)?.input.session_id, passed = [];
+      const sid = s.calls.map(c => sessionOf(c.input)).find(Boolean), passed = [];
       let tried = 0;
       // A check an adapter marks `todo` names the lessloc defect that fails it; it is reported on every run, and stays out of
       // the recording's checks.
@@ -162,7 +173,9 @@ describe('end to end', { concurrency: Number(process.env.E2E_JOBS || 4) }, () =>
       assert.ok(s.routed, 'lessloc is set up the documented way');
       assert.deepEqual(s.server.errors, [], 'every step the session asked for was offered');
       await check('A1: the standard is in the first main request', () => assert.ok(mains[0]?.text.includes(STANDARD.slice(0, 60))));
-      await check('A2: the hints about existing code reach the model', () => assert.match(caps.prompt ? mains[0]?.text : mains.flatMap(r => r.results.map(x => x.text)).join('\n'), /formatMoney/));
+      // The hints come from the request, which only a prompt event shows lessloc; test runs only from hooks that see a
+      // command's exit (the fixture's `evidence`, as in the contract tests).
+      if (a.events.includes('UserPromptSubmit')) await check('A2: the hints about existing code reach the model', () => assert.match(caps.prompt ? mains[0]?.text : mains.flatMap(r => r.results.map(x => x.text)).join('\n'), /formatMoney/));
       if (caps.gate !== false) await check('A3: the placeholder is refused, and never lands', () => {
         assert.match(call(step('write'))?.text ?? '', SAYS.placeholder);
         assert.ok(!fs.existsSync(path.join(s.t.work, 'shop/total.js')));
@@ -173,15 +186,16 @@ describe('end to end', { concurrency: Number(process.env.E2E_JOBS || 4) }, () =>
         assert.ok(call(bad)?.text);
         assert.match(read(path.join(s.state, 'sessions', `${sid}.log`)), /^touch \S+ shop\/load\.js$/m);
       });
-      await check('A5: the failing test run is recorded', o.A5);
+      if (a.evidence !== false) await check('A5: the failing test run is recorded', o.A5);
+      // A pre-tool call refuses and never holds; a host may put both answers at one path (Gemini's `reason`).
       if (answer.block) await check('A6: the turn is held once, and the next request carries the hold', () => {
-        assert.equal(s.calls.filter(c => at(parse(c.stdout), answer.block)).length, 1);
+        assert.equal(s.calls.filter(c => event(a.host, c.input, c.argv) !== 'PreToolUse' && at(parse(c.stdout), answer.block)).length, 1);
         assert.match(main(step('reply') + 1)?.text ?? '', SAYS.hold);
       });
-      await check('A7: the passing run after the fix is recorded at the final state', o.A7);
+      if (a.evidence == null) await check('A7: the passing run after the fix is recorded at the final state', o.A7);
       if (a.events.includes('Stop')) await check('A8: the handoff record has the request, the file and the verdict', o.A8);
       await check('A9: every event lessloc set up fired', () => {
-        const fired = new Set(s.calls.map(c => c.input.hook_event_name ?? c.argv.at(-1)));
+        const fired = new Set(s.calls.map(c => event(a.host, c.input, c.argv)));
         assert.deepEqual(a.events.filter(e => !fired.has(e) && !a.unfired?.[e]), []);
       });
       await check('A10: the model never reads lessloc\'s name, from lessloc or from the tool', () => {
