@@ -69,7 +69,7 @@ Each tool below has up to three ways to install lessloc, in this order:
 3. **In a terminal.** Get lessloc first:
 
    ```sh
-   git clone https://github.com/rextail-ai/lessloc ~/.lessloc
+   git clone https://get.lessloc.org/lessloc.git ~/.lessloc
    ```
 
    On this site, `lessloc` stands for `node ~/.lessloc/lessloc.mjs`. Running `npm link` inside the clone puts `lessloc` on your PATH. The hooks run lessloc from this clone, so keep it where it is. If you move it, run the same `init` commands again; lessloc replaces its own entries.
@@ -89,7 +89,7 @@ This installs lessloc's hooks for every tool it finds and supports, in your home
 2. In Claude Code's prompt box:
 
    ```
-   /plugin marketplace add rextail-ai/lessloc
+   /plugin marketplace add https://get.lessloc.org/claude/lessloc.git
    /plugin install lessloc@lessloc
    ```
 
@@ -109,7 +109,15 @@ The plugin also adds a `/lessloc` skill for you. It is never listed to the agent
 ### Codex
 
 1. Ask your agent: [the sentence above](#_1-install-lessloc).
-2. In a terminal:
+2. In Codex's prompt box, type `/plugins`, choose "Add marketplace", enter `https://get.lessloc.org/codex/lessloc.git`, and install lessloc from the list. In a terminal, the same is:
+
+   ```sh
+   codex plugin marketplace add https://get.lessloc.org/codex/lessloc.git
+   codex plugin add lessloc@lessloc
+   ```
+
+   The plugin's hooks are exactly the ones `init --codex` writes. Then start a new session.
+3. In a terminal:
 
    ```sh
    cd your-repo
@@ -117,7 +125,6 @@ The plugin also adds a `/lessloc` skill for you. It is never listed to the agent
    ```
 
    This adds lessloc's entries to `~/.codex/hooks.json` (in `$CODEX_HOME` when that is set), so they apply to all your projects.
-3. In Codex's prompt box, type `/plugins`, choose "Add marketplace", enter `rextail-ai/lessloc`, and install lessloc from the list. The plugin's hooks are exactly the ones `init --codex` writes.
 
 Either way, Codex runs new hooks only after you trust them once: `/hooks` in Codex. Use the plugin or `init --codex`, not both; `doctor` warns when both are set up.
 
@@ -243,7 +250,7 @@ How lessloc works in Cline:
 2. In Pi's prompt box:
 
    ```
-   !pi install git:github.com/rextail-ai/lessloc
+   !pi install https://get.lessloc.org/pi/lessloc.git
    /reload
    ```
 
@@ -271,7 +278,8 @@ How lessloc works in Pi:
 2. In Copilot CLI's prompt box:
 
    ```
-   /plugin install rextail-ai/lessloc
+   /plugin marketplace add https://get.lessloc.org/copilot/lessloc.git
+   /plugin install lessloc@lessloc
    ```
 
    Copilot reads lessloc's Copilot manifest, `.github/plugin/plugin.json`, which comes before the Claude Code plugin's in Copilot's search order. In VS Code, use the sentence or the terminal.
@@ -362,10 +370,10 @@ How lessloc works in Gemini CLI:
 2. In Qwen Code's prompt box:
 
    ```
-   /extensions install rextail-ai/lessloc
+   /extensions install https://get.lessloc.org/qwen/lessloc.git
    ```
 
-   Qwen Code reads lessloc's own manifest, `qwen-extension.json`, and keeps the `/lessloc` skill off. In a terminal, the same is `qwen extensions install rextail-ai/lessloc`. Then start a new session.
+   Qwen Code reads lessloc's own manifest, `qwen-extension.json`, and keeps the `/lessloc` skill off. In a terminal, the same is `qwen extensions install https://get.lessloc.org/qwen/lessloc.git`. Then start a new session.
 3. In a terminal:
 
    ```sh
@@ -624,7 +632,7 @@ lessloc init
 lessloc doctor
 ```
 
-`init` adds the commit gate to this clone, and lists your agent tools. The agent-driven install and `init --agents` already did this for the repository they ran in. The [reference](/guide/reference#init) lists its flags for the files your whole team shares, and [every file lessloc writes](/guide/reference#files-lessloc-writes).
+`init` adds the commit gate to this clone, and lists your agent tools. A tool's own plugin, from its prompt box, creates no `~/.lessloc`, so get lessloc first, as [in a terminal](#_1-install-lessloc). The agent-driven install and `init --agents` already did this for the repository they ran in. The [reference](/guide/reference#init) lists its flags for the files your whole team shares, and [every file lessloc writes](/guide/reference#files-lessloc-writes).
 
 ## 3. Check that it works
 
@@ -637,6 +645,7 @@ Right after you install, `doctor` says that no lessloc hook has run in this repo
 The agent never sees lessloc, but you will see it now and then:
 
 - An approval prompt that starts with `lessloc:` when an agent edits a protected path, `.lessloc.json` or `.lessloc-baseline.json` with its edit tools, or runs a command that skips the project's checks, such as `git commit --no-verify`. Approve only what you asked for. [The gate](/guide/how-it-works#before-each-write-the-gate) says what tools that cannot ask you do instead.
+- A refused write: a placeholder, commented-out code or a junk file does not land, and the agent writes the real thing.
 - An agent that keeps working once after saying it is done, because lessloc sent it back with what is unfinished, in plain words. For example: the tests fail on the final code, or the agent's own reply says part of the problem still fails.
 - A refused commit that says "Not committed. Fix these first:", followed by what blocks it.
 

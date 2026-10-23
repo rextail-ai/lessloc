@@ -4,6 +4,10 @@ Every release of lessloc, newest first. Versions follow [Semantic Versioning](ht
 
 ## [Unreleased]
 
+### Install
+
+- The install sentence, the clone and the installs that Claude Code, Codex, Qwen Code, Pi and GitHub Copilot CLI make themselves download lessloc from get.lessloc.org, which serves the GitHub repository unchanged. `remove --agents` gives Pi's `pi remove` command with the source Pi installed lessloc from, and for GitHub Copilot CLI it also gives `copilot plugin marketplace remove lessloc` when lessloc came from its marketplace.
+
 ### Safer by default
 
 - The CI workflow from `init --ci` installs lessloc from npm at exactly the version that wrote it, a version no one can republish. Its token can only read the repository, the checkout keeps no credentials, and the base branch reaches the command as a variable. To get it in a repository that has the earlier file, delete `.github/workflows/lessloc.yml` and run `lessloc init --ci` again.

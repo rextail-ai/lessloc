@@ -405,7 +405,7 @@ lessloc keeps one folder per checkout, and per git worktree: `~/.cache/lessloc/<
 | `once/` | one empty file per recent Codex, Cursor, Copilot, Gemini CLI or Qwen Code hook payload, kept 30 seconds, so a tool that runs lessloc's hooks twice for one event (a plugin's and a hook file's) gets one answer |
 | `errors.log` | hook errors, shown by `doctor` |
 
-Beside the checkout folders, `originals.json` keeps what each agent tool's hook or settings file held before `init` first added lessloc's entries: its text, where writing it back would not give the same bytes, or that `init` created it. `remove` uses it to give each file back exactly. Only your user can read it.
+Beside the checkout folders, `originals.json` keeps what each agent tool's hook or settings file held before `init` first added lessloc's entries: its text, where writing it back would not give the same bytes, or that `init` created it. `remove` uses it to give each file back exactly. Only your user can read it. It exists only after `init` has written such a file, so a setup with only Claude Code's plugin, which Claude Code installs itself, has none.
 
 The whole folder is private to your user. lessloc creates the root (`~/.cache/lessloc`, `$XDG_CACHE_HOME/lessloc` or the `LESSLOC_STATE` folder) and each checkout's folder readable by your user alone (mode 700), and sets a root folder an earlier version created to 700 the next time it runs, so other accounts on a shared machine cannot read these files, the shortened prompts among them. On Windows, where folders have no mode, the default `%LOCALAPPDATA%\lessloc` is private to you through your user profile; keep a `LESSLOC_STATE` or `XDG_CACHE_HOME` folder inside your profile too.
 

@@ -7,7 +7,13 @@ outline: [2, 3]
 
 lessloc keeps coding agents to the least code that does the job and still works. It runs inside your agent tool's hooks: you never call it, and nothing it tells you names it. It needs no account and no API key, installs no packages (it needs only Node and git), and is open source under Apache-2.0.
 
-It makes no network calls; [Does my code leave my machine?](/guide/faq#does-my-code-leave-my-machine) lists the programs it runs and has a check the user can run. The agent tool still sends code and prompts to its model provider. Of the commands the user runs, `lessloc probe` starts the user's `probe` agent command in a clean checkout of the repository, a paid agent session whose model provider gets the code that agent reads, and `lessloc audit --tools` runs the vulnerability scanners the user has installed, which look up advisories online. What lessloc stores ([Files lessloc writes](#files-lessloc-writes)):
+It makes no network calls of its own; [Does my code leave my machine?](/guide/faq#does-my-code-leave-my-machine) lists the programs it runs and has a check the user can run. Every network contact, in full:
+
+- get.lessloc.org, lessloc's download address, or GitHub: when lessloc is installed or updated, and when an agent tool that installed lessloc as its plugin or extension checks for updates, which Codex and Qwen Code do each time they start. Only git and the agent tools download from it; lessloc itself never contacts it. What that server keeps: [Where it downloads from](/guide/faq#does-my-code-leave-my-machine).
+- The user's own git remote: in a partial clone (`git clone --filter`), git fetches the objects a review reads that the clone does not have yet, during a session too.
+- What the commands the user runs contact: `test`, `verify` and `ci` run the user's `test` and `setup` commands, and `ci` runs clippy in Rust projects; `lessloc probe` starts the user's `probe` agent command in a clean checkout of the repository, a paid agent session whose model provider gets the code that agent reads; `lessloc audit --tools` runs the analyzers the user has installed, and its vulnerability scanners look up advisories online; the workflow that `init --ci` writes downloads lessloc from npm.
+
+lessloc contacts nothing else. The agent tool still sends code and prompts to its model provider. What lessloc stores ([Files lessloc writes](#files-lessloc-writes)):
 
 - In the repository: two git hooks in `.git/hooks`, `pre-commit` (the commit gate) and `prepare-commit-msg` (commit trailers, only when `trailers` is set), and snapshots of the working tree, untracked files that git does not ignore included, as unreachable objects in `.git/objects` until `git gc` prunes them. Git pushes neither. Nothing goes into the repository's files or commits unless the user asks.
 - In the user cache: one folder per checkout, which holds a shortened copy of the user's prompts and is readable by the user alone.
@@ -50,20 +56,21 @@ Follow [install.md](/install.md) step by step. In short, from the repository's f
 node --version                                # v20 or newer, or stop and tell the user
 git --version                                 # a version, or stop: lessloc needs git
 git rev-parse --show-toplevel                 # the repository to set up
-git clone --depth 1 https://github.com/rextail-ai/lessloc ~/.lessloc
+git clone --depth 1 https://get.lessloc.org/lessloc.git ~/.lessloc
 node ~/.lessloc/lessloc.mjs init --agents
 node ~/.lessloc/lessloc.mjs doctor
 ```
 
 - If Node or git is missing, or Node is older than 20, stop and tell the user; do not install them yourself.
 - If `git rev-parse` fails, ask the user which repository they mean, and run the next steps there.
+- get.lessloc.org, lessloc's download address, serves lessloc's GitHub repository https://github.com/rextail-ai/lessloc unchanged and counts new installs (lessloc keeps no addresses). lessloc itself never contacts it; only git and the agent tools download from it. Updates use it too: `git pull`, and the update check that Codex and Qwen Code make each time they start, when lessloc is their plugin or extension. What it keeps and how to check it: [Where it downloads from](/guide/faq#does-my-code-leave-my-machine). If the clone from it fails, clone from GitHub instead: `git clone --depth 1 https://github.com/rextail-ai/lessloc ~/.lessloc`.
 - If `~/.lessloc` exists, update it instead, as [Update lessloc](#update-lessloc) says.
 - Keep lessloc in `~/.lessloc`: the hooks run it from there. Never install it globally or run it through npx.
 - `init --agents` adds the commit gate to this repository's `.git/hooks` and installs hooks for every agent tool it finds, in the user's home folder, for all their projects. It must run inside a git repository.
 - Act on each line under "Agent tools for this user" as install.md's table says. For Claude Code it prints `claude plugin` commands instead, because lessloc never edits Claude Code's settings: run them.
-- Then tell the user the points in install.md's step 5: what you did, including the snapshots lessloc's hooks keep in `.git/objects`; to start a new session in each tool and do the step in the last column below; how to undo it; if you offer to pause it instead, what stays on ([Turn a check off](#turn-a-check-off)); and that the snapshots stay after the undo until `git gc` prunes them. Never say that `remove` or `rm -rf ~/.cache/lessloc ~/.lessloc` deletes everything ([Remove lessloc](#remove-lessloc)).
+- Then tell the user every point in install.md's step 5, with every fact in it: what you did, including the commit trailers that `prepare-commit-msg` adds only when `trailers` is set, and the snapshots lessloc's hooks keep in `.git/objects`, untracked files that git does not ignore included; to start a new session in each tool; what they will notice, all four items of [What the user will notice](#what-the-user-will-notice); for each tool that was set up, the step in the last column below; how to undo it; if you offer to pause it instead, what stays on ([Turn a check off](#turn-a-check-off)); and that the snapshots stay after the undo until `git gc` prunes them, two weeks by default. If you mention `git gc --prune=now`, always say that it also deletes the repository's other unreachable objects, such as a dropped stash, and to run it only after every agent session has ended. Never say that `remove` or `rm -rf ~/.cache/lessloc ~/.lessloc` deletes everything ([Remove lessloc](#remove-lessloc)).
 
-To set up one tool, run `init` with its flag. Flags combine, as in `init --codex --gemini`. Some tools can also install lessloc as their own plugin or extension ([Getting started](/guide/getting-started#_1-install-lessloc)); use that or `init`, not both.
+To set up one tool, run `init` with its flag. Flags combine, as in `init --codex --gemini`. Some tools can instead install lessloc as their own plugin or extension, with the commands in the table after this one; use that or `init`, not both.
 
 | Agent tool | Set up with | Writes | Then the user |
 |---|---|---|---|
@@ -93,6 +100,19 @@ To set up one tool, run `init` with its flag. Flags combine, as in `init --codex
 
 Files in the home folder apply to all the user's projects; the Copilot cloud agent's file and AGENTS.md are in the repository. `init --agents` finds Copilot by its `copilot` program or its `~/.copilot` folder, so with VS Code alone, run `init --copilot`. The environment variables under [Reference](#environment-variables) move some of these files.
 
+A tool's own plugin or extension, which the tool installs itself ([Getting started](/guide/getting-started#_1-install-lessloc) has each tool's section):
+
+| Agent tool | Install command | Then the user |
+|---|---|---|
+| Codex | in a terminal: `codex plugin marketplace add https://get.lessloc.org/codex/lessloc.git`, then `codex plugin add lessloc@lessloc`; or in Codex's prompt box: `/plugins`, "Add marketplace", the same URL, then lessloc from the list | starts a new session and trusts the hooks once: `/hooks` in Codex |
+| Qwen Code | in a terminal: `qwen extensions install https://get.lessloc.org/qwen/lessloc.git` | starts a new session |
+| Gemini CLI | in a terminal: `gemini extensions install https://github.com/rextail-ai/lessloc` | restarts Gemini CLI |
+| Pi | in a terminal: `pi install https://get.lessloc.org/pi/lessloc.git` | types `/reload`, or restarts Pi |
+| GitHub Copilot CLI | in its prompt box: `/plugin marketplace add https://get.lessloc.org/copilot/lessloc.git`, then `/plugin install lessloc@lessloc` | starts a new session |
+| Cursor | in its agent chat: `/add-plugin https://github.com/rextail-ai/lessloc` | starts a new session |
+
+A plugin alone creates no `~/.lessloc`, so there is no `lessloc` command to run, no `doctor`, and no commit gate in the repository. To have them, clone lessloc as above and run `init --agents` in the repository. `doctor` then lists the tool as `set up (Codex plugin)`, `(Qwen Code extension)` and so on, and `init --agents` leaves a tool set up by its plugin as it is.
+
 Two of the tools without hooks differ ([Tools without hooks](/guide/getting-started#tools-without-hooks)). Continue does not read AGENTS.md: the user copies `~/.lessloc/RULES.md` into `.continue/rules/`. Zed reads only the first rules file it finds, so it skips AGENTS.md when an earlier one, such as `.rules`, `.cursorrules` or `AGENT.md`, exists.
 
 ### Check that it works
@@ -101,7 +121,7 @@ Two of the tools without hooks differ ([Tools without hooks](/guide/getting-star
 node ~/.lessloc/lessloc.mjs doctor
 ```
 
-Run it in the repository. Each line starts with `✓` (works), `!` (needs attention) or `✗` (failed); the text in parentheses is the fix. It exits with 1 when a line failed. Report each line to the user in plain words.
+Run it in the repository. Each line starts with `✓` (works), `!` (needs attention) or `✗` (failed); the text in parentheses is the fix. It exits with 1 when a line failed. Report each line to the user in plain words, then tell them what they will notice, with all four items of [What the user will notice](#what-the-user-will-notice).
 
 | The line says | Do this |
 |---|---|
@@ -127,7 +147,14 @@ Run it in the repository. Each line starts with `✓` (works), `!` (needs attent
 | `✗ <tool>: the hooks in <file> do not answer` | Run the command in parentheses again ([Hooks do not run](#hooks-do-not-run)). |
 | `no lessloc hooks for <tools>: ...` | Those tools get no hooks. Offer `init --rules`. |
 
-When you tell the user what they will notice from now on, use this list: an approval prompt that starts with `lessloc:` when an agent edits a protected path, `.lessloc.json` or `.lessloc-baseline.json`, or runs a command that skips the project's checks, such as `git commit --no-verify`; the agent working once more after saying it is done, because lessloc sent it back with what is unfinished; and a refused commit that says "Not committed. Fix these first:". A refused write goes to you, the agent, not to the user.
+#### What the user will notice
+
+After an install or a check, tell the user all four ways they will notice lessloc from now on:
+
+- An approval prompt that starts with `lessloc:`, when an agent edits `.lessloc.json`, `.lessloc-baseline.json` or a protected path, or runs a command that skips the project's checks, such as `git commit --no-verify`. Claude Code, OpenCode 2.x, Factory Droid and VS Code's agent mode show it. In the other tools, Codex among them, that call is refused instead, and the agent asks the user in its reply. Cline's VS Code extension and Aider neither ask nor refuse.
+- A refused write: a placeholder, commented-out code or a junk file does not land, and the agent writes the real thing. The refusal is written for the agent, not the user.
+- The agent working once more after saying it is done, because lessloc sent it back with what is unfinished, such as tests that fail on the final code.
+- A refused commit that says "Not committed. Fix these first:".
 
 ### Configure it
 
@@ -338,6 +365,10 @@ Tell the user only what the output lists as removed: an AGENTS.md block, for exa
 
 ### Troubleshoot
 
+#### The clone from get.lessloc.org fails
+
+Clone from GitHub instead: `git clone --depth 1 https://github.com/rextail-ai/lessloc ~/.lessloc`. It is the same repository, and `git -C ~/.lessloc pull --ff-only` then updates from GitHub.
+
 #### Hooks do not run
 
 Run `lessloc doctor` in the repository, then check these in order:
@@ -346,7 +377,7 @@ Run `lessloc doctor` in the repository, then check these in order:
 2. **The tool's one-time step.** In Claude Code, `claude plugin list` must show `lessloc@lessloc` with `Status: ✔ enabled`; if it is disabled, `claude plugin enable lessloc@lessloc` with the user's agreement; `✘ failed to load` means the folder it was added from is gone (item 5). Codex runs new hooks only after the user trusts them: `/hooks` in Codex. Cline's VS Code extension runs hook files only with "Enable Hooks" on: Cline settings, Feature Settings. Amp needs `plugins: reload` (Ctrl+O), Pi `/reload`, and Gemini CLI, OpenCode 1.x and Kilo Code a restart.
 3. **A switch.** `LESSLOC=off` in the environment the tool starts with, or `"mode": "off"` in `.lessloc.json`, turns every agent hook off. `LESSLOC_OFF` is not a cause: it turns single parts off, and the hooks still run and show in `doctor`.
 4. **Node.** Every hook starts `node`. Node 20 or newer must be on the PATH the agent tool uses, not only in your shell.
-5. **The clone.** The hooks, and Claude Code's plugin, run lessloc from `~/.lessloc`. If `ls ~/.lessloc/hook.mjs` fails, put the clone back there: move it back, or clone it again with `git clone --depth 1 https://github.com/rextail-ai/lessloc ~/.lessloc`, then start a new session. While it is missing, `claude plugin list` shows `lessloc@lessloc` as `✘ failed to load`, and `init` run from another folder does not re-point the Claude Code plugin.
+5. **The clone.** The hooks, and Claude Code's plugin, run lessloc from `~/.lessloc`. If `ls ~/.lessloc/hook.mjs` fails, put the clone back there: move it back, or clone it again with `git clone --depth 1 https://get.lessloc.org/repair/lessloc.git ~/.lessloc`, then start a new session. While it is missing, `claude plugin list` shows `lessloc@lessloc` as `✘ failed to load`, and `init` run from another folder does not re-point the Claude Code plugin.
 6. **Errors.** A `hook error(s)` line names the latest one; the rest are in `errors.log` in this checkout's folder in the user cache, `~/.cache/lessloc/<repo>-<id>/errors.log`, the folder `doctor` prints as `lessloc's own files`, not in `~/.lessloc`. `LESSLOC_DEBUG=1` prints them on the hook's stderr as they happen; an agent the user built shows them only if it passes the hook's stderr through.
 7. **Where the tool reads hooks.** Kiro's IDE reads none of them, only its CLI. Junie runs hooks only in its CLI's Early Access build. OpenHands skips them in a repository with its own `.openhands/hooks.json`. A `crushrc` that sets hooks may hide Crush's entry.
 
@@ -451,7 +482,7 @@ In the repository. Nothing goes into the working tree unless the user asks:
 | `.github/hooks/review.json` | `init --copilot --repo` |
 | `Lessloc-Verified`, `Lessloc-Open`, `Lessloc-Unchecked` commit trailers | `prepare-commit-msg`, only when `trailers` is set |
 
-In the user cache, one folder per checkout: `~/.cache/lessloc/<repo>-<id>/`. It holds `sessions/<session>.log` (each session's journal: files touched, approvals asked, notes given, turns held), `sessions/<session>.json`, `ledger/<session>.json` (the handoff record), `evidence/<tree>.json` (test results per exact tree), `errors.log`, `cost.log` and `staged.json`. Beside the checkout folders, `originals.json` keeps what each agent tool's settings file held before `init`, so `remove` can give it back. None of it is shared with the team. Session state and handoff records keep a shortened copy of the user's prompts. The whole folder is readable by the user alone: lessloc creates it, and each checkout's folder, with mode 700 ([In your user cache](/guide/reference#in-your-user-cache)).
+In the user cache, one folder per checkout: `~/.cache/lessloc/<repo>-<id>/`. It holds `sessions/<session>.log` (each session's journal: files touched, approvals asked, notes given, turns held), `sessions/<session>.json`, `ledger/<session>.json` (the handoff record), `evidence/<tree>.json` (test results per exact tree), `errors.log`, `cost.log` and `staged.json`. Beside the checkout folders, `originals.json` exists only after `init` has written a tool's JSON hook or settings file, which it never does for Claude Code's plugin, since Claude Code installs that itself: it keeps what that file held before, so `remove` can give it back. None of it is shared with the team. Session state and handoff records keep a shortened copy of the user's prompts. The whole folder is readable by the user alone: lessloc creates it, and each checkout's folder, with mode 700 ([In your user cache](/guide/reference#in-your-user-cache)).
 
 In the home folder: the files in the [install table](#install-lessloc). In the system's temporary folder: clean checkouts (`lessloc-checkout-*`), `doctor`'s test folders (`lessloc-doctor-*`) and one folder per process for short-lived files (`lessloc-tmp-*`), each readable by the user alone and removed when the command ends.
 

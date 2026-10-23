@@ -35,6 +35,8 @@ It runs:
 - `git`, plus `ruff` and `python3` when they are installed. ruff runs with its fixes turned off, whatever the repository's ruff settings say, so it never changes a file. On Windows, the programs lessloc starts itself (git, ruff, python3, cargo, node) never come from the repository's folder. The agent hooks never run your repository's own commands;
 - your `test` and `setup` commands from `.lessloc.json`, but only from `lessloc test`, `verify` and `ci`, and the `probe` command only from `lessloc probe`. `ci` runs `cargo clippy` in Rust projects, which builds them. `audit --tools` runs the analyzers you have installed, and some of them, the vulnerability scanners, look up advisories online. It runs knip from the repository's `node_modules` only when git tracks nothing there; a committed `node_modules` never runs, and knip then comes from your PATH. `doctor` runs each installed hook once to see that it answers.
 
+The clone that installs lessloc, and the installs that Claude Code, Codex, Qwen Code, Pi and GitHub Copilot CLI make themselves, download it from get.lessloc.org, which serves this repository unchanged ([FAQ](https://lessloc.org/guide/faq#does-my-code-leave-my-machine) has the check).
+
 For enforcement, make `lessloc ci` a required check ([What each layer stops](https://lessloc.org/guide/ci#what-each-layer-stops)). The agent hooks guide the agent; they do not confine it. They fail open by design, so a lessloc error never blocks your agent. An agent's shell can change files the hooks do not parse, and a git hook can be skipped; the required check reviews every pull request either way.
 
 ## Scope

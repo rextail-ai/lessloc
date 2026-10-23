@@ -269,7 +269,7 @@ export default defineConfig({
     groups.push({ text: 'More', items: site.pages.filter(page => !groups.some(g => g.items.some(i => pageOf(i.link) === page))).map(page => ({ text: titleOf(page), link: linkOf(page) })) });
     const seen = new Set(), listed = [];
     const about = [`> ${DESCRIPTION}`,
-      `It runs inside your AI coding agent through the agent tool's hooks. It is free and open source (Apache-2.0), needs no account, and makes no network calls. Source code: [${REPO}](${REPO}). To install it, tell your coding agent: "Install lessloc for this project by following ${SITE}/install.md"`];
+      `It runs inside your AI coding agent through the agent tool's hooks. It is free and open source (Apache-2.0), needs no account, and makes no network calls of its own ([every network contact](${SITE}/guide/faq.md#does-my-code-leave-my-machine)). Source code: [${REPO}](${REPO}). To install it, tell your coding agent: "Install lessloc for this project by following ${SITE}/install.md"`];
     // Agent fetch tools often shorten or summarise a long file, so llms.txt gives the size of the files in one and of the pages of
     // 20 KB or more, and an agent can fetch what it reads whole.
     const kb = text => Math.round(Buffer.byteLength(text) / 1000), lists = [];

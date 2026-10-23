@@ -32,7 +32,7 @@ Install lessloc for this project by following https://lessloc.org/install.md
 Claude Code? Or type these in its prompt box:
 
 ```
-/plugin marketplace add rextail-ai/lessloc
+/plugin marketplace add https://get.lessloc.org/claude/lessloc.git
 /plugin install lessloc@lessloc
 ```
 

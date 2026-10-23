@@ -19,7 +19,8 @@ Almost nothing. Your agent works as before and writes less code. Now and then:
 
 - when it says "done" but its own tests still fail, it is sent back to fix them first;
 - a placeholder, commented-out code or a stray backup file is refused, and the agent writes the real thing;
-- a commit with problems like these is stopped until they are fixed.
+- a commit with problems like these is stopped until they are fixed;
+- when it tries to edit `.lessloc.json`, `.lessloc-baseline.json` or a file you protected, or to skip the project's checks, such as with `git commit --no-verify`, you are asked first, in a prompt that starts with `lessloc:`. [The gate](/guide/how-it-works#before-each-write-the-gate) says what tools that cannot show such a prompt do instead.
 
 ## Check that it works
 
@@ -39,7 +40,7 @@ Claude Code, Codex, OpenCode, GitHub Copilot, Gemini CLI, Cursor and many more: 
 
 ## Free and private
 
-Open source under the Apache-2.0 license. No account and no API key. lessloc makes no network calls, so your code and your prompts stay on your computer.
+Open source under the Apache-2.0 license. No account and no API key. lessloc makes no network calls of its own, so your code and your prompts stay on your computer ([every network contact](/guide/faq#does-my-code-leave-my-machine)).
 
 ## More
 

@@ -16,7 +16,7 @@ lessloc is a free, open-source (Apache-2.0) tool that keeps AI coding agents to 
 Tell your coding agent: `Install lessloc for this project by following https://lessloc.org/install.md`. The agent follows [the install steps](/install). Using Claude Code? Type these two commands in its prompt box instead:
 
 ```
-/plugin marketplace add rextail-ai/lessloc
+/plugin marketplace add https://get.lessloc.org/claude/lessloc.git
 /plugin install lessloc@lessloc
 ```
 
@@ -37,7 +37,7 @@ lessloc adds about 175 tokens at session start, for its working standard. Most o
 
 ## Does my code leave my machine?
 
-Not through lessloc. lessloc makes no network calls and has no dependencies. It is plain JavaScript that imports only Node's own built-in modules. You can check this in your clone:
+Not through lessloc. lessloc makes no network calls of its own and has no dependencies. It is plain JavaScript that imports only Node's own built-in modules. You can check this in your clone:
 
 ```sh
 cd ~/.lessloc
@@ -49,11 +49,23 @@ Every line it prints is either one of lessloc's own files or one of Node's own `
 **What it runs.**
 
 - During a session, the hooks run git, ruff when it is installed, and, in Python projects, `python3` once per checkout to list Python's standard-library modules. They never run your project's own commands: the agent runs the tests, and lessloc reads the result.
+- In a partial clone (`git clone --filter`), git fetches from your own remote the objects a review reads that the clone does not have yet, during a session too. Use a full clone where no fetch may happen.
 - Commands you run yourself can run more. `test`, `verify` and `ci` run your `test` and `setup` commands. `probe` runs your `probe` agent command in a clean checkout of the repository: a paid agent session, whose model provider gets the code that agent reads. `ci` runs clippy in Rust projects. `audit --tools` runs the analyzers you have installed: knip, vulture, cargo-machete, deadcode, osv-scanner, pip-audit, cargo-audit and govulncheck. Those are separate programs with their own behavior; the vulnerability scanners, for example, look up advisories online.
 - The CI workflow that `init --ci` writes downloads lessloc from npm, at exactly the version that wrote it.
-- In a partial clone (`git clone --filter`), git fetches from your own remote the objects a review reads that the clone does not have yet.
+
+**Where it downloads from.** Only git and your agent tools download lessloc, from get.lessloc.org, lessloc's download address on Cloudflare.
+
+- **What lessloc itself contacts:** nothing. lessloc makes no network calls of its own, to get.lessloc.org or anywhere else.
+- **What it serves:** the GitHub repository https://github.com/rextail-ai/lessloc, unchanged.
+- **What uses it:** the clone that installs lessloc, and the installs that Claude Code, Codex, Qwen Code, Pi and GitHub Copilot CLI make themselves. Gemini CLI and Cursor install lessloc from GitHub.
+- **When your machine contacts it:** when you install, on each `git pull` that updates the clone, when one of those tools updates lessloc, and, without you running anything, each time Codex or Qwen Code starts with lessloc installed as its plugin or extension, because that tool asks get.lessloc.org for updates.
+- **What it keeps:** like any download server, it sees your IP address. lessloc stores no addresses: to tell new installs from updates and count each installer once a day, it keeps one-way codes made with a key that is deleted within two days, after which no code can be linked to any address. Cloudflare, which runs it, handles the connection under its own privacy policy. Your code, your prompts and your project never reach it.
+- **To check it:** compare `git ls-remote https://get.lessloc.org/lessloc.git HEAD` with `git ls-remote https://github.com/rextail-ai/lessloc HEAD`; both print the same commit.
+- **To use GitHub instead:** clone from `https://github.com/rextail-ai/lessloc`. Every get.lessloc.org address, the plugin addresses among them, serves that same repository, so `https://github.com/rextail-ai/lessloc` works in its place. After a GitHub clone, `init --agents` and the Claude Code commands it prints download nothing more.
 
 **What it stores.** In the repository it adds two git hooks in `.git/hooks`, and keeps snapshots of the working tree as unreachable objects in `.git/objects`, untracked files that git does not ignore included, until `git gc` prunes them. Untracked environment and key files, such as `.env`, `*.pem` and `id_rsa`, go in with their lines blanked, so their content stays out of git. Git never pushes either. Its own files are in your user cache, among them a shortened copy of your prompts. [Files lessloc writes](/guide/reference#files-lessloc-writes) lists every file, what it holds, who on your machine can read it, and whether your team gets it. `lessloc remove` deletes only the current checkout's folder in your user cache. To delete what lessloc stored outside your repositories, close every agent session and run `rm -rf ~/.cache/lessloc ~/.lessloc` ([`remove`](/guide/reference#remove) says how the snapshots go).
+
+**Every network contact, in full.** get.lessloc.org, or GitHub, when you install or update lessloc, and when an agent tool that installed lessloc as its plugin or extension checks for updates, which Codex and Qwen Code do each time they start. Your own git remote, when git fetches the objects a review reads that a partial clone does not have yet, during a session too. And what the commands you run yourself contact: `test`, `verify` and `ci` run your `test` and `setup` commands, `ci` runs clippy in Rust projects, `probe` starts a paid agent session, `audit --tools` runs the analyzers you have installed, and the workflow that `init --ci` writes downloads lessloc from npm. lessloc contacts nothing else.
 
 Your agent tool still sends your code and prompts to its model provider. lessloc does not change that.
 

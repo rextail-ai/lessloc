@@ -178,6 +178,12 @@ test("init recognizes lessloc installed by Copilot's and Cursor's plugin manager
   assert.match(removed, /remove it there: Cursor: uninstall the lessloc plugin in Cursor's plugin settings$/m);
 });
 
+test('remove --agents also removes the lessloc marketplace that Copilot CLI installed lessloc from', () => {
+  const m = machine(['copilot'], { '.copilot/installed-plugins/lessloc/lessloc/.github/plugin/plugin.json': JSON.stringify({ name: 'lessloc' }) });
+  assert.match(m.cli(['init', '--agents']).stdout, /^- GitHub Copilot: set up \(Copilot plugin\)$/m);
+  assert.match(m.cli(['remove', '--agents']).stdout, /remove it there: GitHub Copilot: copilot plugin uninstall lessloc && copilot plugin marketplace remove lessloc$/m);
+});
+
 const repoFile = f => new URL(`../${f}`, import.meta.url);
 const generated = (host, entry) => {
   const f = path.join(tmp('generated-'), 'hooks.json');
@@ -248,6 +254,12 @@ test("init leaves a Cline hook file of the user's own alone, and --agents adds n
   assert.ok(!fs.existsSync(path.join(m.home, '.cline/plugins/lessloc.js')) && !fs.existsSync(path.join(m.home, '.pi/agent/extensions/lessloc.js')));
   assert.equal(fs.readFileSync(path.join(m.home, 'Documents/Cline/Hooks/PreToolUse'), 'utf8'), '#!/bin/sh\necho mine\n');
   assert.match(m.cli(['remove', '--agents']).stdout, /remove it there: Pi: pi remove git:github\.com\/rextail-ai\/lessloc$/m);
+});
+
+test('remove --agents gives the pi remove command for the source Pi installed lessloc from', () => {
+  const m = machine(['pi'], { '.pi/agent/settings.json': JSON.stringify({ packages: ['npm:pi-other', { source: 'https://get.lessloc.org/pi/lessloc.git' }] }) });
+  assert.match(m.cli(['init', '--agents']).stdout, /^- Pi: set up \(Pi package\)$/m);
+  assert.match(m.cli(['remove', '--agents']).stdout, /remove it there: Pi: pi remove https:\/\/get\.lessloc\.org\/pi\/lessloc\.git$/m);
 });
 
 test("Pi's package install loads lessloc's extension and no skill, and the npm package carries every bridge", async () => {

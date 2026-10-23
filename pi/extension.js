@@ -1,5 +1,5 @@
 // lessloc for the Pi coding agent: an extension that forwards Pi's runs and tool calls to `hook.mjs --host pi` and applies the
-// answers (bridge/core.js). `pi install git:github.com/rextail-ai/lessloc` loads it through package.json's `pi` key, and
+// answers (bridge/core.js). `pi install https://get.lessloc.org/pi/lessloc.git` loads it through package.json's `pi` key, and
 // `lessloc init --pi` puts a file in Pi's extensions folder that loads it.
 import { append, call, joined } from '../bridge/core.js';
 
