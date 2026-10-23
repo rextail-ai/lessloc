@@ -46,10 +46,6 @@ To remove it: `Remove lessloc by following https://lessloc.org/remove.md`
 
 <p align="center"><a href="https://lessloc.org/benchmarks"><picture><source media="(prefers-color-scheme: dark)" srcset="https://lessloc.org/projects-dark.svg"><img alt="On every project tested: 23 to 36% less code and 15 to 26% lower cost" src="https://lessloc.org/projects-light.svg" width="880"></picture></a></p>
 
-## Same task, less code
-
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="https://lessloc.org/diff-dark.svg"><img alt="Same task: 13 lines without lessloc, 6 lines with lessloc, in both runs, and all four runs passed the hidden tests" src="https://lessloc.org/diff-light.svg" width="880"></picture></p>
-
 ## What changes
 
 - **Less code to review.** It reuses what your project already has.
