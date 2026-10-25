@@ -3,7 +3,7 @@
 AI coding agents bloat software in recurring, documented ways. This catalog lists each one, the software-engineering standard that already calls it a bad practice, and what lessloc does about it:
 
 - **Rule**: the line in [RULES.md](RULES.md) that prevents it. Every session gets the rules; in Claude Code, each subagent gets a one-line working standard.
-- **Kind**: the finding lessloc reports when it happens anyway. **Stops** marks a kind that holds an agent's turn once, sending it back with what is unfinished. Tier-0 kinds also fail `lessloc check`. All other kinds are notes to the user.
+- **Kind**: the finding lessloc reports when it happens anyway. **Stops** marks a kind that holds an agent's turn once, sending it back with what is unfinished. Tier-0 kinds also fail `lessloc check`, except `tests-failed`, `policy` and `protected`, which only agent sessions report, and `weakened-tests`, which `check` reports at tier 1. All other kinds are notes to the user.
 - **When**: *write* means right after each edit, while the code is still open; *turn* means when the agent says it is done; *check* means commit and CI; *audit* means the whole codebase.
 
 Every detected row is proven by a test: bad and good forms in [test/cases.mjs](test/cases.mjs), where the bad form must be caught and the good form must not be, so the push for less code never flags what the code needs; or a named test. [test/catalog.test.mjs](test/catalog.test.mjs) fails when a row has neither.
@@ -183,7 +183,7 @@ Hand-written versions of what the platform does safely. They are short, which is
 
 | Pattern | lessloc |
 |---|---|
-| `git commit --no-verify`, `-n`, `HUSKY=0`, `SKIP=`, `LESSLOC=off` | The gate asks the user before the command runs |
+| `--no-verify` on `git commit`, `push`, `merge`, `rebase`, `am` or `cherry-pick`; `git commit -n`; `HUSKY=0`, `SKIP=`, `LESSLOC=off` or `LESSLOC_OFF=` before a command; `core.hooksPath` in a `git` command | The gate asks the user before the command runs |
 | Editing lessloc's policy or a protected path | `policy` (tier 0) and `protected` (tier 0); the gate asks the user |
 | Suppressing a finding without a reason | `lessloc-ignore` works only with a reason. `check` and CI list every suppression |
 | Fixing a review by adding layers, checks or tests | The turn's hold ends with "Fix only these and add nothing else for this note" |

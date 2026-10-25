@@ -674,7 +674,7 @@ lessloc doctor
 
 Every hook event starts `~/.lessloc/hook.mjs` afresh: the hooks that `init` installed run it from this clone, and Claude Code reads the plugin added from `~/.lessloc` from that folder. So the pull updates the code every hook runs. A plugin or extension that a tool installed from elsewhere updates through that tool: for Claude Code, `claude plugin marketplace update lessloc && claude plugin update lessloc@lessloc`. `doctor` shows no versions: `lessloc version` prints the clone's, and `claude plugin list` the Claude Code plugin's.
 
-The pull does not change what `init` wrote into a tool's own files: lessloc's hook entries (which events and tool calls run it), and the copy of the working standard for Junie, goose, Crush and Aider. Run `init` again in a repository with the flag of each tool that `doctor` lists as `set up (<path>)`, such as `lessloc init --codex --gemini`, and lessloc replaces its entries with the current ones. The Claude Code plugin needs no step.
+The pull does not change what `init` wrote into a tool's own files: lessloc's hook entries (which events and tool calls run it), and the copy of the working standard for Augment, Junie, goose, Crush and Aider. Run `init` again in a repository with the flag of each tool that `doctor` lists as `set up (<path>)`, such as `lessloc init --codex --gemini`, and lessloc replaces its entries with the current ones. The Claude Code plugin needs no step.
 
 Start a new session in each tool afterwards. Each hook runs lessloc from `~/.lessloc`, so open sessions run the new code from their next hook, but they keep the hooks they loaded at start (which events call lessloc and, in OpenCode, Kilo Code, Amp, Cline and Pi, lessloc's plugin) until a new session loads the current ones.
 

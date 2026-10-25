@@ -4,7 +4,7 @@ title: "lessloc CLI reference: commands, flags and finding kinds"
 
 # Reference
 
-Every command and flag, every finding kind, every file lessloc writes, and the environment variables it reads. Here `lessloc` stands for `node ~/.lessloc/lessloc.mjs` ([Getting started](/guide/getting-started)). Run it with no command to print the usage.
+Every command and flag, every finding kind, every file lessloc writes, and the environment variables it reads. Here `lessloc` stands for `node ~/.lessloc/lessloc.mjs` ([Getting started](/guide/getting-started)). Run it with no command, or with `help`, `--help` or `-h`, to print the usage; `--help` or `-h` after a command prints the usage instead of running it.
 
 ## Commands
 
@@ -241,7 +241,7 @@ Prints each agent tool lessloc knows: how to install lessloc for it, and its sta
 lessloc version
 ```
 
-Prints lessloc's version.
+Prints lessloc's version. `--version` and `-v` do the same.
 
 ### Used by the git hooks
 
@@ -456,13 +456,15 @@ In the system's temporary folder, lessloc creates clean checkouts (`lessloc-chec
 | `LESSLOC_PROFILE=1` | prints each detector's time |
 | `LESSLOC_SOURCE` | where the workflow from `init --ci` installs lessloc from, instead of the npm package at exactly this version, `lessloc@<version>` |
 | `XDG_CACHE_HOME`, `LOCALAPPDATA` | the user cache that lessloc's folder goes in |
-| `XDG_CONFIG_HOME` | where `init --opencode`, `--kilo` and `--amp` put their plugin files, `init --goose` and `--crush` their rules blocks, `init --crush` its hook entry, `init --devin` its hook entries and `init --aider` its `agent-standard` folder, and where `init` and `doctor` look for the settings folders of OpenCode, Amp, Kilo Code, goose, Crush and Zed |
+| `XDG_CONFIG_HOME` | where `init --opencode`, `--kilo` and `--amp` put their plugin files, `init --goose` and `--crush` their rules blocks, `init --crush` its hook entry, `init --devin` its hook entries and `init --aider` its `agent-standard` folder, and where `init` and `doctor` look for the settings folders of OpenCode, Amp, Kilo Code, goose, Devin CLI, Crush and Zed |
+| `APPDATA` | on Windows, where `init --devin` writes Devin CLI's `devin\config.json`, and where `init` and `doctor` look for it |
 | `CRUSH_GLOBAL_CONFIG` | the folder of Crush's `crush.json`, as Crush reads it, for `init --crush` |
 | `GOOSE_PATH_ROOT` | where `init --goose` puts its plugin folder and rules block, as goose reads them |
 | `CLINE_DIR` | where `init --cline` puts the Cline plugin, and where `init` and `doctor` look for Cline's folder |
 | `CODEX_HOME` | where `init --codex` finds Codex's `hooks.json`, and `init` and `doctor` find Codex's `config.toml` |
 | `COPILOT_HOME` | where `init --copilot` writes Copilot's hook file, and where `init` and `doctor` find Copilot's installed plugins |
 | `CLAUDE_CONFIG_DIR` | where `init` and `doctor` look for Claude Code's installed plugins |
+| `CLAUDE_PID` | the Claude Code process that `doctor` runs under; `doctor` reads its start time with `ps` to tell whether the plugin was installed after that session started |
 | `PI_CODING_AGENT_DIR` | where `init --pi` puts the Pi extension, and where `init` and `doctor` look for Pi's folder and its installed packages |
 | `CLAUDECODE=1`, `CODEX_THREAD_ID`, `CURSOR_AGENT=1`, `OPENCODE_TERMINAL=1`, `GEMINI_CLI=1`, `COPILOT_CLI=1`, `KILO_PID`, `CLINE_ACTIVE=true`, `PI_CODING_AGENT=true`, `QWEN_CODE=1`, `AUGMENT_AGENT=1`, `GOOSE_TERMINAL=1`, `CRUSH=1` | set by Claude Code, Codex, Cursor, OpenCode 2.x, Gemini CLI, Copilot CLI, Kilo Code, Cline's VS Code terminals, Pi, Qwen Code, Augment, goose and Crush for the commands their agents run; `init` reads them to name the tool it runs in. Amp, Factory Droid, Kiro, Junie, OpenHands, Devin CLI, Antigravity and Aider document none |
 | `CURSOR_VERSION`, `CURSOR_PROJECT_DIR`, `PLUGIN_DATA` | set by the agent tools themselves; lessloc reads them to tell which tool ran a hook that does not name its host |

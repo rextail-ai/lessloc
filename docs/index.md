@@ -32,7 +32,7 @@ features:
   - title: Works with your agent
     details: Claude Code, Codex, GitHub Copilot, Gemini CLI, Cursor, OpenCode and many more.
   - title: Free and private
-    details: Open source. No account. Nothing leaves your machine.
+    details: Open source. No account. lessloc runs locally and makes no network calls of its own.
 ---
 
 <div class="install-box">

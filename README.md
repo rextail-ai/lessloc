@@ -55,7 +55,7 @@ To remove it: `Remove lessloc by following https://lessloc.org/remove.md`
 
 ## Free and private
 
-Open source (Apache-2.0). No account, no API key, no network calls, no dependencies.
+Open source (Apache-2.0). No account, no API key, no network calls of its own, no dependencies.
 
 ## Learn more
 

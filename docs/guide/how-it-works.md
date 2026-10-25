@@ -91,7 +91,7 @@ Not applied: `shop/money_old.py` is a backup, copy, scratch or report file. Edit
 These go to you for approval, because the agent should not decide them alone:
 
 - such writes to `.lessloc.json`, `.lessloc-baseline.json` or a path listed in `protect` ([policy edits](/patterns/#policy-edits)). A change to them made another way, such as by `sed -i`, is a tier-0 finding (`policy` or `protected`) that holds the turn when it ends, unless that change turns lessloc off. These findings exist only in agent sessions: `lessloc check`, the commit gate and CI do not report them;
-- commands that skip the project's checks in these forms: `--no-verify` on `git commit`, `push`, `merge`, `rebase`, `am` or `cherry-pick`, `git commit -n`, and `HUSKY=0`, `SKIP=…`, `LESSLOC=off` or `LESSLOC_OFF=…` in front of a command ([skipping the checks](/patterns/#bypass)). Other ways around the git hooks are left to CI, the check that binds ([what each layer stops](/guide/ci#what-each-layer-stops)).
+- commands that skip the project's checks in these forms: `--no-verify` on `git commit`, `push`, `merge`, `rebase`, `am` or `cherry-pick`, `git commit -n`, `HUSKY=0`, `SKIP=…`, `LESSLOC=off` or `LESSLOC_OFF=…` in front of a command, and a `git` command that names `core.hooksPath` ([skipping the checks](/patterns/#bypass)). Other ways around the git hooks are left to CI, the check that binds ([what each layer stops](/guide/ci#what-each-layer-stops)).
 
 The approval prompt is written for you, so it is the one text that names lessloc:
 

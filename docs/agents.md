@@ -87,7 +87,7 @@ To set up one tool, run `init` with its flag. Flags combine, as in `init --codex
 | Gemini CLI | `init --gemini` | the `hooks` key of `~/.gemini/settings.json` | restarts Gemini CLI |
 | Qwen Code | `init --qwen` | the `hooks` key of `~/.qwen/settings.json` | starts a new session |
 | Factory Droid | `init --droid` | `~/.factory/hooks.json`, or the `hooks` key of `~/.factory/settings.json` | starts a new session |
-| Augment | `init --augment` | the `hooks` key of `~/.augment/settings.json` | starts a new session |
+| Augment | `init --augment` | the `hooks` key of `~/.augment/settings.json`, and a block in `~/.augment/rules/working-standard.md` | starts a new session |
 | Kiro CLI | `init --kiro` | `~/.kiro/hooks/lessloc.json` | uses Kiro's CLI; its IDE does not read this file |
 | Junie CLI | `init --junie` | the `hooks` key of `~/.junie/config.json`, and a block in `~/.junie/AGENTS.md` | uses the Early Access build of Junie's CLI |
 | OpenHands | `init --openhands` | `~/.openhands/hooks.json` | works in repositories without their own `.openhands/hooks.json` |
@@ -324,7 +324,7 @@ node ~/.lessloc/lessloc.mjs doctor
 ```
 
 - The pull updates the clone in `~/.lessloc`. Every hook event starts `~/.lessloc/hook.mjs` afresh: the hooks that `init` wrote in the home folder run it, directly or through lessloc's plugin, and Claude Code reads the plugin that install.md added from that folder too (`claude plugin list` shows `Read from: ~/.lessloc`). So the pull updates the code every hook runs.
-- The pull does not change what `init` wrote into a tool's own files: lessloc's hook entries (which events and tool calls run it), and the copy of the working standard for Junie, goose, Crush and Aider. In the repository, run `init` again with the flag of each tool whose `doctor` line reads `set up (<path>)`, such as `node ~/.lessloc/lessloc.mjs init --codex --gemini` (the flags are in the [install table](#install-lessloc)); lessloc replaces its own entries with the current ones. Claude Code's plugin, `set up (Claude Code plugin)`, needs no step: a new session reads its hook list from `~/.lessloc`.
+- The pull does not change what `init` wrote into a tool's own files: lessloc's hook entries (which events and tool calls run it), and the copy of the working standard for Augment, Junie, goose, Crush and Aider. In the repository, run `init` again with the flag of each tool whose `doctor` line reads `set up (<path>)`, such as `node ~/.lessloc/lessloc.mjs init --codex --gemini` (the flags are in the [install table](#install-lessloc)); lessloc replaces its own entries with the current ones. Claude Code's plugin, `set up (Claude Code plugin)`, needs no step: a new session reads its hook list from `~/.lessloc`.
 - If `~/.lessloc` does not exist, there is no clone to pull and no `doctor` to run: lessloc came as a plugin its tool installed. For Claude Code (`claude plugin list` shows `lessloc@lessloc`), run:
 
   ```sh
@@ -497,8 +497,8 @@ In the home folder: the files in the [install table](#install-lessloc). In the s
 | `LESSLOC_PROFILE=1` | prints each detector's time |
 | `LESSLOC_SOURCE` | where the workflow from `init --ci` installs lessloc from |
 | `XDG_CACHE_HOME`, `LOCALAPPDATA` | the user cache that lessloc's folder goes in |
-| `XDG_CONFIG_HOME` | replaces `~/.config` for the files `init --opencode`, `--kilo`, `--amp`, `--goose`, `--crush` and `--aider` write there (not `--devin`) |
-| `CODEX_HOME`, `COPILOT_HOME`, `CLINE_DIR`, `PI_CODING_AGENT_DIR`, `CRUSH_GLOBAL_CONFIG`, `OH_PERSISTENCE_DIR`, `CLAUDE_CONFIG_DIR` | where each tool keeps its settings, as the tool reads it |
+| `XDG_CONFIG_HOME` | replaces `~/.config` for the files `init --opencode`, `--kilo`, `--amp`, `--goose`, `--devin`, `--crush` and `--aider` write there |
+| `CODEX_HOME`, `COPILOT_HOME`, `CLINE_DIR`, `PI_CODING_AGENT_DIR`, `CRUSH_GLOBAL_CONFIG`, `GOOSE_PATH_ROOT`, `CLAUDE_CONFIG_DIR` | where each tool keeps its settings, as the tool reads it |
 | `GITHUB_ACTIONS=true` | `check` prints GitHub annotations |
 | `GITHUB_BASE_REF` | the branch `ci` compares with when no `--base` is given |
 
