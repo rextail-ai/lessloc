@@ -98,6 +98,14 @@ test('a false positive is suppressed in place with a reason and stays visible; o
   assert.match(out, /\[config\] \.lessloc\.json: .*each "exceptions" entry needs a "why"/, 'an exception without a reason is a broken setting');
 });
 
+test('a marker the change kept from a line it rewrote is not new; one it added is', () => {
+  const dir = repo({ 'm.py': 'def g(kwargs):\n    kwargs["a"] = cast(  # type: ignore\n        1)\n    return kwargs\n' });
+  write(dir, { 'm.py': 'def g(kwargs):\n    value = cast(  # type: ignore\n        1)\n    kwargs["a"] = value\n    return kwargs\n' });
+  assert.doesNotMatch(kinds(findings(dir)), /suppression/);
+  write(dir, { 'm.py': 'def g(kwargs):\n    value = cast(  # type: ignore\n        1)\n    kwargs["a"] = value  # type: ignore\n    return kwargs\n' });
+  assert.match(kinds(findings(dir)), /suppression m\.py:4 /);
+});
+
 test('GitHub Actions get annotations on the diff: an error for a tier-0 finding, a warning for a tier-1 one', () => {
   const dir = repo({ 'a.py': 'x = 1\n' });
   write(dir, { 'a.py': 'x = 1\n# y = compute(x)\ndef f():\n    try:\n        return 1\n    except Exception:\n        pass\n' });

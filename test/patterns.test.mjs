@@ -116,9 +116,9 @@ test('values copied from tests into production branches are flagged; real rules 
   assert.doesNotMatch(out, /VIP-2024`, a value that appears only in tests/, 'a value production code also defines is a rule');
 });
 
-test('imports no manifest declares are flagged; declared, built-in, relative and aliased imports are not', () => {
+test('imports no manifest declares are flagged; declared, built-in, relative and aliased imports, and imports in doc comments, are not', () => {
   const dir = repo({ 'package.json': '{\n  "dependencies": {\n    "react": "^18.3.1"\n  }\n}\n', 'tsconfig.json': '{"compilerOptions": {"paths": {"@/*": ["./src/*"]}}}\n', 'src/a.ts': 'export const a = 1;\n' });
-  write(dir, { 'src/b.ts': 'import React from "react";\nimport fs from "node:fs";\nimport path from "path";\nimport { a } from "./a";\nimport { x } from "@/lib/x";\nimport pad from "left-padd";\nexport const b = [React, fs, path, a, x, pad];\n' });
+  write(dir, { 'src/b.ts': 'import React from "react";\nimport fs from "node:fs";\nimport path from "path";\nimport { a } from "./a";\nimport { x } from "@/lib/x";\nimport pad from "left-padd";\nexport const b = [React, fs, path, a, x, pad];\n/**\n@example\nimport { z } from "zod";\n*/\n' });
   const out = findings(dir).filter(f => f.kind === 'made-up-api').map(f => `${f.file}:${f.line} ${f.msg}`);
   assert.equal(out.length, 1, out.join('\n'));
   assert.match(out[0], /src\/b\.ts:6 imports `left-padd`, which no manifest declares/);

@@ -38,6 +38,33 @@ test('definitions carry a body shape, so a copy with renamed names matches and d
   assert.equal(js.end, 5, 'a brace body ends at its closing brace');
 });
 
+test('Python strings and docstrings: a quote inside a one-line literal opens nothing, prefixed docstrings are docs, and examples in them define nothing', () => {
+  assert.deepEqual(typeLines('a.py', `MLB = '"""'\ndef load(s):\n    return s\n`).map(l => l.kind), ['code', 'code', 'code', 'blank']);
+  assert.equal(typeLines('a.py', 'def f():\n    r"""Match \\d+ digits."""\n')[1].kind, 'comment');
+  assert.deepEqual(defsIn('a.py', 'def run():\n    """Use it like this:\n\n    def cli():\n        run()\n    """\n    return 1\n').map(d => d.n), ['run']);
+});
+
+test('a call of another object\'s same-named method keeps its name, so two delegating methods are not one shape', () => {
+  const method = name => `def ${name}(self, ctx):\n    rv = self.command.${name}(ctx)\n    if rv is None:\n        rv = ctx.parent and ctx.parent.info_name\n    return rv.strip() + self.suffix + ctx.extra\n`;
+  const [a] = defsIn('a.py', method('get_usage')), [b] = defsIn('a.py', method('get_help'));
+  assert.ok(a.shape);
+  assert.notEqual(a.shape, b.shape);
+});
+
+test('TypeScript definitions: typed, generic and multi-line arrows are found, and a generic header\'s closing `>` line does not end the body', () => {
+  assert.deepEqual(defsIn('a.ts', 'const getCurrentTime = (): number =>\n  Date.now();\nexport const DIRTY = <T>(value: T): Dirty<T> => ({ status: "dirty", value });\nexport const make = (\n  a: number,\n) => a;\n').map(d => d.n), ['getCurrentTime', 'DIRTY', 'make']);
+  const [union] = defsIn('a.ts', 'export class Union<T extends Options> extends Base<\n  T,\n  Def<T>\n> {\n  parse(input) {\n    return input;\n  }\n}\n');
+  assert.equal(union.end, 8);
+  assert.equal(defsIn('a.ts', 'export function makeIssue({\n  path,\n}: Params): Issue {\n  return { path };\n}\n')[0].end, 5, 'nor does a destructured parameter\'s closing `}` line');
+});
+
+test('a multi-line signature is one line: `__new__` repeating `__init__`\'s parameters is no copy, and overloads still differ by their types', () => {
+  const sig = (name, first, ret) => `    def ${name}(\n        ${first},\n        year: int,\n        month: int,\n        day: int,\n        tzinfo: tzinfo | None,\n    ) -> ${ret}:\n        return ${first}\n`;
+  const stub = type => `    @overload\n    def item(\n        value: ${type},\n    ) -> ${type}: ...\n`;
+  const hashes = windows('a.py', `class D:\n${sig('__new__', 'cls', 'D')}\n${sig('__init__', 'self', 'None')}\n${['bool', 'int', 'str'].map(stub).join('\n')}`, 4).map(w => w.h);
+  assert.equal(new Set(hashes).size, hashes.length);
+});
+
 test('rule literals are formats, patterns and queries, not ordinary strings', () => {
   assert.deepEqual(literalsIn('    return f"${value:,.2f}"'), ['${:,.2f}']);
   assert.deepEqual(literalsIn('d = datetime.strptime(s, "%Y-%m-%d")'), ['%Y-%m-%d']);
@@ -124,6 +151,7 @@ test('lines built to slow a review down take no longer than their length: escape
   fast('a catch clause that never closes', () => idioms('a.js', `try { f(); } catch (${' '.repeat(3000)}`));
   fast('a long banner comment', () => kinds('a.js', `// ${'-'.repeat(4000)}!`));
   fast('SEARCH markers that never close', () => clineTool('replace_in_file', { path: 'a.py', diff: '------- SEARCH\n'.repeat(40000) }));
+  fast('arrow heads that never close', () => defsIn('a.ts', `const f = (${'(a) '.repeat(3000)}\nconst g: ${' '.repeat(5000)}x\n`));
   fast('a long run of `}else{`', () => windows('a.js', `function f() {\n  ${'}else{'.repeat(40)}x\n}\n`, 4));
   fast('a prompt with many paths after a command', () => anchors(`Add support: go ${'a/b/c '.repeat(40)}x --fast`));
 });
