@@ -2,7 +2,7 @@
 
 Every release of lessloc, newest first. Versions follow [Semantic Versioning](https://semver.org).
 
-## [Unreleased]
+## [0.10.1]
 
 ### Updates itself
 
@@ -96,4 +96,5 @@ The first public release.
 
 Node 20 or newer, and git. No dependencies, no network calls.
 
+[0.10.1]: https://github.com/rextail-ai/lessloc/releases/tag/v0.10.1
 [0.10.0]: https://github.com/rextail-ai/lessloc/releases/tag/v0.10.0

@@ -121,7 +121,7 @@ lessloc check (+23 −0 lines, 2 new files; tests passed at this exact state (wo
 
 ### GitHub Actions
 
-`lessloc init --ci` writes `.github/workflows/lessloc.yml`. For lessloc 0.10.0 it is:
+`lessloc init --ci` writes `.github/workflows/lessloc.yml`. For lessloc 0.10.1 it is:
 
 ```yaml
 name: lessloc
@@ -139,11 +139,11 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 24
-      - run: npx --yes lessloc@0.10.0 ci --base "origin/$GITHUB_BASE_REF"
+      - run: npx --yes lessloc@0.10.1 ci --base "origin/$GITHUB_BASE_REF"
 ```
 
 - `fetch-depth: 0` fetches the whole history, so git can find the merge base with the base branch, and the ratchet can measure the base commit.
-- The job installs lessloc from npm at exactly the version that wrote the file. A published npm version never changes, and npm checks the package against the registry's hash. To install from somewhere else, such as a fork, set `LESSLOC_SOURCE` when you run `init --ci`, for example `LESSLOC_SOURCE=github:<owner>/lessloc#v0.10.0`.
+- The job installs lessloc from npm at exactly the version that wrote the file. A published npm version never changes, and npm checks the package against the registry's hash. To install from somewhere else, such as a fork, set `LESSLOC_SOURCE` when you run `init --ci`, for example `LESSLOC_SOURCE=github:<owner>/lessloc#v0.10.1`.
 - `lessloc ci` runs the pull request's own `setup` and tests, so the job's token can only read the repository, and the checkout keeps no credentials. Keep the trigger `pull_request`; never use `pull_request_target`, which runs with the base repository's secrets and a token that can write. If a step of yours needs more access, give it to that step's own job.
 - The base branch reaches the command as the variable `GITHUB_BASE_REF`, never as an expression inside the script.
 - The workflow sets up Node only. If your tests need a language toolchain, services or dependencies, add those steps before the lessloc step, and put the install command in `setup` in `.lessloc.json`.
@@ -158,7 +158,7 @@ Make the lessloc job a required status check in your branch protection or rulese
 Any CI with Node 20 or newer and git can run the same command. The clone needs the base branch, with enough history for git to find the merge base; a full clone is simplest:
 
 ```sh
-npx --yes lessloc@0.10.0 ci --base origin/main
+npx --yes lessloc@0.10.1 ci --base origin/main
 ```
 
 Annotations are in GitHub's format. Elsewhere, read the plain output and the exit code.

@@ -1,5 +1,5 @@
 {
   "name": "lessloc",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "Keeps AI coding agents such as Claude Code, Codex, GitHub Copilot, Gemini CLI and Cursor to the least code that does the job and still works: reuse hints and an edit gate while it writes, a review of exactly what it changed, a handoff record for the next agent, gates for commits and CI."
 }
