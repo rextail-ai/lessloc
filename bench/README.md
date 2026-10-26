@@ -6,11 +6,15 @@ lessloc is measured on real changes to real open-source projects. Each task is a
 
 lessloc 0.10.0 against no tool, with Haiku (claude-haiku-5-5) in Claude Code 2.1.303. There are 117 tasks from three Python projects, two sessions per task for each setup, 468 sessions in all.
 
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://lessloc.org/results-dark.svg"><img alt="117 real changes in 3 open-source projects, judged by hidden tests: 27% less code, 23% lower cost, the same results" src="https://lessloc.org/results-light.svg" width="880"></picture>
+
 lessloc wrote less code on every project and cost 23% less overall, with the same results: tasks passed show no measurable difference.
 
 - **Same results.** lessloc's sessions passed 157 times out of 234, and no tool's 161: a difference of 2 tasks, with a 95% confidence interval from 5 fewer to 0.5 more, which includes zero.
 - **Less code.** It wrote 27% fewer production lines per task, with an interval of 23% to 32% fewer.
 - **Lower cost.** It cost 23% less per task, with an interval of 10% to 31% less, its own hooks included.
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://lessloc.org/projects-dark.svg"><img alt="On every project tested: 23 to 36% less code and 15 to 26% lower cost" src="https://lessloc.org/projects-light.svg" width="880"></picture>
 
 | | Pass rate: no tool | Pass rate: lessloc | Production code | Cost per task |
 |---|--:|--:|--:|--:|

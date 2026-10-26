@@ -26,8 +26,16 @@ const links = (text, from) => text.replace(/\[([^\]]*)\]\((?!https?:|#|mailto:)(
   const file = path.posix.normalize(path.posix.join(path.posix.dirname(from), to)), [page, name] = SITE[file] || [];
   return `[${name && label === to ? name : label}](${page || `${BLOB}/${file}`})`;
 });
-// Outside code spans, `<` and `{{` would be read as markup by the site's templates.
-const safe = text => text.split(/(`[^`]*`)/).map((s, i) => (i % 2 ? s : s.replace(/</g, '&lt;').replace(/\{\{/g, '&#123;&#123;'))).join('');
+// A chart in the repository's Markdown is a <picture> of its light and dark copies on lessloc.org, so GitHub shows the one for
+// its own appearance. On the site it is both copies, sized from their files and each shown only in its own appearance
+// (theme/custom.css); they load lazily, so the hidden one is never fetched.
+const chart = html => ['light', 'dark'].map(theme => {
+  const file = new URL(html.match(theme === 'dark' ? / srcset="([^"]+)"/ : / src="([^"]+)"/)[1]).pathname;
+  const [, width, height] = fs.readFileSync(path.join(DOCS, 'public', file), 'utf8').match(/<svg[^>]* width="(\d+)" height="(\d+)"/);
+  return `<img class="${theme}-only" src="${file}" alt="${html.match(/ alt="([^"]*)"/)[1]}" width="${width}" height="${height}" loading="lazy">`;
+}).join('');
+// Outside code spans and charts, `<` and `{{` would be read as markup by the site's templates.
+const safe = text => text.split(/(`[^`]*`|<picture>.*?<\/picture>)/).map((s, i) => (i % 2 ? (s[0] === '<' ? chart(s) : s) : s.replace(/</g, '&lt;').replace(/\{\{/g, '&#123;&#123;'))).join('');
 const LANG = { py: 'python', js: 'js', mjs: 'js', ts: 'ts', tsx: 'tsx', jsx: 'jsx', rs: 'rust', go: 'go', java: 'java', cs: 'csharp', rb: 'ruby', kt: 'kotlin', php: 'php', swift: 'swift', sh: 'bash', sql: 'sql', json: 'json', yml: 'yaml', yaml: 'yaml', toml: 'toml', md: 'md', html: 'html', css: 'css', c: 'c', cpp: 'cpp' };
 const fence = (file, code) => `\`\`\`${LANG[file.split('.').pop()] || ''} [${file}]\n${code.replace(/\n$/, '')}\n\`\`\``;
 // The standards a text cites, linked to their sources: CWE entries (also a list of their numbers after "CWE weaknesses"), PEPs

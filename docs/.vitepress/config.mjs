@@ -253,7 +253,9 @@ export default defineConfig({
     };
     const absolute = (page, md) => md.split(/(^[ \t]*```[\s\S]*?^[ \t]*```)/m).map((s, i) => (i % 2 ? s : s.replace(/`[^`\n]*`|(?<!!)(\[(?:[^\]`]|`[^`\n]*`)*\]\()([^)\s]+)/g,
       (all, open, to) => (!open || /^([a-z][\w+.-]*:|#)/i.test(to) ? all : open + twin(page, to))))).join('');
-    const markdown = page => absolute(page, (page === 'index.md' ? home : body)(read(page)));
+    // A chart's two copies, one for each appearance (theme/custom.css), read as one image.
+    const chart = md => md.replace(/<img class="light-only" src="([^"]+)" alt="([^"]*)"[^>]*><img class="dark-only"[^>]*>/g, (_, src, alt) => `![${alt}](${SITE}${src})`);
+    const markdown = page => chart(absolute(page, (page === 'index.md' ? home : body)(read(page))));
     for (const page of site.pages) {
       const out = path.join(site.outDir, page);
       fs.mkdirSync(path.dirname(out), { recursive: true });

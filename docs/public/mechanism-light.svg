@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="784" viewBox="0 0 880 784" role="img" aria-labelledby="t d">
+<title id="t">How lessloc works: inside your agent's own loop</title>
+<desc id="d">lessloc runs inside the agent's own loop, through the hooks the agent tool already has. At session start it adds a short working standard. When a word of the prompt names existing code, it points to the places that may already do part of the task. Before a write it refuses placeholders and junk files. Right after a write it flags secrets and swallowed errors. At the end of the turn it reviews the change and sends unfinished work back to the agent, once. Principles: the least code that stays correct, reuse before new code, act in the agent's loop with no reports, the agent's own test runs as proof, review only the change. Built on: Node.js with no dependencies, no API key and no model calls, git for snapshots, one table for more than 20 agent tools, a code index for 16 languages.</desc>
+<style>
+svg{font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.ink{fill:#243040}.mut{fill:#56657a}.lt{fill:#4d7c0f}
+.lb{fill:#b3ec64}.gb{fill:#8d99a8}
+.lr{stroke:#8ed13f}.tr{stroke:#e5e9ee}.ck{stroke:#243040}.tb{fill:#e5e9ee}.dot{fill:#243040}
+@media not all{
+.ink{fill:#e4f1f4}.mut{fill:#9aa8b8}.lt{fill:#bdf86c}
+.lb{fill:#b3ec64}.gb{fill:#5d6879}
+.lr{stroke:#b3ec64}.tr{stroke:#1f2834}.tb{fill:#1f2834}.dot{fill:#e4f1f4}}
+</style>
+<text class="ink" x="0" y="40" font-size="36" font-weight="800">inside your agent's own loop</text>
+<text class="mut" x="0" y="84" font-size="26">through the hooks your agent tool already has</text>
+<line class="lr" x1="14" y1="151" x2="14" y2="415" stroke-width="4" stroke-linecap="round"/>
+<circle class="lb" cx="14" cy="150" r="12"/><text class="mut" x="46" y="160" font-size="26">session start</text><text class="ink" x="268" y="160" font-size="30" font-weight="700">adds a short working standard</text>
+<circle class="lb" cx="14" cy="216" r="12"/><text class="mut" x="46" y="226" font-size="26">each prompt</text><text class="ink" x="268" y="226" font-size="30" font-weight="700">points to code you already have</text>
+<circle class="lb" cx="14" cy="282" r="12"/><text class="mut" x="46" y="292" font-size="26">before a write</text><text class="ink" x="268" y="292" font-size="30" font-weight="700">refuses placeholders and junk</text>
+<circle class="lb" cx="14" cy="348" r="12"/><text class="mut" x="46" y="358" font-size="26">after a write</text><text class="ink" x="268" y="358" font-size="30" font-weight="700">flags secrets, swallowed errors</text>
+<circle class="lb" cx="14" cy="414" r="12"/><text class="mut" x="46" y="424" font-size="26">end of turn</text><text class="ink" x="268" y="424" font-size="30" font-weight="700">sends unfinished work back once</text>
+<line class="tr" x1="0" y1="472" x2="880" y2="472" stroke-width="2"/>
+<text class="lt" x="0" y="528" font-size="28" font-weight="800">principles</text>
+<rect class="lb" x="0" y="559" width="16" height="16" rx="3"/><text class="ink" x="28" y="576" font-size="26">least code that stays correct</text>
+<rect class="lb" x="0" y="607" width="16" height="16" rx="3"/><text class="ink" x="28" y="624" font-size="26">reuse before new code</text>
+<rect class="lb" x="0" y="655" width="16" height="16" rx="3"/><text class="ink" x="28" y="672" font-size="26">act in the loop, no reports</text>
+<rect class="lb" x="0" y="703" width="16" height="16" rx="3"/><text class="ink" x="28" y="720" font-size="26">the agent's test runs as proof</text>
+<rect class="lb" x="0" y="751" width="16" height="16" rx="3"/><text class="ink" x="28" y="768" font-size="26">review only the change</text>
+<text class="lt" x="456" y="528" font-size="28" font-weight="800">built on</text>
+<rect class="lb" x="456" y="559" width="16" height="16" rx="3"/><text class="ink" x="484" y="576" font-size="26">Node.js, no dependencies</text>
+<rect class="lb" x="456" y="607" width="16" height="16" rx="3"/><text class="ink" x="484" y="624" font-size="26">no API key, no model calls</text>
+<rect class="lb" x="456" y="655" width="16" height="16" rx="3"/><text class="ink" x="484" y="672" font-size="26">git for snapshots</text>
+<rect class="lb" x="456" y="703" width="16" height="16" rx="3"/><text class="ink" x="484" y="720" font-size="26">one table, 20+ agent tools</text>
+<rect class="lb" x="456" y="751" width="16" height="16" rx="3"/><text class="ink" x="484" y="768" font-size="26">code index, 16 languages</text>
+</svg>

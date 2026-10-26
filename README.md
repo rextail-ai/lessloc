@@ -44,7 +44,9 @@ To remove it: `Remove lessloc by following https://lessloc.org/remove.md`
 
 <p align="center"><a href="https://lessloc.org/benchmarks"><picture><source media="(prefers-color-scheme: dark)" srcset="https://lessloc.org/results-dark.svg"><img alt="117 real changes in 3 open-source projects, judged by hidden tests: 27% less code, 23% lower cost, the same results" src="https://lessloc.org/results-light.svg" width="880"></picture></a></p>
 
-<p align="center"><a href="https://lessloc.org/benchmarks"><picture><source media="(prefers-color-scheme: dark)" srcset="https://lessloc.org/projects-dark.svg"><img alt="On every project tested: 23 to 36% less code and 15 to 26% lower cost" src="https://lessloc.org/projects-light.svg" width="880"></picture></a></p>
+## How it works
+
+<p align="center"><a href="https://lessloc.org/guide/how-it-works"><picture><source media="(prefers-color-scheme: dark)" srcset="https://lessloc.org/mechanism-dark.svg"><img alt="How lessloc works inside your agent's own loop, through the hooks your agent tool already has: at session start it adds a short working standard, at each prompt it points to code you already have, before a write it refuses placeholders and junk, after a write it flags secrets and swallowed errors, and at the end of the turn it sends unfinished work back once. Principles: the least code that stays correct, reuse before new code, act in the loop with no reports, the agent's test runs as proof, review only the change. Built on Node.js with no dependencies, no API key and no model calls, git for snapshots, one table for 20+ agent tools, and a code index for 16 languages." src="https://lessloc.org/mechanism-light.svg" width="880"></picture></a></p>
 
 ## What changes
 

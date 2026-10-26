@@ -42,3 +42,5 @@ features:
 `Install lessloc for this project by following https://lessloc.org/install.md`
 
 </div>
+
+[<img class="light-only" src="/results-light.svg" alt="117 real changes in 3 open-source projects, judged by hidden tests: 27% less code, 23% lower cost, the same results" width="880" height="628" loading="lazy"><img class="dark-only" src="/results-dark.svg" alt="117 real changes in 3 open-source projects, judged by hidden tests: 27% less code, 23% lower cost, the same results" width="880" height="628" loading="lazy">](/benchmarks)
