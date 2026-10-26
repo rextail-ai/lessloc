@@ -25,7 +25,7 @@ const said = (out, err, code) => {
 
 function session(run) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lessloc-weight-')), home = fs.mkdtempSync(path.join(os.tmpdir(), 'lessloc-weight-home-'));
-  const env = { ...process.env, LESSLOC_STATE: path.join(home, 'state'), LESSLOC_OFF: '', LESSLOC: '' };
+  const env = { ...process.env, LESSLOC_STATE: path.join(home, 'state'), LESSLOC_OFF: 'update', LESSLOC: '' };
   try {
     execFileSync('git', ['clone', '-q', '--no-local', source, dir], { stdio: 'ignore' });
     const target = path.join(dir, file), before = fs.readFileSync(target, 'utf8'), last = before.trimEnd().split('\n').at(-1);

@@ -14,6 +14,7 @@ import { clip, fmtDefs, isCode, relevant } from './lib/text.mjs';
 import { renderCatalog } from './lib/catalog.mjs';
 import { CLOUD_ENTRY } from './lib/hosts.mjs';
 import { CLI, REPO_HOOKS, ROOT, TOOLS, ago, cloudStep, health, hostRows, hostTable, repoHooks, setup, teardown } from './lib/install.mjs';
+import { own, toolOf, turnedOff, updateFile } from './lib/update.mjs';
 
 const SELF = fileURLToPath(import.meta.url);
 const [cmd, ...args] = process.argv.slice(2);
@@ -214,6 +215,15 @@ function doctor() {
   // Every hook starts Node, and a build without its startup snapshot (common in Linux distribution packages) spends about
   // 0.2 s of CPU on each start before lessloc runs.
   if (process.config.variables.node_use_node_snapshot === false) line('warn', `this Node (${process.execPath}) was built without its startup snapshot, so every hook starts several times slower`, 'install Node from nodejs.org or a version manager such as nvm or fnm');
+  // The version, whether lessloc keeps itself current (lib/update.mjs), what its last daily check did and how to turn it off,
+  // and a rewrite of its entries in the agent tools' files that failed. A copy an agent tool installed is that tool's to update,
+  // and a folder that is not lessloc's own clone is never updated.
+  const u = load(updateFile()), tool = toolOf(ROOT), setting = `git -C "${ROOT}" config lessloc.update false`;
+  const off = (process.env.LESSLOC_OFF || '').split(',').includes('update') ? 'LESSLOC_OFF=update' : turnedOff(ROOT) && setting;
+  const on = !off && !tool && own(ROOT), checked = u.checked ? `${ago(Date.now() - u.checked)}, ${u.result || 'no result yet'}` : 'none yet';
+  const how = off ? `auto-update off (${off})` : tool ? `a copy ${tool.label} installed, updated through ${tool.label}` : on ? `auto-update on, daily; last check: ${checked}; to turn it off: ${setting}` : 'not a clone lessloc may update';
+  line(on && /^(skipped|the fast-forward)/.test(u.result || '') ? 'warn' : 'ok', `lessloc ${VERSION} in ${ROOT}; ${how}`, `it updates only a clone of lessloc's with no changes or commits of its own, on its branch: git -C "${ROOT}" status`);
+  if (u.failed?.length) line('bad', `lessloc ${u.wrote} could not rewrite its entries: ${u.failed.join('; ')}`, 'fix what is named; the next session start writes them again');
   line(top ? 'ok' : 'bad', top ? `git repository ${top}` : 'not in a git repository', 'reviews, checks and evidence need git');
   if (top) {
     const cfg = config(top), command = testCommand(top, cfg), dir = stateDir(top), cost = costs(top);

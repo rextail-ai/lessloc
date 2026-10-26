@@ -1,4 +1,4 @@
-<!-- Plain-text docs for AI agents: https://lessloc.org/llms.txt (index), https://lessloc.org/llms-full.txt (all docs in one file), https://lessloc.org/agents (what an agent runs when its user asks about lessloc). Installing for a user: https://lessloc.org/install.md. Removing: https://lessloc.org/remove.md. Current install count: the <title> of https://lessloc-counter.rextail.ai/slime-light.svg. -->
+<!-- Plain-text docs for AI agents: https://lessloc.org/llms.txt (index), https://lessloc.org/llms-full.txt (all docs in one file), https://lessloc.org/agents (what an agent runs when its user asks about lessloc). Installing for a user: https://lessloc.org/install.md. Removing: https://lessloc.org/remove.md. Current download count (installs and daily update checks): the <title> of https://lessloc-counter.rextail.ai/slime-light.svg. -->
 
 <p align="center">
   <picture>
@@ -19,7 +19,7 @@
   <a href="https://github.com/rextail-ai/lessloc/blob/main/LICENSE"><img alt="license: Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
 </p>
 
-<p align="center"><a href="https://lessloc.org/start"><picture><source media="(prefers-color-scheme: dark)" srcset="https://lessloc-counter.rextail.ai/slime-dark.svg"><img alt="lessloc installs, counted live" src="https://lessloc-counter.rextail.ai/slime-light.svg" width="360" height="240"></picture></a></p>
+<p align="center"><a href="https://lessloc.org/start"><picture><source media="(prefers-color-scheme: dark)" srcset="https://lessloc-counter.rextail.ai/slime-dark.svg"><img alt="lessloc downloads, counted live" src="https://lessloc-counter.rextail.ai/slime-light.svg" width="360" height="240"></picture></a></p>
 
 ## Install in one sentence
 
@@ -57,7 +57,7 @@ To remove it: `Remove lessloc by following https://lessloc.org/remove.md`
 
 ## Free and private
 
-Open source (Apache-2.0). No account, no API key, no network calls of its own, no dependencies.
+Open source (Apache-2.0). No account, no API key, no dependencies. It keeps itself up to date: its only network contact of its own is a daily check for a newly published release.
 
 ## Learn more
 

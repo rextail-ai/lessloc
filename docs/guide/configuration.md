@@ -269,6 +269,7 @@ An agent sent back for something it intended can just say why in one line instea
 | lessloc in the agent, for a repository | Set `"mode": "off"` in `.lessloc.json` |
 | Refusals and approval prompts before writes | Set `"mode": "warn"`; the end-of-turn review still runs |
 | One part | Set `LESSLOC_OFF` to a comma-separated list of parts ([below](#lessloc-off-single-components)) |
+| lessloc's daily update | Run `git -C ~/.lessloc config lessloc.update false`, for every agent tool however it is started; `git -C ~/.lessloc config --unset lessloc.update` turns it on again ([Update lessloc](/guide/getting-started#update-lessloc)) |
 | Holds for some kinds | Leave them out of [`interrupt`](#interrupt) in `.lessloc.json` |
 | Some paths | List them in [`allow`](#allow) in `.lessloc.json` |
 | The commit gate, trailers, the rules block in AGENTS.md and lessloc's files | Run `lessloc remove` in the repository |
@@ -308,6 +309,7 @@ LESSLOC_OFF=reuse,handoff claude
 | `requests` | the check that the functions, options and flags a request asks for exist (`unaddressed`) |
 | `unfinished` | the check of the agent's last reply for part of the request it says still fails (`unfinished`) |
 | `pace` | the one note in a turn that passes 40 tool calls, to finish what works and say what is left |
+| `update` | lessloc's daily check for its newest published release, and the rewrite of its entries in the agent tools' files after its version changes, in sessions of a tool started with it. To turn the daily check off for good, use `git -C ~/.lessloc config lessloc.update false` ([above](#turning-lessloc-off)) |
 
 `LESSLOC_OFF` is for narrowing down a problem, and for measuring what each component is worth.
 

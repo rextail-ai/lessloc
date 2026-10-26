@@ -14,8 +14,9 @@ import { CLI, ENTRY, fill, tmp } from './helpers.mjs';
 const GOLDEN = new URL('./golden/claude.jsonl', import.meta.url);
 
 // The hooks run with a clean environment and a PATH that holds only node and git, so no tool installed on this machine
-// (ruff, python3) and no setting of the user's (git config, agent variables) changes what they answer. `claude` adds the
-// variables Claude Code sets for a plugin's hooks, so a host check that reads them cannot move Claude Code to another row.
+// (ruff, python3) and no setting of the user's (git config, agent variables) changes what they answer, and with lessloc's own
+// update off, so no session start checks for a release. `claude` adds the variables Claude Code sets for a plugin's hooks, so
+// a host check that reads them cannot move Claude Code to another row.
 function sandbox(claude) {
   const root = tmp('golden-'), dir = path.join(root, 'shop'), bin = path.join(root, 'bin');
   for (const d of [dir, bin, path.join(root, 'home')]) fs.mkdirSync(d);
@@ -24,7 +25,7 @@ function sandbox(claude) {
   });
   fs.symlinkSync(process.execPath, path.join(bin, 'node'));
   fs.symlinkSync(which('git'), path.join(bin, 'git'));
-  const env = { PATH: bin, HOME: path.join(root, 'home'), TMPDIR: root, LESSLOC_STATE: path.join(root, 'state'), GIT_CONFIG_NOSYSTEM: '1', LC_ALL: 'C' };
+  const env = { PATH: bin, HOME: path.join(root, 'home'), TMPDIR: root, LESSLOC_STATE: path.join(root, 'state'), LESSLOC_OFF: 'update', GIT_CONFIG_NOSYSTEM: '1', LC_ALL: 'C' };
   if (claude) Object.assign(env, { CLAUDECODE: '1', CLAUDE_CODE_ENTRYPOINT: 'cli', CLAUDE_PROJECT_DIR: dir, CLAUDE_PLUGIN_ROOT: path.dirname(ENTRY), CLAUDE_PLUGIN_DATA: path.join(root, 'plugin-data') });
   return { dir, env, state: env.LESSLOC_STATE };
 }

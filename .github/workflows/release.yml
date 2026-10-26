@@ -1,6 +1,6 @@
 # Publishes each version tag that matches package.json, once the tests and the end-to-end tests (e2e.yml) pass: a GitHub
 # release with the Gemini CLI extension (scripts/gemini-extension.mjs) as its one asset and the version's section of
-# CHANGELOG.md as its notes, then the npm package.
+# CHANGELOG.md as its notes, then the npm package, then the tag released/<version> that installs update to.
 # Gemini CLI and Qwen Code install a release's only asset; with more assets than one, they take the source archive instead.
 # A re-run skips whatever is already published. Each job runs in its own environment, whose rules decide which tags may deploy.
 name: release
@@ -57,3 +57,14 @@ jobs:
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
       - run: npm view "lessloc@${GITHUB_REF_NAME#v}" version > /dev/null 2>&1 || npm publish --provenance --access public
+  # Installs update only to a version published everywhere, which the tag released/<version> marks (lib/update.mjs). A tag
+  # made with the job's token starts no workflow, and the name does not match the v* trigger anyway.
+  released:
+    needs: npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - run: gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/released/$GITHUB_REF_NAME" > /dev/null 2>&1 || gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/released/$GITHUB_REF_NAME" -f sha="$GITHUB_SHA" > /dev/null
+        env:
+          GH_TOKEN: ${{ github.token }}

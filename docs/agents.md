@@ -7,9 +7,9 @@ outline: [2, 3]
 
 lessloc keeps coding agents to the least code that does the job and still works. It runs inside your agent tool's hooks: you never call it, and nothing it tells you names it. It needs no account and no API key, installs no packages (it needs only Node and git), and is open source under Apache-2.0.
 
-It makes no network calls of its own; [Does my code leave my machine?](/guide/faq#does-my-code-leave-my-machine) lists the programs it runs and has a check the user can run. Every network contact, in full:
+Its only network contact of its own is a daily check for its newest published release; [Does my code leave my machine?](/guide/faq#does-my-code-leave-my-machine) lists the programs it runs and has a check the user can run. Every network contact, in full:
 
-- get.lessloc.org, lessloc's download address, or GitHub: when lessloc is installed or updated, and when an agent tool that installed lessloc as its plugin or extension checks for updates, which Codex and Qwen Code do each time they start. Only git and the agent tools download from it; lessloc itself never contacts it. What that server keeps: [Where it downloads from](/guide/faq#does-my-code-leave-my-machine).
+- get.lessloc.org, lessloc's download address, or GitHub when get.lessloc.org cannot be reached: once a day for lessloc's update check, a background `git` process in `~/.lessloc` that lists lessloc's published releases and fast-forwards the clone to a newer one ([Update lessloc](#update-lessloc)); when lessloc is installed or updated; and when an agent tool that installed lessloc as its plugin or extension checks for updates, which Codex and Qwen Code do each time they start. What that server keeps: [Where it downloads from](/guide/faq#does-my-code-leave-my-machine).
 - The user's own git remote: in a partial clone (`git clone --filter`), git fetches the objects a review reads that the clone does not have yet, during a session too.
 - What the commands the user runs contact: `test`, `verify` and `ci` run the user's `test` and `setup` commands, and `ci` runs clippy in Rust projects; `lessloc probe` starts the user's `probe` agent command in a clean checkout of the repository, a paid agent session whose model provider gets the code that agent reads; `lessloc audit --tools` runs the analyzers the user has installed, and its vulnerability scanners look up advisories online; the workflow that `init --ci` writes downloads lessloc from npm.
 
@@ -63,7 +63,7 @@ node ~/.lessloc/lessloc.mjs doctor
 
 - If Node or git is missing, or Node is older than 20, stop and tell the user; do not install them yourself.
 - If `git rev-parse` fails, ask the user which repository they mean, and run the next steps there.
-- get.lessloc.org, lessloc's download address, serves lessloc's GitHub repository https://github.com/rextail-ai/lessloc unchanged and counts new installs (lessloc keeps no addresses). lessloc itself never contacts it; only git and the agent tools download from it. Updates use it too: `git pull`, and the update check that Codex and Qwen Code make each time they start, when lessloc is their plugin or extension. What it keeps and how to check it: [Where it downloads from](/guide/faq#does-my-code-leave-my-machine). If the clone from it fails, clone from GitHub instead: `git clone --depth 1 https://github.com/rextail-ai/lessloc ~/.lessloc`.
+- get.lessloc.org, lessloc's download address, serves lessloc's GitHub repository https://github.com/rextail-ai/lessloc unchanged and counts downloads: new installs and lessloc's daily update checks (lessloc keeps no addresses). Updates use it too: lessloc's own daily update check, `git pull`, and the update check that Codex and Qwen Code make each time they start, when lessloc is their plugin or extension. What it keeps and how to check it: [Where it downloads from](/guide/faq#does-my-code-leave-my-machine). If the clone from it fails, clone from GitHub instead: `git clone --depth 1 https://github.com/rextail-ai/lessloc ~/.lessloc`.
 - If `~/.lessloc` exists, update it instead, as [Update lessloc](#update-lessloc) says.
 - Keep lessloc in `~/.lessloc`: the hooks run it from there. Never install it globally or run it through npx.
 - `init --agents` adds the commit gate to this repository's `.git/hooks` and installs hooks for every agent tool it finds, in the user's home folder, for all their projects. It must run inside a git repository.
@@ -127,6 +127,12 @@ Run it in the repository. Each line starts with `✓` (works), `!` (needs attent
 |---|---|
 | `✗ node <version>` | Stop. The user installs Node 20 or newer. |
 | `! this Node (...) was built without its startup snapshot, ...` | This Node starts several times slower, and every hook starts Node. Do what [Node without its startup snapshot](#node-without-its-startup-snapshot) says. |
+| `✓ lessloc <version> in <folder>; auto-update on, daily; last check: <when>, <what it did>; to turn it off: git -C "<folder>" config lessloc.update false` | Nothing. `none yet` until a session has started. `no answer from get.lessloc.org or github.com` means it was offline; it tries again the next day. The command at the end turns the update off, if the user asks for that. |
+| `✓ lessloc <version> in <folder>; auto-update off (<switch>)` | Nothing, if the user chose it. `git -C <folder> config --unset lessloc.update` turns it on again; `LESSLOC_OFF=update` comes from the environment the tool started with. Update by hand ([Update lessloc](#update-lessloc)). |
+| `✓ lessloc <version> in <folder>; a copy <tool> installed, updated through <tool>` | Nothing. That tool's own updates reach it (see [Update lessloc](#update-lessloc)). |
+| `✓ lessloc <version> in <folder>; not a clone lessloc may update` | Nothing, if the user installed it this way. lessloc updates only a clone made from get.lessloc.org or GitHub, as [Install lessloc](#install-lessloc) makes it. |
+| `! lessloc <version> in <folder>; ...; last check: <when>, skipped: <reason>` or `..., the fast-forward to v<version> failed` | The clone in the folder named did not update itself: it has changes or commits of its own, or is not on its branch. Show the user `git -C <folder> status` and ask before changing anything there. |
+| `✗ lessloc <version> could not rewrite its entries: <tool>: <reason>` | After a version change, lessloc writes its entries in each tool's file again. Fix the reason named, often a file of the user's own in the way, with the user's agreement. The next session start writes them again. |
 | `✗ not in a git repository` | Run it inside the repository. |
 | `✓ lessloc's own files: <folder> (outside the repository)` | Nothing. Session journals and the error log are there. |
 | `✗ .lessloc.json: <problem>` | A key with a problem is ignored and its default applies; if the file is not valid JSON, every default applies. Show the user the fix ([Configure it](#configure-it)). |
@@ -251,6 +257,7 @@ lessloc reads `.lessloc.json` again at every hook call, so `"mode": "off"` takes
 | `requests` | the check that requested functions, options and flags exist |
 | `unfinished` | the check of your last reply for part of the request it says still fails |
 | `pace` | the one note in a turn that passes 40 tool calls |
+| `update` | lessloc's daily update check, and the rewrite of its entries in the agent tools' files after its version changes |
 
 ### Accept one finding
 
@@ -318,21 +325,27 @@ The check in `ci` fails only on tier-0 findings: `placeholder`, `commented-out`,
 
 ### Update lessloc
 
+lessloc updates itself. Once a day, at the start of a session (with Aider, at its lint command), a background process fast-forwards `~/.lessloc` to lessloc's newest published release when that release is newer and descends from the clone; a session never waits for it. A clone with changes or commits of its own, on a branch of its own or on a version checked out by hand stays as it is. After a version change, the next session start writes lessloc's entries in the tools' own files again, for each tool set up from `~/.lessloc`, and keeps the user's own entries. `doctor` shows the version, whether auto-update is on, and the last check ([Check that it works](#check-that-it-works)). `git -C ~/.lessloc config lessloc.update false` turns it off, when the user asks for that.
+
+When the user asks to update now, or has auto-update off:
+
 ```sh
 git -C ~/.lessloc pull --ff-only
 node ~/.lessloc/lessloc.mjs doctor
 ```
 
 - The pull updates the clone in `~/.lessloc`. Every hook event starts `~/.lessloc/hook.mjs` afresh: the hooks that `init` wrote in the home folder run it, directly or through lessloc's plugin, and Claude Code reads the plugin that install.md added from that folder too (`claude plugin list` shows `Read from: ~/.lessloc`). So the pull updates the code every hook runs.
-- The pull does not change what `init` wrote into a tool's own files: lessloc's hook entries (which events and tool calls run it), and the copy of the working standard for Augment, Junie, goose, Crush and Aider. In the repository, run `init` again with the flag of each tool whose `doctor` line reads `set up (<path>)`, such as `node ~/.lessloc/lessloc.mjs init --codex --gemini` (the flags are in the [install table](#install-lessloc)); lessloc replaces its own entries with the current ones. Claude Code's plugin, `set up (Claude Code plugin)`, needs no step: a new session reads its hook list from `~/.lessloc`.
+- The next session start writes lessloc's hook entries (which events and tool calls run it) and the copy of the working standard for Augment, Junie, goose, Crush and Aider again. In tools started with `LESSLOC_OFF=update`, the pull does not change what `init` wrote into a tool's own files: in the repository, run `init` again with the flag of each tool whose `doctor` line reads `set up (<path>)`, such as `node ~/.lessloc/lessloc.mjs init --codex --gemini` (the flags are in the [install table](#install-lessloc)); lessloc replaces its own entries with the current ones. Claude Code's plugin, `set up (Claude Code plugin)`, needs no step: a new session reads its hook list from `~/.lessloc`.
 - If `~/.lessloc` does not exist, there is no clone to pull and no `doctor` to run: lessloc came as a plugin its tool installed. For Claude Code (`claude plugin list` shows `lessloc@lessloc`), run:
 
   ```sh
   claude plugin marketplace update lessloc
   claude plugin update lessloc@lessloc
   ```
-- Any other plugin or extension that a tool installed itself (`doctor` lists it as `set up (Codex plugin)`, `(Cursor plugin)`, `(Copilot plugin)`, `(Gemini CLI extension)`, `(Qwen Code extension)` or `(Pi package)`) belongs to that tool. These pages give no update step for it: tell the user so, and do not guess one.
-- `doctor` shows no versions. `lessloc version` prints the clone's, and `claude plugin list` shows the Claude Code plugin's.
+
+  Claude Code also updates it by itself once the user turns on auto-update for lessloc's marketplace, which is off by default for marketplaces other than Anthropic's: `/plugin`, Marketplaces, lessloc, Enable auto-update. A session that is open when it updates keeps the version it loaded until `/reload-plugins` or a new session.
+- Any other plugin or extension that a tool installed itself (`doctor` lists it as `set up (Codex plugin)`, `(Cursor plugin)`, `(Copilot plugin)`, `(Gemini CLI extension)`, `(Qwen Code extension)` or `(Pi package)`) belongs to that tool. Codex and Qwen Code check for updates each time they start; for the others these pages give no update step: tell the user so, and do not guess one.
+- `doctor` shows the clone's version, and `claude plugin list` the Claude Code plugin's.
 - Act on `doctor`'s lines as in [Check that it works](#check-that-it-works). Two come from a version change. For `AGENTS.md holds the rules of an earlier lessloc`, run `lessloc init --rules` with the user's agreement. For `ratchet baseline is from lessloc <version>`, a baseline recorded by another version only informs: the user reviews the difference, then runs `lessloc baseline` to record it again.
 - Then tell the user to start a new session in each tool. Each hook runs lessloc from `~/.lessloc`, so open sessions run the new code from their next hook, but they keep the hooks they loaded at start (which events call lessloc and, in OpenCode, Kilo Code, Amp, Cline and Pi, lessloc's plugin) until a new session loads the current ones.
 
@@ -485,6 +498,8 @@ In the repository. Nothing goes into the working tree unless the user asks:
 In the user cache, one folder per checkout: `~/.cache/lessloc/<repo>-<id>/`. It holds `sessions/<session>.log` (each session's journal: files touched, approvals asked, notes given, turns held), `sessions/<session>.json`, `ledger/<session>.json` (the handoff record), `evidence/<tree>.json` (test results per exact tree), `errors.log`, `cost.log` and `staged.json`. Beside the checkout folders, `originals.json` exists only after `init` has written a tool's JSON hook or settings file, which it never does for Claude Code's plugin, since Claude Code installs that itself: it keeps what that file held before, so `remove` can give it back. None of it is shared with the team. Session state and handoff records keep a shortened copy of the user's prompts. The whole folder is readable by the user alone: lessloc creates it, and each checkout's folder, with mode 700 ([In your user cache](/guide/reference#in-your-user-cache)).
 
 In the home folder: the files in the [install table](#install-lessloc). In the system's temporary folder: clean checkouts (`lessloc-checkout-*`), `doctor`'s test folders (`lessloc-doctor-*`) and one folder per process for short-lived files (`lessloc-tmp-*`), each readable by the user alone and removed when the command ends.
+
+The folder of lessloc's own clone in the user cache, `~/.cache/lessloc/.lessloc-<id>/`, holds `update.json`: when lessloc last checked for a release and what it did, the version before and after its last update, and the version that last wrote its entries. `update.lock` is there while a check runs.
 
 ### Environment variables
 

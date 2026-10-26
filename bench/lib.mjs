@@ -26,10 +26,11 @@ export const HOST = opt('host', 'claude');
 const MODEL = opt('model', HOST === 'claude' ? 'sonnet' : undefined);
 export const RUNS = Number(opt('runs', 3)), JOBS = Number(opt('jobs', 3));
 // The lessloc-old arm runs another lessloc checkout (--old <dir>), such as the release before this one, side by side with
-// this one in the same run.
+// this one in the same run. lessloc's own update is always off: a background process would add noise to the costs, and
+// update the checkout under test.
 export const setup = name => ({
   name,
-  env: name.includes('-no-') ? { LESSLOC_OFF: name.split('-no-').slice(1).join(',') } : {},
+  env: { LESSLOC_OFF: ['update', ...name.split('-no-').slice(1)].join(',') },
   lessloc: name.startsWith('lessloc'),
   plugin: name === 'lessloc-old' ? path.resolve(opt('old')) : name.startsWith('lessloc') ? LESSLOC : null,
 });

@@ -138,6 +138,7 @@ lessloc doctor
 Says whether lessloc works in this repository. Each check prints one line that starts with `✓` (works), `!` (needs attention) or `✗` (failed). It reports:
 
 - the version of the Node that runs `doctor`, and whether it was built without its startup snapshot ([Requirements](/guide/getting-started#requirements) has the fix)
+- lessloc's version and folder, whether it updates itself ([Update lessloc](/guide/getting-started#update-lessloc)), and when it last checked for a release and what it did; a warning when that check left the clone as it was, because it has changes or commits of its own or is not on its branch, or when the fast-forward failed; for a copy an agent tool installed, the tool it is updated through, and for a folder that is not lessloc's own clone, that lessloc does not update it; and a failure when lessloc could not write its entries in a tool's file again after a version change
 - the git repository, and the folder outside it where lessloc keeps its files
 - whether `.lessloc.json` is valid, or that there is none and the defaults apply
 - the test command, and whether it was discovered or set
@@ -404,6 +405,8 @@ lessloc keeps one folder per checkout, and per git worktree: `~/.cache/lessloc/<
 | `cost.log` | each hook's time and tokens added, and the agent tool, when it is not Claude Code |
 | `once/` | one empty file per recent Codex, Cursor, Copilot, Gemini CLI or Qwen Code hook payload, kept 30 seconds, so a tool that runs lessloc's hooks twice for one event (a plugin's and a hook file's) gets one answer |
 | `errors.log` | hook errors, shown by `doctor` |
+| `update.json` | only in the folder of lessloc's own clone (`~/.cache/lessloc/.lessloc-<id>/`): when lessloc last checked for a published release and what it did, the version before and after its last update and when, the version that last wrote its entries in the agent tools' files, and what it could not write there |
+| `update.lock` | only in that folder, while an update check runs |
 
 Beside the checkout folders, `originals.json` keeps what each agent tool's hook or settings file held before `init` first added lessloc's entries: its text, where writing it back would not give the same bytes, or that `init` created it. `remove` uses it to give each file back exactly. Only your user can read it. It exists only after `init` has written such a file, so a setup with only Claude Code's plugin, which Claude Code installs itself, has none.
 
@@ -439,7 +442,7 @@ None of these files is shared with your team: they live in your account's cache,
 | `~/.gemini/config/hooks.json`, the hook named `review` | `init --antigravity` |
 | `~/.aider.conf.yml`, a block, and `~/.config/agent-standard/`: `check`, `CONVENTIONS.md` | `init --aider` |
 
-lessloc changes only its own entries in these files, which are not shared with your team. Claude Code installs and removes the Claude Code plugin itself.
+lessloc changes only its own entries in these files, which are not shared with your team. After lessloc's version changes, the next session start writes them again, the way that version's `init` does, for each tool set up from that clone; `LESSLOC_OFF=update` turns this off. Claude Code installs and removes the Claude Code plugin itself.
 
 ### Temporary files
 
@@ -450,7 +453,7 @@ In the system's temporary folder, lessloc creates clean checkouts (`lessloc-chec
 | Variable | Effect |
 |---|---|
 | `LESSLOC=off` | turns every agent hook off ([Configuration](/guide/configuration#turning-lessloc-off)) |
-| `LESSLOC_OFF` | turns single components off, comma-separated ([Configuration](/guide/configuration#lessloc-off-single-components)) |
+| `LESSLOC_OFF` | turns single components off, comma-separated, `update` among them for lessloc's daily update ([Configuration](/guide/configuration#lessloc-off-single-components)) |
 | `LESSLOC_STATE` | the folder lessloc keeps its files in, instead of the user cache |
 | `LESSLOC_DEBUG=1` | prints hook errors on the hook's stderr as they happen; `doctor` shows the logged ones |
 | `LESSLOC_PROFILE=1` | prints each detector's time |

@@ -4,6 +4,14 @@ Every release of lessloc, newest first. Versions follow [Semantic Versioning](ht
 
 ## [Unreleased]
 
+### Updates itself
+
+- lessloc keeps its clone current by itself: once a day, at the start of an agent session (with Aider, at its lint command), one background process fast-forwards it to the newest published release that descends from it, from get.lessloc.org, or from GitHub when get.lessloc.org cannot be reached. No session waits for it. A clone with changes or commits of its own stays as it is, and git runs with hooks, filters and submodules off. `git -C ~/.lessloc config lessloc.update false` turns it off.
+- After a version change, the next session start writes lessloc's entries in the agent tools' files again, the way `init` writes them, for every tool set up from that clone; everyone else's entries stay.
+- `doctor` shows lessloc's version, whether it updates itself and how to turn that off, and what its last check did; a copy that an agent tool installed is shown as updated through that tool.
+- A clone from an earlier version gets this with one update by hand: `git -C ~/.lessloc pull --ff-only`.
+- get.lessloc.org counts downloads: new installs and lessloc's daily update checks.
+
 ### Install
 
 - The install sentence, the clone and the installs that Claude Code, Codex, Qwen Code, Pi and GitHub Copilot CLI make themselves download lessloc from get.lessloc.org, which serves the GitHub repository unchanged. `remove --agents` gives Pi's `pi remove` command with the source Pi installed lessloc from, and for GitHub Copilot CLI it also gives `copilot plugin marketplace remove lessloc` when lessloc came from its marketplace.

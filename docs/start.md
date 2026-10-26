@@ -40,7 +40,7 @@ Claude Code, Codex, OpenCode, GitHub Copilot, Gemini CLI, Cursor and many more: 
 
 ## Free and private
 
-Open source under the Apache-2.0 license. No account and no API key. lessloc makes no network calls of its own, so your code and your prompts stay on your computer ([every network contact](/guide/faq#does-my-code-leave-my-machine)).
+Open source under the Apache-2.0 license. No account and no API key. lessloc's only network contact of its own is a daily check for its newest published release, which sends none of your code or prompts, so they stay on your computer ([every network contact](/guide/faq#does-my-code-leave-my-machine)).
 
 ## More
 

@@ -10,6 +10,8 @@ flowchart TB
   cli["lessloc.mjs: commands"] --> agent
   agent --> hosts["lib/hosts.mjs: each agent tool's protocol"]
   cli --> install["lib/install.mjs: agent tools found, set up, checked"]
+  agent --> update["lib/update.mjs: the daily update, entries rewritten after a version change"]
+  update --> install
   install --> hosts
   agent --> voice["lib/voice.mjs: every word the agent reads"]
   agent --> evidence["lib/evidence.mjs: the agent's test runs and their results"]
@@ -41,6 +43,7 @@ flowchart TB
 | `lib/requirements.mjs` | The names a request asks to exist, from the wording around them, and whether a tree has them anywhere: a file's text, path or name, or a close spelling the change wrote. Also what the agent's last reply says it left failing of the request |
 | `lib/evidence.mjs` | Test runs recognized in the agent's shell commands (runner, masked or not, whole suite or a selection), their result as the host reported it, and the files that define what the tests run |
 | `lib/hosts.mjs` | Each agent tool's hook protocol as one row: event and tool names in Claude Code's vocabulary, what the tool cannot do (ask the user, take context with a prompt), how it reports a command's success, and how an answer is written back. The `generic` row is the documented protocol for custom agents |
+| `lib/update.mjs` | lessloc keeping its own clone current. At most once a day, at a session's start, one detached process fast-forwards the clone to the newest published release that descends from it (the release workflow tags each release it published `released/vX.Y.Z`), with git's hooks, filters and submodules off, and after a version change it writes lessloc's entries in the agent tools' files again through `lib/install.mjs`. `lessloc.update` false in the clone's git settings turns the check off; `LESSLOC_OFF=update` turns both off |
 | `lib/install.mjs` | The agent tools on a user's machine: found by program and folder, recognized by the variable each sets for its agent's commands, set up and taken out by `init` and `remove`, and checked by `doctor`, which runs each installed hook command once |
 | `.github/plugin/`, `copilot-hooks.json`, `.cursor-plugin/`, `cursor-hooks.json`, `gemini/`, `qwen-extension.json`, `qwen-hooks.json`, `scripts/gemini-extension.mjs` | The plugin manifests and hook files of Copilot CLI and Cursor, the Gemini CLI extension, and Qwen Code's extension manifest and hook file. The release workflow builds the Gemini extension, with Qwen Code's manifest, into each release's one asset. Copilot and Qwen Code find their manifests before Claude Code's, and no hook file sits where Claude Code would load it |
 | `bridge/core.js` | What every plugin bridge shares: it runs one event through `hook.mjs --host <tool>` in the generic protocol and returns the answer, failing open |
@@ -105,5 +108,7 @@ lessloc writes nothing into a repository by default. Its state lives in `~/.cach
 - handoff records, one file per session;
 - the definitions index;
 - cost and error logs.
+
+The folder of lessloc's own clone also keeps `update.json`, what the last update check did and which version last wrote lessloc's entries.
 
 Snapshots are ordinary unreachable git objects. [Files lessloc writes](https://lessloc.org/guide/reference#files-lessloc-writes) lists everything.

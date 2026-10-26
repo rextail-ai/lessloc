@@ -35,7 +35,7 @@ if (spawnSync('bash', ['-c', P.setup], { cwd: dir, encoding: 'utf8' }).status) t
 fs.writeFileSync(path.join(dir, '.lessloc.json'), JSON.stringify({ test: TEST }));
 
 const hook = (input, state) => {
-  const r = spawnSync('node', [path.join(LESSLOC, 'hook.mjs')], { cwd: dir, input: JSON.stringify({ cwd: dir, session_id: 'c', ...input }), encoding: 'utf8', env: { ...process.env, LESSLOC_STATE: state, LESSLOC_OFF: '', LESSLOC: '' } });
+  const r = spawnSync('node', [path.join(LESSLOC, 'hook.mjs')], { cwd: dir, input: JSON.stringify({ cwd: dir, session_id: 'c', ...input }), encoding: 'utf8', env: { ...process.env, LESSLOC_STATE: state, LESSLOC_OFF: 'update', LESSLOC: '' } });
   try { return r.stdout ? JSON.parse(r.stdout) : {}; } catch { return {}; }
 };
 // The task's hidden tests on the current tree: whether the change's own checks pass.

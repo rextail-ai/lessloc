@@ -6,7 +6,7 @@ title: "Install lessloc: steps for an AI coding agent"
 
 These steps are for an AI coding agent whose user asked it to install lessloc. Follow them in order and run each command yourself. The user only approves your commands. Where a step says to stop, stop and tell the user why.
 
-lessloc keeps coding agents to the least code that does the job and still works. It runs as hooks inside the user's agent tools. It makes no network calls of its own; [Does my code leave my machine?](https://lessloc.org/guide/faq#does-my-code-leave-my-machine) lists every network contact. In the repository it writes the commit gate in `.git/hooks` and snapshots of the working tree in `.git/objects`, which git never pushes, and nothing into the repository's files unless the user asks.
+lessloc keeps coding agents to the least code that does the job and still works. It runs as hooks inside the user's agent tools. Its only network contact of its own is a daily check for its newest published release; [Does my code leave my machine?](https://lessloc.org/guide/faq#does-my-code-leave-my-machine) lists every network contact. In the repository it writes the commit gate in `.git/hooks` and snapshots of the working tree in `.git/objects`, which git never pushes, and nothing into the repository's files unless the user asks.
 
 ## 1. Check the requirements
 
@@ -30,7 +30,7 @@ If the folder `~/.lessloc` does not exist, clone lessloc into it:
 git clone --depth 1 https://get.lessloc.org/lessloc.git ~/.lessloc
 ```
 
-get.lessloc.org is lessloc's download address. It serves lessloc's GitHub repository, https://github.com/rextail-ai/lessloc, unchanged, and counts new installs; lessloc keeps no addresses. lessloc itself makes no network calls of its own, to get.lessloc.org or anywhere else; only git and the agent tools download from it. What it keeps: [Where it downloads from](https://lessloc.org/guide/faq#does-my-code-leave-my-machine). Updates use it too: `git pull`, and the update check that Codex and Qwen Code make each time they start, when lessloc is their plugin or extension. If this clone fails, or the user wants to download only from GitHub, clone from GitHub instead: `git clone --depth 1 https://github.com/rextail-ai/lessloc ~/.lessloc`. Every get.lessloc.org address, the plugin addresses among them, serves that same repository, so the GitHub URL works in its place, and the later steps download nothing.
+get.lessloc.org is lessloc's download address. It serves lessloc's GitHub repository, https://github.com/rextail-ai/lessloc, unchanged, and counts downloads: new installs and lessloc's daily update checks; lessloc keeps no addresses. What it keeps: [Where it downloads from](https://lessloc.org/guide/faq#does-my-code-leave-my-machine). Updates use it too: lessloc's own daily update check, `git pull`, and the update check that Codex and Qwen Code make each time they start, when lessloc is their plugin or extension. If this clone fails, or the user wants to download only from GitHub, clone from GitHub instead: `git clone --depth 1 https://github.com/rextail-ai/lessloc ~/.lessloc`. Every get.lessloc.org address, the plugin addresses among them, serves that same repository, so the GitHub URL works in its place, and the later steps download nothing.
 
 If it exists, update it:
 
@@ -114,6 +114,7 @@ Tell the user every point below. Skip only what is about a tool or a step this i
   - Its hooks are installed for each tool that was set up, in the user's home folder, for all their projects.
   - Two git hooks are in this repository's `.git/hooks`: `pre-commit`, the commit gate, and `prepare-commit-msg`, which adds commit trailers only when `trailers` is set in `.lessloc.json`.
   - lessloc keeps its own files, a shortened copy of the user's prompts among them, in `~/.cache/lessloc`.
+  - lessloc updates itself: once a day, when a session starts, it checks for its newest published release and updates `~/.lessloc` in the background. `git -C ~/.lessloc config lessloc.update false` turns this off.
   - Its hooks keep snapshots of the working tree, untracked files that git does not ignore included, in each repository's `.git/objects`; git never pushes them.
   - Nothing goes into the repository's files.
 - **Start a new session** in each tool that was set up, so it loads lessloc. This session runs without lessloc.

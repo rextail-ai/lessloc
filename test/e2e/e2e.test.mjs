@@ -106,8 +106,8 @@ async function session(a, exe, dir) {
     };
     const started = Date.now();
     // The wrapper goes into lessloc's copy, and into any folder a route builds from it (an extension). Such a folder's hook.mjs is
-    // the copy's wrapper, so it gets the real hook back first, or its wrapper would run itself.
-    t.wrap = dir => (dir !== t.lessloc && fs.copyFileSync(path.join(t.lessloc, 'hook.real.mjs'), path.join(dir, 'hook.mjs')), wrap(dir, { record: t.record, state: t.state, off: process.env.E2E_OFF || '', work: t.work, given: Object.keys(env) }));
+    // the copy's wrapper, so it gets the real hook back first, or its wrapper would run itself. lessloc's own update stays off.
+    t.wrap = dir => (dir !== t.lessloc && fs.copyFileSync(path.join(t.lessloc, 'hook.real.mjs'), path.join(dir, 'hook.mjs')), wrap(dir, { record: t.record, state: t.state, off: ['update', process.env.E2E_OFF].filter(Boolean).join(','), work: t.work, given: Object.keys(env) }));
     t.wrap(t.lessloc);
     for (const [f, text] of Object.entries(a.files?.(t) || {})) fs.mkdirSync(path.dirname(f), { recursive: true }), fs.writeFileSync(f, text);
     // What a route runs: the tool's own commands, or lessloc's init from the copy, in the work repository.

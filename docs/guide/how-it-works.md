@@ -47,6 +47,8 @@ In this project: only the user changes `migrations/**`; `shop/**` must not impor
 
 When Claude Code compacts a long conversation, the standard and the project's rules are given again.
 
+Once a day, session start also has lessloc check for its newest published release in a background process. The agent gets nothing from it and the session waits for nothing ([Update lessloc](/guide/getting-started#update-lessloc)).
+
 ### Why the standard is short
 
 Every rule in the standard is something the agent may act on in every task, and acting costs tokens. A rule to prove that a test fails first can end up applied to new features too, a step that lists every place a change must reach makes agents think longer before their first edit, and a closing report makes them count lines. So the standard asks to reproduce a bug first only when one is reported, has no planning step, and asks for no closing report.

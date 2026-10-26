@@ -667,14 +667,18 @@ The [reference](/guide/reference#commands) lists every command and flag.
 
 ## Update lessloc
 
+lessloc updates itself. Once a day, when an agent session starts, a background process fast-forwards `~/.lessloc` to lessloc's newest published release, and every hook that starts after it runs the new version. No session waits for it, and without a network it tries again the next day. After a version change, the next session start also writes lessloc's entries in your agent tools' files again, the way `init` writes them, for every tool set up from `~/.lessloc`, so new hook events reach each tool; your own entries stay. Aider, which has no session start, gets the same from its lint command.
+
+It updates only its own clone, and only to a release that descends from it: a clone with changes or commits of your own, on a branch of its own, or on a version you checked out stays as it is. `lessloc doctor` shows the version, and when lessloc last checked and what it found. To turn it off, run `git -C ~/.lessloc config lessloc.update false` ([Turning lessloc off](/guide/configuration#turning-lessloc-off)). To update by hand:
+
 ```sh
 git -C ~/.lessloc pull --ff-only
 lessloc doctor
 ```
 
-Every hook event starts `~/.lessloc/hook.mjs` afresh: the hooks that `init` installed run it from this clone, and Claude Code reads the plugin added from `~/.lessloc` from that folder. So the pull updates the code every hook runs. A plugin or extension that a tool installed from elsewhere updates through that tool: for Claude Code, `claude plugin marketplace update lessloc && claude plugin update lessloc@lessloc`. `doctor` shows no versions: `lessloc version` prints the clone's, and `claude plugin list` the Claude Code plugin's.
+Every hook event starts `~/.lessloc/hook.mjs` afresh: the hooks that `init` installed run it from this clone, and Claude Code reads the plugin added from `~/.lessloc` from that folder. So an update reaches every hook. With `LESSLOC_OFF=update`, a pull leaves what `init` wrote into a tool's own files as it was: run `init` again in a repository with the flag of each tool that `doctor` lists as `set up (<path>)`, such as `lessloc init --codex --gemini`, and lessloc replaces its entries with the current ones.
 
-The pull does not change what `init` wrote into a tool's own files: lessloc's hook entries (which events and tool calls run it), and the copy of the working standard for Augment, Junie, goose, Crush and Aider. Run `init` again in a repository with the flag of each tool that `doctor` lists as `set up (<path>)`, such as `lessloc init --codex --gemini`, and lessloc replaces its entries with the current ones. The Claude Code plugin needs no step.
+A plugin or extension that a tool installed from elsewhere updates through that tool. Claude Code updates the plugin from lessloc's marketplace once you turn on auto-update for it, which is off by default for marketplaces other than Anthropic's: `/plugin`, Marketplaces, lessloc, Enable auto-update. By hand: `claude plugin marketplace update lessloc && claude plugin update lessloc@lessloc`. Codex and Qwen Code check for updates each time they start.
 
 Start a new session in each tool afterwards. Each hook runs lessloc from `~/.lessloc`, so open sessions run the new code from their next hook, but they keep the hooks they loaded at start (which events call lessloc and, in OpenCode, Kilo Code, Amp, Cline and Pi, lessloc's plugin) until a new session loads the current ones.
 
