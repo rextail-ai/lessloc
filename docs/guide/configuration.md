@@ -286,7 +286,7 @@ Every hook call starts lessloc afresh and reads `.lessloc.json` again, so any ch
 
 Neither switch touches the git hooks, `lessloc check` or CI.
 
-In the default `block` mode, if an agent puts `LESSLOC=off` or `LESSLOC_OFF=…` in front of its own commands, the command goes to you for approval ([the gate](/guide/how-it-works#before-each-write-the-gate)). For enforcement, make `lessloc ci` a required check ([what each layer stops](/guide/ci#what-each-layer-stops)). An agent's shell can still change `.lessloc.json` or `.git/hooks` in ways the hooks do not parse; the required check reviews every pull request either way.
+In the default `block` mode, if an agent puts `LESSLOC=off` or `LESSLOC_OFF=…` in front of its own commands, the command goes to you for approval ([the gate](/guide/how-it-works#before-each-write-the-gate)). A quoted message for `git` or `gh`, a quoted search pattern, or a heredoc with a quoted delimiter written to a text, docs, Python or JavaScript file or read by Python or Node is not read for them, unless something in the same command could run it; the rest of the command is read as before. For enforcement, make `lessloc ci` a required check ([what each layer stops](/guide/ci#what-each-layer-stops)). An agent's shell can still change `.lessloc.json` or `.git/hooks` in ways the hooks do not parse; the required check reviews every pull request either way.
 
 ### `LESSLOC_OFF`: single components
 

@@ -202,6 +202,15 @@ test('commands that skip the project checks need the user, not the agent', () =>
   for (const command of ['git commit -am "fix login"', 'git push -n origin main', 'git commit --amend --no-edit', 'npm test']) assert.notEqual(ask(command)?.permissionDecision, 'ask', command);
 });
 
+test('a skip flag in a message, a search pattern or a heredoc for a file, Python or Node is not read, unless the command could run it', () => {
+  const dir = repo({ 'a.py': 'x = 1\n' });
+  const ask = command => hook(dir, { hook_event_name: 'PreToolUse', tool_name: 'Bash', tool_use_id: command, tool_input: { command } })?.hookSpecificOutput?.permissionDecision;
+  const flags = 'git commit --no-verify; git commit -n; HUSKY=0 x; SKIP=lint x; LESSLOC=off x; LESSLOC_OFF=gate x; git -c core.hooksPath=/dev/null commit';
+  for (const command of [`python3 - <<'EOF'\nprint("""${flags}""")\nEOF`, `cat > notes.md <<'EOF'\n${flags}\nEOF`, 'git commit -m "Mention --no-verify and LESSLOC_OFF=foreground"', "git commit -m 'Mention --no-verify and LESSLOC_OFF=foreground'", `git commit -m "$(cat <<'EOF'\nSay "stop" (and ${flags}\nEOF\n)" && git push`, 'grep -n "hooksPath\\|LESSLOC_OFF=" lib/agent.mjs', "rg 'no-verify' docs", "gh pr create --title 'x' --body 'mentions --no-verify'"]) assert.notEqual(ask(command), 'ask', command);
+  const run = 'git commit --no-verify -m x';
+  for (const command of [`bash -c '${run}'`, `"bash" -c '${run}'`, `$SHELL -c '${run}'`, `echo '${run}' | bash`, `cat <<'EOF' | sh\n${run}\nEOF`, `cat <<'EOF' > x.sh && bash x.sh\n${run}\nEOF`, `cat > s <<'EOF'\n${run}\nEOF\nchmod +x s && ./s`, `cat > Makefile <<'EOF'\nall:\n\t${run}\nEOF\nmake`, `tee package.json <<'EOF'\n{"scripts": {"x": "${run}"}}\nEOF\nnpm run x`,`x=$(${run})`, 'git commit -m "$(git push --no-verify)"', 'git -c "core.hooksPath=/dev/null" commit -m x', 'git config Core.HooksPath /dev/null', 'git commit -m "wip" --no-verify', `git commit -m "$(cat <<'EOF'\nwip\nEOF\n)" --no-verify`, `find . -exec ${run} \\;`]) assert.equal(ask(command), 'ask', command);
+});
+
 test('debug prints and stubs wait for the end of the turn; behavior without a test is asked of the turn, not of a subagent', () => {
   const dir = repo({ 'shop/cart.js': 'export const total = xs => xs.reduce((a, b) => a + b, 0);\n', 'test/cart.test.js': 'import { test } from "node:test";\nimport assert from "node:assert";\nimport { total } from "../shop/cart.js";\ntest("total", () => assert.equal(total([1]), 1));\n' });
   turn(dir, 'add a discount');

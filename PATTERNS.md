@@ -183,7 +183,7 @@ Hand-written versions of what the platform does safely. They are short, which is
 
 | Pattern | lessloc |
 |---|---|
-| `--no-verify` on `git commit`, `push`, `merge`, `rebase`, `am` or `cherry-pick`; `git commit -n`; `HUSKY=0`, `SKIP=`, `LESSLOC=off` or `LESSLOC_OFF=` before a command; `core.hooksPath` in a `git` command | The gate asks the user before the command runs |
+| `--no-verify` on `git commit`, `push`, `merge`, `rebase`, `am` or `cherry-pick`; `git commit -n`; `HUSKY=0`, `SKIP=`, `LESSLOC=off` or `LESSLOC_OFF=` before a command; `core.hooksPath`, in any letter case, in a `git` command | The gate asks the user before the command runs. A quoted message for `git` or `gh`, a quoted search pattern, and a heredoc with a quoted delimiter written to a text, docs, Python or JavaScript file or read by Python or Node are not read for these, unless something in the same command could run them |
 | Editing lessloc's policy or a protected path | `policy` (tier 0) and `protected` (tier 0); the gate asks the user |
 | Suppressing a finding without a reason | `lessloc-ignore` works only with a reason. `check` and CI list every suppression |
 | Fixing a review by adding layers, checks or tests | The turn's hold ends with "Fix only these and add nothing else for this note" |

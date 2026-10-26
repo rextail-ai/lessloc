@@ -35,6 +35,7 @@ Every release of lessloc, newest first. Versions follow [Semantic Versioning](ht
 
 ### More accurate
 
+- A command that only mentions a flag that skips the project's checks no longer asks the user: a quoted message for `git` or `gh`, a quoted search pattern, and a heredoc with a quoted delimiter that is written to a text, docs, Python or JavaScript file or read by Python or Node are not read for those flags, unless something in the same command could run them. Read this way, a flag after a message that spans lines, Claude Code's commit form among them, now asks, and so does `core.hooksPath` in any letter case.
 - PHPUnit's and .NET's verdict lines count only at the start of a line, so one quoted inside a test name or a log line is not read as a failed run.
 - A turn goes on through prompt events that bring no new request: Claude Code's notice that a background task or subagent ended, the event Qwen Code sends for the same prompt after each batch of tool calls, and a held turn that Gemini CLI sends back as a prompt. The turn is still held at most once, and the next session hears the session's last reply. Gemini CLI's request is read without the session start text it puts in front.
 
